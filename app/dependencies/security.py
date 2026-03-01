@@ -1,7 +1,7 @@
 from typing import Annotated
 
 import jwt  # type: ignore[import-untyped, import-not-found]
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError  # type: ignore[import-untyped, import-not-found]
 
@@ -55,3 +55,19 @@ async def get_request_user(token: Annotated[str, Depends(oauth2_scheme)]) -> Use
         raise credentials_exception
 
     return user
+
+
+async def get_optional_user(request: Request) -> User | None:
+    """
+    인증이 선택적인 엔드포인트를 위한 종속성 함수입니다.
+    토큰이 없거나 유효하지 않아도 에러를 발생시키지 않고 None을 반환합니다.
+    (데모용: OAuth2PasswordBearer의 strict 체크를 방지하기 위해 헤더를 직접 확인)
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.split(" ")[1]
+    try:
+        return await get_request_user(token)
+    except:
+        return None

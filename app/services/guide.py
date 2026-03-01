@@ -19,16 +19,33 @@ class GuideService:
         # TODO: LLM 연동 또는 ai_worker 통신 로직 구현 (진료 기록 + 복약 정보 결합)
         # 1. request.medical_records와 request.medication_info를 바탕으로 프롬프트 생성
         # 2. AI 모델 기반 응답 생성
-        dummy_text = f"사용자 {request.user_id}님을 위한 맞춤형 복약 및 생활습관 가이드입니다. (더미 데이터)"
+        dummy_data = {
+            "section1": {
+                "title": "복약 안전성 및 주의사항",
+                "status": "주의 필요",
+                "content": "현재 복용 중인 약물과 알레르기 성분 사이에 경미한 상호작용 가능성이 있습니다.",
+                "general_cautions": ["권장 용량을 초과하지 마세요.", "음주는 피해야 합니다."]
+            },
+            "section2": {
+                "title": "질환 기반 생활습관 가이드",
+                "disease_guides": [
+                    { "name": "고혈압", "tips": ["저염식을 실천하세요.", "매일 30분 걷기를 추천합니다."] }
+                ],
+                "integrated_point": "심혈관 건강을 위해 식단과 운동 병행이 필수적입니다."
+            },
+            "section3": {
+                "title": "오늘의 실행 플랜",
+                "checklist": ["물 1.5L 마시기", "약 제시간에 복용하기", "30분 산책하기"]
+            },
+            "section4": {
+                "title": "왜 이런 가이드가 생성되었나요?",
+                "reason": "사용자의 고혈압 병력과 현재 복용 중인 약물 정보를 바탕으로 작성되었습니다."
+            },
+            "disclaimer": "본 서비스는 의료 진단이나 처방을 제공하지 않으며, 참고용 안내입니다."
+        }
         return GuideResponse(
             id=999,
-            guide_type="복약",
-            risk_level="Low",
-            guide_text=dummy_text,
-            structured_content={
-                "profile_summary": "30대 남성, 기저 질환 없음",
-                "ocr_summary": "감기약 (항생제/소염제)",
-                "warnings": ["부작용 주의", "술 금지"],
-            },
+            guide_data=dummy_data,
+            created_at="2026-03-01T20:00:00",
             multimodal_assets=[],
         )
