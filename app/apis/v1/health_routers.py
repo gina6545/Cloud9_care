@@ -2,13 +2,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.dependencies.security import get_request_user
+from app.dependencies.security import get_optional_user, get_request_user
 from app.dtos.health import (
     AllergyCreateRequest,
-    AllergyListResponse,
     AllergyResponse,
     ChronicDiseaseCreateRequest,
-    ChronicDiseaseListResponse,
     ChronicDiseaseResponse,
 )
 from app.models.allergy import Allergy
@@ -20,11 +18,13 @@ health_router = APIRouter(prefix="/health", tags=["health-profile"])
 # --- Chronic Diseases ---
 
 
-@health_router.get("/chronic-diseases", response_model=ChronicDiseaseListResponse)
-async def get_chronic_diseases(user: Annotated[User, Depends(get_request_user)]):
+@health_router.get("/chronic-diseases")
+async def get_chronic_diseases(user: Annotated[User | None, Depends(get_optional_user)] = None):
     """
     [PROFILE] 기저질환 목록 조회
     """
+    if user is None:
+        return {"items": []}
     diseases = await ChronicDisease.filter(user=user).all()
     return {"items": diseases}
 
@@ -55,11 +55,13 @@ async def delete_chronic_disease(id: int, user: Annotated[User, Depends(get_requ
 # --- Allergies ---
 
 
-@health_router.get("/allergies", response_model=AllergyListResponse)
-async def get_allergies(user: Annotated[User, Depends(get_request_user)]):
+@health_router.get("/allergies")
+async def get_allergies(user: Annotated[User | None, Depends(get_optional_user)] = None):
     """
     [PROFILE] 알러지 목록 조회
     """
+    if user is None:
+        return {"items": []}
     allergies = await Allergy.filter(user=user).all()
     return {"items": allergies}
 

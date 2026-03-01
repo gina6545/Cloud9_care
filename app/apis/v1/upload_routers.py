@@ -20,7 +20,8 @@ async def upload_file(
     [UPLOAD] 이미지 업로드(처방전/알약 앞/뒤). 업로드 결과(upload_id)로 분석 API 호출
     """
     # Simple upload simulation
-    file_ext = os.path.splitext(file.filename)[1]
+    filename = file.filename or "unknown.jpg"
+    file_ext = os.path.splitext(filename)[1]
     unique_filename = f"{uuid.uuid4()}{file_ext}"
     file_path = f"app/static/uploads/{unique_filename}"
 

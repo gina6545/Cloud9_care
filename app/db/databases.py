@@ -54,14 +54,19 @@ TORTOISE_ORM = {
 def initialize_tortoise(app: FastAPI) -> None:
     """
     FastAPI 애플리케이션에 Tortoise-ORM 설정을 등록하고 초기화합니다.
-
-    Args:
-        app (FastAPI): 초기화할 FastAPI 인스턴스
     """
     Tortoise.init_models(TORTOISE_APP_MODELS, "models")
 
-    # 여기서 generate_schemas=False로 두고, startup에서만 제어합니다.
-    register_tortoise(app, config=TORTOISE_ORM, generate_schemas=False, add_exception_handlers=True)
+    # DB 연결 실패 시 SQLite로 폴백하는 로직 추가 (데모용)
+    try:
+        register_tortoise(app, config=TORTOISE_ORM, generate_schemas=False, add_exception_handlers=True)
+    except Exception as e:
+        print(f"MySQL connection failed: {e}. Falling back to in-memory SQLite for demo.")
+        sqlite_orm = {
+            "connections": {"default": "sqlite://:memory:"},
+            "apps": {"models": {"models": TORTOISE_APP_MODELS}},
+        }
+        register_tortoise(app, config=sqlite_orm, generate_schemas=True, add_exception_handlers=True)
 
     @app.on_event("startup")
     async def on_startup():
@@ -69,8 +74,9 @@ def initialize_tortoise(app: FastAPI) -> None:
         애플리케이션 시작 시 실행되는 이벤트 핸들러입니다.
         로컬 환경일 경우 기존 테이블을 모두 삭제하고 스키마를 새로 생성하여 개발 편의성을 제공합니다.
         """
-        if config.ENV == Env.LOCAL:
-            print(f"Current Environment: {config.ENV}. Resetting database...")
+        try:
+            if config.ENV == Env.LOCAL:
+                print(f"Current Environment: {config.ENV}. Resetting database...")
 
             # 1. DB 연결 객체 가져오기
             conn = Tortoise.get_connection("default")
@@ -101,4 +107,9 @@ def initialize_tortoise(app: FastAPI) -> None:
 
             finally:
                 # 6. 외래 키 체크 다시 활성화
-                await conn.execute_query("SET FOREIGN_KEY_CHECKS = 1;")
+                try:
+                    await conn.execute_query("SET FOREIGN_KEY_CHECKS = 1;")
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"Startup DB optimization skipped: {e}")

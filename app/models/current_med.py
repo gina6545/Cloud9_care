@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from tortoise import fields, models
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class CurrentMed(models.Model):
@@ -12,7 +17,7 @@ class CurrentMed(models.Model):
     medication_name = fields.CharField(max_length=255)
     added_from = fields.CharField(max_length=20)  # 출처 (OCR_PRESCRIPTION, PILL_SCAN 등)
     start_date = fields.DateField()  # 복용 시작 시점
-    user = fields.ForeignKeyField("models.User", related_name="current_meds")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="current_meds")
 
     class Meta:
         table = "current_meds"

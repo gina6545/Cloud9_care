@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from tortoise import fields, models
+
+if TYPE_CHECKING:
+    from app.models.alarm import Alarm
 
 
 class AlarmHistory(models.Model):
@@ -10,7 +15,7 @@ class AlarmHistory(models.Model):
     id = fields.IntField(pk=True)
     sent_at = fields.DatetimeField(auto_now_add=True)
     is_confirmed = fields.BooleanField(default=False)  # 약 먹었음 체크 여부
-    alarm = fields.ForeignKeyField("models.Alarm", related_name="histories")
+    alarm: fields.ForeignKeyRelation["Alarm"] = fields.ForeignKeyField("models.Alarm", related_name="histories")
 
     class Meta:
         table = "alarm_history"

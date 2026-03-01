@@ -1,4 +1,10 @@
+from typing import TYPE_CHECKING
+
 from tortoise import fields, models
+
+if TYPE_CHECKING:
+    from app.models.llm_life_guide import LLMLifeGuide
+    from app.models.user import User
 
 
 class ChatMessage(models.Model):
@@ -8,12 +14,14 @@ class ChatMessage(models.Model):
     """
 
     id = fields.IntField(pk=True)
-    user = fields.ForeignKeyField("models.User", related_name="chat_messages")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="chat_messages")
     session_id = fields.CharField(max_length=100)  # 대화 세션 묶음
     role = fields.CharField(max_length=20)  # user 또는 ai
     message = fields.TextField()
     # [RAG 핵심] 질문 시 참고한 가이드 ID를 연결하여 맥락 유지
-    reference_guide = fields.ForeignKeyField("models.LLMLifeGuide", related_name="chats", null=True)
+    reference_guide: fields.ForeignKeyRelation["LLMLifeGuide"] | None = fields.ForeignKeyField(
+        "models.LLMLifeGuide", related_name="chats", null=True
+    )
     is_deleted = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now_add=True)
 

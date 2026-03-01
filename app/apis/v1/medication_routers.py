@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.dependencies.security import get_request_user
+from app.dependencies.security import get_optional_user, get_request_user
 from app.models.user import User
 
 medication_router = APIRouter(tags=["medication"])
@@ -25,7 +25,7 @@ async def confirm_pill(id: int, user: Annotated[User, Depends(get_request_user)]
 
 
 @medication_router.get("/current-meds")
-async def get_current_meds(user: Annotated[User, Depends(get_request_user)]):
+async def get_current_meds(user: Annotated[User | None, Depends(get_optional_user)] = None):
     """
     [MEDS] 현재 복용약 목록 조회(RAG 핵심 소스)
     """

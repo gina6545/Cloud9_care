@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from tortoise import fields, models
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class ChronicDisease(models.Model):
@@ -10,7 +15,7 @@ class ChronicDisease(models.Model):
     id = fields.IntField(pk=True)
     disease_name = fields.CharField(max_length=100)  # 질환명 (예: 고혈압, 당뇨)
     # 사용자별 기저질환 관리 (N:1)
-    user = fields.ForeignKeyField("models.User", related_name="chronic_diseases")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="chronic_diseases")
 
     class Meta:
         table = "chronic_diseases"

@@ -108,5 +108,7 @@ module = [
     "jwt.*",
     "httpx",
     "httpx.*",
+    "openai.*",
+    "dotenv.*",
 ]
 ignore_missing_imports = true
