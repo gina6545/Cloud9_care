@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from tortoise import fields, models
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class Alarm(models.Model):
@@ -11,7 +16,7 @@ class Alarm(models.Model):
     drug_name = fields.CharField(max_length=255)
     alarm_time = fields.TimeField()
     is_active = fields.BooleanField(default=True)
-    user = fields.ForeignKeyField("models.User", related_name="alarms")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="alarms")
 
     class Meta:
         table = "alarms"

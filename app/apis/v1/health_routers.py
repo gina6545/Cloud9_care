@@ -2,13 +2,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.dependencies.security import get_request_user, get_optional_user
+from app.dependencies.security import get_optional_user, get_request_user
 from app.dtos.health import (
     AllergyCreateRequest,
-    AllergyListResponse,
     AllergyResponse,
     ChronicDiseaseCreateRequest,
-    ChronicDiseaseListResponse,
     ChronicDiseaseResponse,
 )
 from app.models.allergy import Allergy

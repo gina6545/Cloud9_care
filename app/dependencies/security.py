@@ -1,7 +1,7 @@
 from typing import Annotated
 
 import jwt  # type: ignore[import-untyped, import-not-found]
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError  # type: ignore[import-untyped, import-not-found]
 
@@ -69,5 +69,5 @@ async def get_optional_user(request: Request) -> User | None:
     token = auth_header.split(" ")[1]
     try:
         return await get_request_user(token)
-    except:
+    except Exception:
         return None

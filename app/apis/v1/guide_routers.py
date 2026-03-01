@@ -1,15 +1,16 @@
-from typing import Annotated
-import os
 import json
-from dotenv import load_dotenv
-from openai import AsyncOpenAI
-from fastapi import APIRouter, Depends, HTTPException
+import os
+from typing import Annotated
 
-from app.dependencies.security import get_request_user, get_optional_user, oauth2_scheme
-from app.models.user import User
-from app.models.chronic_disease import ChronicDisease
+from dotenv import load_dotenv
+from fastapi import APIRouter, Depends
+from openai import AsyncOpenAI
+
+from app.dependencies.security import get_optional_user
 from app.models.allergy import Allergy
+from app.models.chronic_disease import ChronicDisease
 from app.models.current_med import CurrentMed
+from app.models.user import User
 
 load_dotenv()
 
@@ -36,24 +37,24 @@ async def generate_guide(
                     "title": "복약 안전성 및 주의사항",
                     "status": "주의 필요",
                     "content": "API 키가 설정되지 않아 예시 데이터를 표시합니다. 평소 드시는 약과 알레르기 반응을 주의하세요.",
-                    "general_cautions": ["권장 용량을 준수하세요.", "불편함이 느껴지면 즉시 복용을 중단하세요."]
+                    "general_cautions": ["권장 용량을 준수하세요.", "불편함이 느껴지면 즉시 복용을 중단하세요."],
                 },
                 "section2": {
                     "title": "질환 기반 생활습관 가이드",
                     "disease_guides": [
-                        { "name": "내 기저질환", "tips": ["충분한 수분을 섭취하세요.", "규칙적인 식습관이 중요합니다."] }
+                        {"name": "내 기저질환", "tips": ["충분한 수분을 섭취하세요.", "규칙적인 식습관이 중요합니다."]}
                     ],
-                    "integrated_point": "균형 잡힌 생활 패턴 유지를 권장합니다."
+                    "integrated_point": "균형 잡힌 생활 패턴 유지를 권장합니다.",
                 },
                 "section3": {
                     "title": "오늘의 실행 플랜",
-                    "checklist": ["물 2L 마시기", "가벼운 스트레칭", "제시간에 약 복용"]
+                    "checklist": ["물 2L 마시기", "가벼운 스트레칭", "제시간에 약 복용"],
                 },
                 "section4": {
                     "title": "왜 이런 가이드가 생성되었나요?",
-                    "reason": "사용자의 건강 정보를 종합적으로 분석하여 생성되었습니다."
+                    "reason": "사용자의 건강 정보를 종합적으로 분석하여 생성되었습니다.",
                 },
-                "disclaimer": "본 서비스는 의료 진단이나 처방을 제공하지 않으며, 참고용 안내입니다."
+                "disclaimer": "본 서비스는 의료 진단이나 처방을 제공하지 않으며, 참고용 안내입니다.",
             },
             "created_at": "2026-03-01T20:00:00",
         }
@@ -64,7 +65,7 @@ async def generate_guide(
             # Try to get first user but don't fail if DB is down
             try:
                 user = await User.first()
-            except:
+            except Exception:
                 user = None
 
         if user:
@@ -87,9 +88,9 @@ async def generate_guide(
 신중하고 전문적인 의료 도우미로서, 아래 환자의 건강 상태를 바탕으로 '생활 안내 가이드'를 작성해줘.
 
 [환자 상태]
-- 만성 질환: {', '.join(disease_list) if disease_list else '없음'}
-- 알레르기: {', '.join(allergy_list) if allergy_list else '없음'}
-- 현재 복용 약: {', '.join(med_list) if med_list else '없음'}
+- 만성 질환: {", ".join(disease_list) if disease_list else "없음"}
+- 알레르기: {", ".join(allergy_list) if allergy_list else "없음"}
+- 현재 복용 약: {", ".join(med_list) if med_list else "없음"}
 
 [작성 가이드라인]
 1. 과한 확정 진단(예: ~병입니다)은 피하고, '권장합니다', '주의가 필요합니다' 등의 조언 톤을 유지할 것.
@@ -134,7 +135,7 @@ async def generate_guide(
             temperature=0.4,
         )
 
-        content_json = json.loads(res.choices[0].message.content)
+        content_json = json.loads(res.choices[0].message.content or "{}")
 
         return {
             "guide_id": 1,
@@ -147,12 +148,21 @@ async def generate_guide(
         return {
             "guide_id": 1,
             "guide_data": {
-                "section1": {"title": "오류 안내", "status": "데이터 확인 불가", "content": "네트워크 연결 불안정으로 기본 정보를 제공합니다.", "general_cautions": ["약물 오남용 주의"]},
-                "section2": {"title": "일반 관리", "disease_guides": [{"name": "일반", "tips": ["건강한 수면 취하기"]}], "integrated_point": "병원 방문을 권장합니다."},
+                "section1": {
+                    "title": "오류 안내",
+                    "status": "데이터 확인 불가",
+                    "content": "네트워크 연결 불안정으로 기본 정보를 제공합니다.",
+                    "general_cautions": ["약물 오남용 주의"],
+                },
+                "section2": {
+                    "title": "일반 관리",
+                    "disease_guides": [{"name": "일반", "tips": ["건강한 수면 취하기"]}],
+                    "integrated_point": "병원 방문을 권장합니다.",
+                },
                 "section3": {"title": "실행 플랜", "checklist": ["규칙적 식사", "수분 섭취"]},
                 "section4": {"title": "출처", "reason": "시스템 연결 문제로 기본 가이드가 생성되었습니다."},
-                "disclaimer": "본 정보는 참고용입니다."
-            }
+                "disclaimer": "본 정보는 참고용입니다.",
+            },
         }
 
 

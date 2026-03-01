@@ -1,4 +1,10 @@
+from typing import TYPE_CHECKING
+
 from tortoise import fields, models
+
+if TYPE_CHECKING:
+    from app.models.allergy import Allergy
+    from app.models.chronic_disease import ChronicDisease
 
 
 class User(models.Model):
@@ -20,6 +26,10 @@ class User(models.Model):
     is_privacy_agreed = fields.BooleanField(default=False)  # 개인정보 동의 여부
     is_marketing_agreed = fields.BooleanField(default=False)  # 마케팅 수신 동의
     is_alarm_agreed = fields.BooleanField(default=False)  # 약 복용 알람 정보 수신 동의(선택)
+
+    # Reverse relations for Mypy
+    chronic_diseases: fields.ReverseRelation["ChronicDisease"]
+    allergies: fields.ReverseRelation["Allergy"]
 
     class Meta:
         table = "users"

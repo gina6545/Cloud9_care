@@ -47,7 +47,7 @@ class ChatService:
                     temperature=0.7,
                 )
 
-                reply = response.choices[0].message.content
+                reply = response.choices[0].message.content or ""
 
                 # 질문 분류
                 if any(word in recent_msg for word in ["약", "복용", "복약", "처방"]):

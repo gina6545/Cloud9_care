@@ -109,7 +109,7 @@ def initialize_tortoise(app: FastAPI) -> None:
                 # 6. 외래 키 체크 다시 활성화
                 try:
                     await conn.execute_query("SET FOREIGN_KEY_CHECKS = 1;")
-                except:
+                except Exception:
                     pass
         except Exception as e:
             print(f"Startup DB optimization skipped: {e}")

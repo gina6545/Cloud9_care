@@ -1,4 +1,9 @@
+from typing import TYPE_CHECKING
+
 from tortoise import fields, models
+
+if TYPE_CHECKING:
+    from app.models.prescription import Prescription
 
 
 class PrescriptionDrug(models.Model):
@@ -14,7 +19,9 @@ class PrescriptionDrug(models.Model):
     duration_days = fields.IntField(null=True)  # 복용 일수
     # [핵심] 사용자가 복용 명단 추가 승인 시 True로 변경
     is_linked_to_meds = fields.BooleanField(default=False)
-    prescription = fields.ForeignKeyField("models.Prescription", related_name="drugs")
+    prescription: fields.ForeignKeyRelation["Prescription"] = fields.ForeignKeyField(
+        "models.Prescription", related_name="drugs"
+    )
 
     class Meta:
         table = "prescription_drugs"

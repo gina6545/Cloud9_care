@@ -1,4 +1,10 @@
+from typing import TYPE_CHECKING, Any
+
 from tortoise import fields, models
+
+if TYPE_CHECKING:
+    from app.models.upload import Upload
+    from app.models.user import User
 
 
 class CNNHistory(models.Model):
@@ -10,12 +16,16 @@ class CNNHistory(models.Model):
     id = fields.IntField(pk=True)
     model_version = fields.CharField(max_length=50, null=True)
     confidence = fields.FloatField()  # AI의 확신도 (예: 0.98)
-    raw_result = fields.JSONField(null=True)  # 분석 엔진의 전체 결과 데이터
+    raw_result: Any = fields.JSONField(null=True)  # 분석 엔진의 전체 결과 데이터
     created_at = fields.DatetimeField(auto_now_add=True)
-    front_upload = fields.OneToOneField("models.Upload", related_name="cnn_histories_front")
-    back_upload = fields.OneToOneField("models.Upload", related_name="cnn_histories_back")
+    front_upload: fields.OneToOneRelation["Upload"] = fields.OneToOneField(
+        "models.Upload", related_name="cnn_histories_front"
+    )
+    back_upload: fields.OneToOneRelation["Upload"] = fields.OneToOneField(
+        "models.Upload", related_name="cnn_histories_back"
+    )
 
-    user = fields.ForeignKeyField("models.User", related_name="cnn_histories")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="cnn_histories")
 
     class Meta:
         table = "cnn_history"
