@@ -8,6 +8,7 @@ class AlarmRepository:
 
     def __init__(self):
         self._model = Alarm
+
     # 사용자에 해당하는 알림 가져오기
     async def get_by_user_id(self, user_id: str) -> Alarm | None:
         """

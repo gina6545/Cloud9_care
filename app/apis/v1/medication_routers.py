@@ -1,8 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 
-from app.dependencies.security import get_optional_user, get_request_user
+from app.dependencies.security import get_request_user
 from app.models.user import User
 
 medication_router = APIRouter(tags=["medication"])

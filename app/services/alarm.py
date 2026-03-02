@@ -14,7 +14,11 @@ class AlarmService:
             AlarmResponse(
                 id=alarm.id,
                 medication_name=alarm.current_med.medication_name if alarm.current_med else "알 수 없음",
-                alarm_time=str(alarm.alarm_time) if isinstance(alarm.alarm_time, str) else alarm.alarm_time.strftime("%H:%M") if hasattr(alarm.alarm_time, 'strftime') else str(alarm.alarm_time),
+                alarm_time=str(alarm.alarm_time)
+                if isinstance(alarm.alarm_time, str)
+                else alarm.alarm_time.strftime("%H:%M")
+                if hasattr(alarm.alarm_time, "strftime")
+                else str(alarm.alarm_time),
                 is_active=alarm.is_active,
                 current_med_id=alarm.current_med.id if alarm.current_med else 0,
             )

@@ -12,7 +12,6 @@ alarm_router = APIRouter(prefix="/alarms", tags=["alarm"])
 
 @alarm_router.get("", response_model=list[AlarmResponse])
 async def get_alarms(user: Annotated[User, Depends(get_request_user)]) -> list[AlarmResponse]:
-
     """
     [ALARM] 복약 알람 목록 조회
     """
