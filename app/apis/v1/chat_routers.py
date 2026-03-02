@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import ORJSONResponse as Response
 
 from app.dependencies.security import get_request_user
 from app.dtos.chat import ChatEndRequest, ChatMessage, ChatMessageRequest, ChatMessageResponse, ChatRequest
