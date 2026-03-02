@@ -31,4 +31,4 @@ async def get_guide_detail(id: int, user: Annotated[User | None, Depends(get_opt
 
 @guide_router.patch("/{id}")
 async def update_guide(id: int, user: Annotated[User | None, Depends(get_optional_user)] = None):
-    return {"guide_id": id, "detail": "갱신되었습니다."}
+    return {"id": id, "detail": "갱신되었습니다."}
