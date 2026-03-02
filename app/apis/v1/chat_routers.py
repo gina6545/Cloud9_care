@@ -9,6 +9,7 @@ from app.services.chat import ChatService
 
 chat_router = APIRouter(prefix="/chat", tags=["chat"])
 
+
 @chat_router.post("/message", response_model=ChatMessageResponse)
 async def send_chat_message(
     request: ChatMessageRequest,
