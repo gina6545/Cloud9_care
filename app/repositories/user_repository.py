@@ -25,20 +25,8 @@ class UserRepository:
             User: 생성된 사용자 객체
         """
 
-        allergies = data["allergies"]
-        chronic_diseases = data["chronic_diseases"]
-
-        del data["chronic_diseases"]
-        del data["allergies"]
-
         # dict 언패킹(**)을 사용하여 간단하게 생성
         user: User = await self._model.create(**data)  # type: ignore[assignment]
-
-        if allergies:
-            await self._allergy.create(allergy_name=allergies, user=user)  # user 객체 전달
-
-        if chronic_diseases:
-            await self._chronic_disease.create(disease_name=chronic_diseases, user=user)  # user 객체 전달
 
         return user
 

@@ -265,68 +265,6 @@
                     <option>여자</option>
                 </select>
             </div>
-            <div class="form-group">
-                <div class="head">
-                    <label>만성 질환</label>
-                    <div class="custom-select">
-                        <div class="selected">만성 질환 목록</div>
-                        <ul class="options">
-                            <li>
-                                <label>해당 없음</label>
-                                <ul>
-                                    <li>해당 사항 없음</li>
-                                </ul>
-                            </li>
-                            <li>
-                                <label>심혈관질 및 대사 질환</label>
-                                <ul>
-                                    <li>고혈압</li>
-                                    <li>당뇨병</li>
-                                    <li>고지혈</li>
-                                    <li>심긍경색</li>
-                                    <li>뇌졸증</li>
-                                    <li>동맹경화증</li>
-                                </ul>
-                            </li>
-                            <li>
-                                <label>호흡기 및 간 질환</label>
-                                <ul>
-                                    <li>만성 폐쇄성 폐질환</li>
-                                    <li>천식</li>
-                                    <li>만성 간염</li>
-                                    <li>간경병증</li>
-                                </ul>
-                            </li>
-                            <li>
-                                <label>근골격계 및 신경계 질환</label>
-                                <ul>
-                                    <li>관절염</li>
-                                    <li>골다공증</li>
-                                    <li>치매</li>
-                                    <li>통풍</li>
-                                </ul>
-                            </li>
-                            <li>
-                                <label>기타</label>
-                                <ul>
-                                    <li>암</li>
-                                    <li>갑상선 질환</li>
-                                    <li>만성 신부전증</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="chronic_diseases_list">
-                    <input type="text" name="chronic_diseases" id="chronic_diseases" maxlength="11" value=""
-                        placeholder="만성 질환" required>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>알러지</label>
-                <input type="text" name="allergies" id="allergies" maxlength="11" value="각갑류 알러지" placeholder="알러지"
-                    required>
-            </div>
             <div class="form-group alarm_tf">
                 <input type="checkbox">
                 <label>알람 전체 실행</label>
@@ -364,31 +302,6 @@
     </div>
 
     <script>
-        const selected = document.querySelector('.selected');
-        const options = document.querySelector('.options');
-        const li = document.querySelectorAll(".options li")
-
-        selected.addEventListener('click', () => {
-            options.style.display = options.style.display === 'block' ? 'none' : 'block';
-        });
-
-
-
-        li.forEach(el => {
-            el.addEventListener('click', (e) => {
-                selected.textContent = e.target.textContent;
-
-                if (e.target.textContent == '해당 사항 없음') {
-                    document.getElementById('chronic_diseases').value = e.target.textContent
-                } else {
-                    document.getElementById('chronic_diseases').value = document.getElementById('chronic_diseases').value.replace("해당 사항 없음", "")
-                    if (!document.getElementById('chronic_diseases').value.includes(e.target.textContent)) {
-                        document.getElementById('chronic_diseases').value += e.target.textContent + ","
-                    }
-                }
-                options.style.display = 'none';
-            });
-        })
 
         // 1. 인증번호 발송 함수
         async function sendCode() {
@@ -534,8 +447,6 @@
                 birthday: document.getElementById('birthday').value,
                 gender: document.getElementById('gender').value,
                 phone_number: document.getElementById('phone_number').value,
-                chronic_diseases: document.getElementById('chronic_diseases').value,
-                allergies: document.getElementById('allergies').value,
                 alarm_tf: document.querySelector(".alarm_tf input").checked,
                 is_terms_agreed: document.getElementById('is_terms_agreed').checked,
                 is_privacy_agreed: document.getElementById('is_privacy_agreed').checked,

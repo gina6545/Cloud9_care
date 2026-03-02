@@ -250,67 +250,6 @@
                         <option>여자</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <div class="head">
-                        <label>만성 질환</label>
-                        <div class="custom-select">
-                            <div class="selected">만성 질환 목록</div>
-                            <ul class="options">
-                                <li>
-                                    <label>해당 없음</label>
-                                    <ul>
-                                        <li>해당 사항 없음</li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <label>심혈관질 및 대사 질환</label>
-                                    <ul>
-                                        <li>고혈압</li>
-                                        <li>당뇨병</li>
-                                        <li>고지혈</li>
-                                        <li>심긍경색</li>
-                                        <li>뇌졸증</li>
-                                        <li>동맹경화증</li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <label>호흡기 및 간 질환</label>
-                                    <ul>
-                                        <li>만성 폐쇄성 폐질환</li>
-                                        <li>천식</li>
-                                        <li>만성 간염</li>
-                                        <li>간경병증</li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <label>근골격계 및 신경계 질환</label>
-                                    <ul>
-                                        <li>관절염</li>
-                                        <li>골다공증</li>
-                                        <li>치매</li>
-                                        <li>통풍</li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <label>기타</label>
-                                    <ul>
-                                        <li>암</li>
-                                        <li>갑상선 질환</li>
-                                        <li>만성 신부전증</li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="chronic_diseases_list">
-                        <input type="text" name="chronic_diseases" id="chronic_diseases" maxlength="11" value=""
-                            placeholder="만성 질환" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>알러지</label>
-                    <input type="text" name="allergies" id="allergies" maxlength="11" placeholder="알러지" required>
-                </div>
                 <div class="form-group alarm_tf">
                     <input type="checkbox">
                     <label>알람 전체 실행</label>
@@ -434,8 +373,6 @@
                 document.getElementById('phone_number').value = user.phone_number;
                 document.getElementById('birthday').value = user.birthday,
                 document.getElementById('gender').value = user.gender,
-                document.getElementById('allergies').value = user.allergies
-                document.getElementById('chronic_diseases').value = user.chronic_diseases
                 document.querySelector('.alarm_tf input').checked = user.alarm_tf;
                 // 약관 동의 상태 반영
                 document.getElementById('is_terms_agreed').checked = user.is_terms_agreed;
@@ -456,8 +393,6 @@
                 phone_number: document.getElementById('phone_number').value,
                 birthday: document.getElementById('birthday').value,
                 gender : document.getElementById('gender').value,
-                allergies: document.getElementById('allergies').value,
-                chronic_diseases: document.getElementById('chronic_diseases').value,
                 alarm_tf: document.querySelector('.alarm_tf input').checked,
                 is_marketing_agreed: document.getElementById('is_marketing_agreed').checked,
                 is_alarm_agreed: document.getElementById('is_alarm_agreed').checked,
