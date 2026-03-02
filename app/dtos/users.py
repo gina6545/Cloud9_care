@@ -21,8 +21,6 @@ class SignUpRequest(BaseModel):
     birthday: Annotated[str, Field(max_length=10)]
     gender: Annotated[str, Field(max_length=10)]
     phone_number: Annotated[str, AfterValidator(validate_phone_number)]
-    chronic_diseases: Annotated[str, Field(max_length=255)]
-    allergies: Annotated[str, Field(max_length=255)]
     alarm_tf: bool
     is_terms_agreed: bool
     is_privacy_agreed: bool
@@ -99,8 +97,6 @@ class UserMeResponse(BaseSerializerModel):
     phone_number: str
     birthday: str
     gender: str
-    chronic_diseases: list[str]
-    allergies: list[str]
     alarm_tf: bool
     is_terms_agreed: bool
     is_privacy_agreed: bool
@@ -115,8 +111,6 @@ class UserMeResponse(BaseSerializerModel):
 class UserUpdateRequest(BaseModel):
     nickname: Annotated[str | None, Field(None, min_length=2, max_length=40)]
     phone_number: Annotated[str | None, AfterValidator(validate_phone_number)] = None
-    chronic_diseases: Annotated[str, Field(max_length=255)]
-    allergies: Annotated[str, Field(max_length=255)]
     birthday: Annotated[str, Field(max_length=10)]
     gender: Annotated[str, Field(max_length=10)]
     alarm_tf: bool
