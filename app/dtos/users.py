@@ -97,6 +97,8 @@ class UserMeResponse(BaseSerializerModel):
     phone_number: str
     birthday: str
     gender: str
+    chronic_diseases: list[str] = Field(default_factory=list)
+    allergies: list[str] = Field(default_factory=list)
     alarm_tf: bool
     is_terms_agreed: bool
     is_privacy_agreed: bool
