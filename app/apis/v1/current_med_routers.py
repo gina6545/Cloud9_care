@@ -1,12 +1,11 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
 
 from app.dependencies.security import get_request_user
+from app.dtos.health import CurrentMedCreateRequest, CurrentMedResponse
 from app.models.current_med import CurrentMed
 from app.models.user import User
-from app.dtos.health import CurrentMedResponse, CurrentMedCreateRequest
 
 current_med_router = APIRouter(prefix="/current-meds", tags=["current_med"])
 
