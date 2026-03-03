@@ -19,6 +19,8 @@ logging.getLogger("tortoise.db_client").setLevel(logging.DEBUG)
 
 # [추가된 기능] 정적 파일 및 템플릿 설정
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# ✅ 업로드 파일 접근용 mount 추가
+app.mount("/uploads", StaticFiles(directory="/app/uploads"), name="uploads")
 templates = Jinja2Templates(directory="app/templates")
 
 

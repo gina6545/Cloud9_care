@@ -13,9 +13,10 @@ class Upload(models.Model):
     """
 
     id = fields.IntField(pk=True)
-    file_url = fields.CharField(max_length=512)  # S3 저장소 내 이미지 경로
+    file_path = fields.CharField(max_length=512)  # 저장소 내 이미지 경로
+    original_name = fields.CharField(max_length=255, null=True)  # 원본 파일명
     file_type = fields.CharField(max_length=20)  # png, jpg 등 확장자
-    category = fields.CharField(max_length=50)  # 분류 (prescription, pill_front, pill_back)
+    category = fields.CharField(max_length=50, null=True)  # 분류 (prescription, pill_front, pill_back)
     created_at = fields.DatetimeField(auto_now_add=True)
     user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="uploads")
 

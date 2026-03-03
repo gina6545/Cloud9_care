@@ -8,6 +8,11 @@ from app.dependencies.security import get_request_user
 from app.models.upload import Upload
 from app.models.user import User
 
+UPLOAD_DIR = "/app/uploads"
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
 upload_router = APIRouter(prefix="/uploads", tags=["upload"])
 
 
@@ -17,18 +22,28 @@ async def upload_file(
     file: Annotated[UploadFile, File()],
 ):
     """
-    [UPLOAD] 이미지 업로드(처방전/알약 앞/뒤). 업로드 결과(upload_id)로 분석 API 호출
+    [UPLOAD] 이미지 업로드(처방전/알약 앞/뒤)
     """
-    # Simple upload simulation
+
     filename = file.filename or "unknown.jpg"
     file_ext = os.path.splitext(filename)[1]
     unique_filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = f"app/static/uploads/{unique_filename}"
 
-    # Normally we save the file here
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+
+    # ✅ 실제 파일 저장
+    with open(file_path, "wb") as buffer:
+        content = await file.read()
+        buffer.write(content)
 
     upload_record = await Upload.create(
-        user=user, original_name=file.filename, file_path=file_path, file_type=file.content_type or "image/jpeg"
+        user=user,
+        original_name=file.filename,
+        file_path=file_path,
+        file_type=file.content_type or "image/jpeg",
     )
 
-    return {"upload_id": upload_record.id, "file_url": f"/static/uploads/{unique_filename}"}
+    return {
+        "upload_id": upload_record.id,
+        "file_url": f"/uploads/{unique_filename}",
+    }
