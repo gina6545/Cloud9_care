@@ -22,16 +22,16 @@ class DrinkingStatus(str, Enum):
 
 
 class WeightChange(str, Enum):
-    NONE = "NONE"  # 변화 없음
-    YES = "YES"  # 변화 있음
-    UNKNOWN = "UNKNOWN"  # 잘 모름
+    NO_CHANGE = "NO_CHANGE"
+    GAIN = "GAIN"
+    LOSS = "LOSS"
+    UNKNOWN = "UNKNOWN"
 
 
 class ExerciseFrequency(str, Enum):
     NONE = "NONE"
     WEEK_1_2 = "WEEK_1_2"
-    WEEK_3_4 = "WEEK_3_4"
-    WEEK_5_PLUS = "WEEK_5_PLUS"
+    WEEK_3_OR_MORE = "WEEK_3_OR_MORE"
     UNKNOWN = "UNKNOWN"
 
 

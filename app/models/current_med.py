@@ -6,10 +6,10 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 class DoseTime(str, Enum):
-    BREAKFAST = "아침"
+    MORNING = "아침"
     LUNCH = "점심"
     DINNER = "저녁"
-    BEFORE_BEDTIME = "취침 전"
+    BEDTIME = "취침 전"
     UNKNOWN = "UNKNOWN"
 
 class CurrentMed(models.Model):
@@ -21,9 +21,9 @@ class CurrentMed(models.Model):
     id = fields.IntField(pk=True)
     # 승인된 약물 이름 (여기 데이터가 RAG의 핵심 소스)
     medication_name = fields.CharField(max_length=255)
-    one_dose = fields.CharField(max_length=255) # 1회 복용량
-    one_dose = fields.CharField(max_length=255) #1일 복용 횟수
-    one_dose_count = fields.CharField(max_length=255) # 1회 복용량
+    one_dose = fields.CharField(max_length=255)  # 1회 용량 (예: 500mg)
+    daily_dose_count = fields.CharField(max_length=255)  # 1일 복용 횟수
+    one_dose_count = fields.CharField(max_length=255)  # 1회 복용 개수 (예: 1정)
     dose_time = fields.CharEnumField(
         DoseTime, description="복용 시간"
     )
