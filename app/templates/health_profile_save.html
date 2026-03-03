@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block title %}Cloud9 Care - 생활 안내 가이드{% endblock %}
+
+{% block head %}
+<style>
+    .health-profile-page-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 30px;
+        display: flex;
+        flex-flow: column;
+    }
+
+    .health-profile-page-container .section-card {
+        background: #ffffff;
+        padding: 25px;
+        margin-bottom: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .health-profile-page-container .section-card h3 {
+        margin-bottom: 20px;
+    }
+
+    .health-profile-page-container .form-group {
+        margin-bottom: 15px;
+    }
+
+    .health-profile-page-container label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .health-profile-page-container input,
+    .health-profile-page-container select,
+    .health-profile-page-container textarea {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    .health-profile-page-container button {
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        background-color: #2d6cdf;
+        color: white;
+        font-weight: 600;
+    }
+    .health-profile-page-container .category {
+        margin-bottom: 15px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+    }
+
+    .health-profile-page-container .category-title {
+        padding: 12px;
+        background-color: #f7f9fc;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .health-profile-page-container .subcategory {
+        padding: 10px;
+    }
+
+    .health-profile-page-container .disease-option {
+        display: inline-block;
+        padding: 6px 12px;
+        margin: 5px;
+        background-color: #eef3ff;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .health-profile-page-container .disease-option:hover {
+        background-color: #d6e2ff;
+    }
+
+    .health-profile-page-container .selected-tag-container {
+        margin-top: 15px;
+    }
+
+    .health-profile-page-container .selected-tag {
+        display: inline-block;
+        padding: 6px 12px;
+        margin: 5px;
+        background-color: #2d6cdf;
+        color: white;
+        border-radius: 20px;
+    }
+
+    .health-profile-page-container .selected-tag span {
+        margin-left: 8px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="health-profile-page-container">
+
+
+    <!-- 건강 프로필 -->
+    <div class="section-card">
+        <h3>건강 프로필</h3>
+
+        <div class="form-group">
+            <label>신장 (cm)</label>
+            <input type="number" step="0.1" name="height_cm">
+        </div>
+
+        <div class="form-group">
+            <label>체중 (kg)</label>
+            <input type="number" step="0.1" name="weight_kg">
+        </div>
+
+        <div class="form-group">
+            <label>최근 체중 변화</label>
+            <select name="weight_change">
+                <option value="UNKNOWN">모름</option>
+                <option value="LOSS">감소</option>
+                <option value="GAIN">증가</option>
+                <option value="NO_CHANGE">변화없음</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>흡연 상태</label>
+            <select name="smoking_status">
+                <option value="UNKNOWN">모름</option>
+                <option value="NO">비흡연</option>
+                <option value="YES">흡연</option>
+                <option value="FORMER">과거 흡연</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>음주 상태</label>
+            <select name="drinking_status">
+                <option value="UNKNOWN">모름</option>
+                <option value="NO">비음주</option>
+                <option value="YES">음주</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>운동 빈도</label>
+            <select name="exercise_frequency">
+                <option value="UNKNOWN">모름</option>
+                <option value="NONE">안함</option>
+                <option value="WEEK_1_2">주 1~2회</option>
+                <option value="WEEK_3_MORE">주 3회 이상</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 알레르기 -->
+    <div class="section-card">
+        <h3>알레르기 정보</h3>
+
+        <div id="allergy-container"></div>
+
+        <button type="button" onclick="addAllergy()">+ 알레르기 추가</button>
+    </div>
+
+    <div class="section-card">
+        <h3>만성질환</h3>
+        <div class="disease-category">
+
+            <!-- 심뇌혈관 및 대사 질환 -->
+            <div class="category">
+                <div class="category-title">심뇌혈관 및 대사 질환</div>
+                <div class="subcategory">
+                    <span class="disease-option" data-value="고혈압">고혈압</span>
+                    <span class="disease-option" data-value="당뇨병">당뇨병</span>
+                    <span class="disease-option" data-value="이상지질혈증">이상지질혈증</span>
+                    <span class="disease-option" data-value="심근경색">심근경색</span>
+                    <span class="disease-option" data-value="뇌졸중">뇌졸중</span>
+                    <span class="disease-option" data-value="동맥경화증">동맥경화증</span>
+                </div>
+            </div>
+
+            <!-- 호흡기 및 간 질환 -->
+            <div class="category">
+                <div class="category-title">호흡기 및 간 질환</div>
+                <div class="subcategory">
+                    <span class="disease-option" data-value="COPD">만성 폐쇄성 폐질환(COPD)</span>
+                    <span class="disease-option" data-value="천식">천식</span>
+                    <span class="disease-option" data-value="만성 간염">만성 간염</span>
+                    <span class="disease-option" data-value="간경변증">간경변증</span>
+                </div>
+            </div>
+
+            <!-- 근골격계 및 신경계 -->
+            <div class="category">
+                <div class="category-title">근골격계 및 신경계 질환</div>
+                <div class="subcategory">
+                    <span class="disease-option" data-value="관절염">관절염</span>
+                    <span class="disease-option" data-value="류마티스 관절염">류마티스 관절염</span>
+                    <span class="disease-option" data-value="골다공증">골다공증</span>
+                    <span class="disease-option" data-value="치매">치매</span>
+                    <span class="disease-option" data-value="통풍">통풍</span>
+                </div>
+            </div>
+
+            <!-- 기타 -->
+            <div class="category">
+                <div class="category-title">기타</div>
+                <div class="subcategory">
+                    <span class="disease-option" data-value="암">암</span>
+                    <span class="disease-option" data-value="갑상선 질환">갑상선 질환</span>
+                    <span class="disease-option" data-value="만성 신부전증">만성 신부전증</span>
+                </div>
+            </div>
+
+        </div>
+        <div id="selected-diseases"></div>
+
+        <input type="text" id="custom-disease-input" placeholder="질환 입력 후 Enter">
+        <input type="hidden" name="chronic_diseases_json" id="chronic-hidden">
+    </div>
+
+    
+    <div class="section-card">
+        <h3>현재 복용 약물</h3>
+
+        <div id="med-container"></div>
+
+        <button type="button" onclick="addMed()">+ 약 추가</button>
+    </div>
+
+    <!-- 혈압 기록 -->
+    <div class="section-card">
+        <h3>혈압 기록</h3>
+
+        <div class="form-group">
+            <label>수축기 (mmHg)</label>
+            <input type="number" name="systolic">
+        </div>
+
+        <div class="form-group">
+            <label>이완기 (mmHg)</label>
+            <input type="number" name="diastolic">
+        </div>
+
+        <div class="form-group">
+            <label>맥박 (bpm)</label>
+            <input type="number" name="pulse">
+        </div>
+
+        <div class="form-group">
+            <label>측정 시각</label>
+            <input type="datetime-local" name="bp_recorded_at">
+        </div>
+    </div>
+
+    <!-- 혈당 기록 -->
+    <div class="section-card">
+        <h3>혈당 기록</h3>
+
+        <div class="form-group">
+            <label>혈당 (mg/dL)</label>
+            <input type="number" step="0.1" name="glucose_mg_dl">
+        </div>
+
+        <div class="form-group">
+            <label>측정 상황</label>
+            <select name="measure_type">
+                <option value="RANDOM">임의</option>
+                <option value="FASTING">공복</option>
+                <option value="BEFORE_MEAL">식전</option>
+                <option value="AFTER_MEAL">식후</option>
+                <option value="BEDTIME">취침 전</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>측정 시각</label>
+            <input type="datetime-local" name="bs_recorded_at">
+        </div>
+    </div>
+
+    <button type="submit">저장하기</button>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const selectedContainer = document.getElementById("selected-diseases");
+const hiddenInput = document.getElementById("disease-hidden-input");
+const customInput = document.getElementById("custom-disease-input");
+
+let selectedDiseases = [];
+
+// 태그 추가
+function addDiseaseTag(name) {
+    if (selectedDiseases.includes(name)) return;
+    selectedDiseases.push(name);
+    renderTags();
+}
+
+// 태그 삭제
+function removeDiseaseTag(name) {
+    selectedDiseases = selectedDiseases.filter(d => d !== name);
+    renderTags();
+}
+
+// 렌더링
+function renderTags() {
+    selectedContainer.innerHTML = "";
+    selectedDiseases.forEach(disease => {
+        const tag = document.createElement("div");
+        tag.className = "selected-tag";
+        tag.innerHTML = `${disease} <span onclick="removeDiseaseTag('${disease}')">×</span>`;
+        selectedContainer.appendChild(tag);
+    });
+    hiddenInput.value = JSON.stringify(selectedDiseases);
+}
+
+// 소분류 클릭
+document.querySelectorAll(".disease-option").forEach(option => {
+    option.addEventListener("click", () => {
+        addDiseaseTag(option.dataset.value);
+    });
+});
+
+// 직접 입력
+customInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        const value = customInput.value.trim();
+        if (value) {
+            addDiseaseTag(value);
+            customInput.value = "";
+        }
+    }
+});
+
+let chronicList = [];
+
+function renderChronic() {
+    const container = document.getElementById("selected-diseases");
+    container.innerHTML = "";
+
+    chronicList.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "selected-tag";
+        div.innerHTML = `
+            ${item.name}
+            <select onchange="updateDiagnose(${index}, this.value)">
+                <option value="">진단시기</option>
+                <option value="1Y">1년 이내</option>
+                <option value="5Y">5년 이내</option>
+                <option value="10Y">10년 이상</option>
+            </select>
+            <span onclick="removeChronic(${index})">×</span>
+        `;
+        container.appendChild(div);
+    });
+
+    document.getElementById("chronic-hidden").value =
+        JSON.stringify(chronicList);
+}
+
+function updateDiagnose(index, value) {
+    chronicList[index].when_to_Diagnose = value;
+    renderChronic();
+}
+
+function removeChronic(index) {
+    chronicList.splice(index, 1);
+    renderChronic();
+}
+
+document.getElementById("custom-disease-input")
+.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        const value = this.value.trim();
+        if (value) {
+            chronicList.push({ name: value, when_to_Diagnose: "" });
+            renderChronic();
+            this.value = "";
+        }
+    }
+});
+
+let allergyIndex = 0;
+
+function addAllergy() {
+    const container = document.getElementById("allergy-container");
+
+    const div = document.createElement("div");
+    div.className = "dynamic-box";
+    div.innerHTML = `
+        <label>약물 알레르기</label>
+        <input type="text" name="allergies[${allergyIndex}][pill_allergy]">
+
+        <label>음식 알레르기</label>
+        <input type="text" name="allergies[${allergyIndex}][food_allergy]">
+
+        <label>기타 알레르기</label>
+        <input type="text" name="allergies[${allergyIndex}][any_allergy]">
+
+        <label>증상</label>
+        <input type="text" name="allergies[${allergyIndex}][symptom]">
+
+        <button type="button" onclick="this.parentElement.remove()">삭제</button>
+    `;
+    container.appendChild(div);
+    allergyIndex++;
+}
+
+let medIndex = 0;
+
+function addMed() {
+    const container = document.getElementById("med-container");
+
+    const div = document.createElement("div");
+    div.className = "dynamic-box";
+    div.innerHTML = `
+        <label>약물명</label>
+        <input type="text" name="meds[${medIndex}][medication_name]" required>
+
+        <label>1회 용량</label>
+        <input type="text" name="meds[${medIndex}][one_dose]" placeholder="예: 500mg">
+
+        <label>1회 복용 개수</label>
+        <input type="text" name="meds[${medIndex}][one_dose_count]" placeholder="예: 1정">
+
+        <label>복용 시간</label>
+        <select name="meds[${medIndex}][dose_time]">
+            <option value="MORNING">아침</option>
+            <option value="LUNCH">점심</option>
+            <option value="DINNER">저녁</option>
+            <option value="BEDTIME">취침 전</option>
+        </select>
+
+        <label>추가 경로</label>
+        <select name="meds[${medIndex}][added_from]">
+            <option value="MANUAL">직접 입력</option>
+            <option value="OCR">OCR</option>
+            <option value="RECOMMEND">추천</option>
+        </select>
+
+        <label>복용 시작일</label>
+        <input type="text" name="meds[${medIndex}][start_date]" placeholder="예: 2024-03">
+
+        <button type="button" onclick="this.parentElement.remove()">삭제</button>
+    `;
+    container.appendChild(div);
+    medIndex++;
+}
+</script>
+{% endblock %}

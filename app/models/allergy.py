@@ -13,7 +13,11 @@ class Allergy(models.Model):
     """
 
     id = fields.IntField(pk=True)
-    allergy_name = fields.CharField(max_length=100)  # 알러지 성분 (예: 페니실린)
+    pill_allergy = fields.CharField(max_length=100)
+    food_allergy = fields.CharField(max_length=100)
+    any_allergy = fields.CharField(max_length=100)
+    symptom = fields.CharField(max_length=100)
+
     # 사용자별 알러지 관리 (N:1)
     user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="allergies")
 
