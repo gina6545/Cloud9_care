@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
-
+from pydantic import BaseModel, Field
 
 class ChronicDiseaseResponse(BaseModel):
     id: int
@@ -55,9 +55,12 @@ class BloodSugarRecordResponse(BaseModel):
 class CurrentMedResponse(BaseModel):
     id: int
     medication_name: str
-    start_date: date | None
+    added_from: str
+    start_date: str
 
-    model_config = ConfigDict(from_attributes=True)
+class CurrentMedCreateRequest(BaseModel):
+    medication_name: str | None
+    added_from: str | None
 
 
 class HealthProfileDetailResponse(BaseModel):
