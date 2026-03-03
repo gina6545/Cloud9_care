@@ -13,7 +13,6 @@ app = FastAPI(
 initialize_tortoise(app)
 
 
-
 # Tortoise-ORM의 SQL 로그를 활성화
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("tortoise.db_client").setLevel(logging.DEBUG)
