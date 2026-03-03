@@ -70,3 +70,9 @@ class Config(BaseSettings):
 
     # Security & Encryption
     AES_SECRET_KEY: str = f"aes-default-secret-{uuid.uuid4().hex[:16]}"
+
+    # Firebase FCM
+    FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_CLIENT_EMAIL: str = ""
+    FIREBASE_PRIVATE_KEY: str = ""
+    VAPID_PUBLIC_KEY: str = ""

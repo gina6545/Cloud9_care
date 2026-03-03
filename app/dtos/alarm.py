@@ -2,22 +2,24 @@ from pydantic import BaseModel, Field
 
 
 class AlarmResponse(BaseModel):
-    id: int = Field(..., description="알람 ID")
-    medication_name: str = Field(..., description="약물 이름")
-    alarm_time: str = Field(..., description="알람 시간 (HH:MM)")
-    is_active: bool = Field(..., description="알람 활성화 여부")
-    current_med_id: int = Field(..., description="연동된 약물 ID")
+    id: int
+    alarm_type: str
+    medication_name: str
+    alarm_time: str
+    is_active: bool
+    current_med_id: int
 
 
 class AlarmCreateRequest(BaseModel):
-    current_med_id: int = Field(..., description="약물 ID")
-    alarm_time: str = Field(..., description="알람 시간 (HH:MM)")
+    alarm_type: str = Field(default="MED")
+    current_med_id: int | None = Field(None)
+    alarm_time: str
 
 
 class AlarmUpdateRequest(BaseModel):
-    alarm_time: str | None = Field(None, description="알람 시간 (HH:MM)")
-    is_active: bool | None = Field(None, description="알람 활성화 여부")
+    alarm_time: str | None = None
+    is_active: bool | None = None
 
 
 class AlarmToggleRequest(BaseModel):
-    is_active: bool = Field(..., description="알람 활성화 여부")
+    is_active: bool
