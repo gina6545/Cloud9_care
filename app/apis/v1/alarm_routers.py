@@ -11,12 +11,12 @@ alarm_router = APIRouter(prefix="/alarms", tags=["alarm"])
 
 
 @alarm_router.get("", response_model=list[AlarmResponse])
-async def get_alarms(user: Annotated[User, Depends(get_request_user)]) -> list[AlarmResponse]:
-    """
-    [ALARM] 복약 알람 목록 조회
-    """
+async def get_alarms(
+    user: Annotated[User, Depends(get_request_user)],
+    alarm_type: str | None = None,
+) -> list[AlarmResponse]:
     service = AlarmService()
-    return await service.get_user_alarms(user)
+    return await service.get_user_alarms(user, alarm_type)
 
 
 @alarm_router.post("", status_code=status.HTTP_201_CREATED, response_model=AlarmResponse)
@@ -69,6 +69,19 @@ async def delete_alarm(alarm_id: int, user: Annotated[User, Depends(get_request_
         await service.delete_alarm(user, alarm_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+
+
+@alarm_router.post("/history/confirm/{alarm_id}", status_code=status.HTTP_200_OK)
+async def confirm_alarm(alarm_id: int, user: Annotated[User, Depends(get_request_user)]) -> dict:
+    """
+    [ALARM] 알람 확인 (복약/측정 완료 체크)
+    """
+    from app.models.alarm_history import AlarmHistory
+    history = await AlarmHistory.filter(alarm_id=alarm_id).order_by("-sent_at").first()
+    if history:
+        history.is_confirmed = True
+        await history.save()
+    return {"detail": "확인 완료"}
 
 
 @alarm_router.get("/{alarm_id}/history")

@@ -114,6 +114,17 @@ async def new_password(
     return Response(content={"detail": "비밀번호가 성공적으로 변경되었습니다."}, status_code=status.HTTP_200_OK)
 
 
+@user_router.patch("/me/fcm-token", status_code=status.HTTP_200_OK)
+async def update_fcm_token(
+    data: dict,
+    user: Annotated[User, Depends(get_request_user)],
+) -> Response:
+    """[USER] FCM 토큰 등록/갱신"""
+    user.fcm_token = data.get("fcm_token")
+    await user.save()
+    return Response(content={"detail": "FCM 토큰이 등록되었습니다."}, status_code=status.HTTP_200_OK)
+
+
 @user_router.get("/id-check")
 async def id_check(id: str, user_service: Annotated[UserManageService, Depends(UserManageService)]):
     """
