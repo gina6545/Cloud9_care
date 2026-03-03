@@ -7,18 +7,21 @@ from app.models.user import User
 
 
 class AlarmService:
+    def _format_time(self, t: object) -> str:
+        if hasattr(t, "strftime"):
+            return t.strftime("%H:%M")  # type: ignore[union-attr, no-any-return]
+        if hasattr(t, "seconds"):  # timedelta
+            total = int(t.seconds)  # type: ignore[union-attr]
+            return f"{total // 3600:02d}:{(total % 3600) // 60:02d}"
+        return str(t)
+
     async def get_user_alarms(self, user: User) -> list[AlarmResponse]:
-        """사용자의 모든 알람 조회"""
         alarms = await Alarm.filter(user=user).prefetch_related("current_med")
         return [
             AlarmResponse(
                 id=alarm.id,
                 medication_name=alarm.current_med.medication_name if alarm.current_med else "알 수 없음",
-                alarm_time=str(alarm.alarm_time)
-                if isinstance(alarm.alarm_time, str)
-                else alarm.alarm_time.strftime("%H:%M")
-                if hasattr(alarm.alarm_time, "strftime")
-                else str(alarm.alarm_time),
+                alarm_time=self._format_time(alarm.alarm_time),
                 is_active=alarm.is_active,
                 current_med_id=alarm.current_med.id if alarm.current_med else 0,
             )
@@ -26,7 +29,6 @@ class AlarmService:
         ]
 
     async def create_alarm(self, user: User, request: AlarmCreateRequest) -> AlarmResponse:
-        """새 알람 생성"""
         current_med = await CurrentMed.get_or_none(id=request.current_med_id, user=user)
         if not current_med:
             raise ValueError("해당 약물을 찾을 수 없습니다.")
@@ -43,10 +45,10 @@ class AlarmService:
         )
 
     async def update_alarm(self, user: User, alarm_id: int, request: AlarmUpdateRequest) -> AlarmResponse:
-        """알람 수정"""
-        alarm = await Alarm.get_or_none(id=alarm_id, user=user).prefetch_related("current_med")
+        alarm = await Alarm.get_or_none(id=alarm_id, user=user)
         if not alarm:
             raise ValueError("알람을 찾을 수 없습니다.")
+        await alarm.fetch_related("current_med")
 
         if request.alarm_time:
             hour, minute = map(int, request.alarm_time.split(":"))
@@ -60,16 +62,16 @@ class AlarmService:
         return AlarmResponse(
             id=alarm.id,
             medication_name=alarm.current_med.medication_name if alarm.current_med else "알 수 없음",
-            alarm_time=alarm.alarm_time.strftime("%H:%M"),
+            alarm_time=self._format_time(alarm.alarm_time),
             is_active=alarm.is_active,
             current_med_id=alarm.current_med.id if alarm.current_med else 0,
         )
 
     async def toggle_alarm(self, user: User, alarm_id: int, request: AlarmToggleRequest) -> AlarmResponse:
-        """알람 온/오프 토글"""
-        alarm = await Alarm.get_or_none(id=alarm_id, user=user).prefetch_related("current_med")
+        alarm = await Alarm.get_or_none(id=alarm_id, user=user)
         if not alarm:
             raise ValueError("알람을 찾을 수 없습니다.")
+        await alarm.fetch_related("current_med")
 
         alarm.is_active = request.is_active
         await alarm.save()
@@ -77,13 +79,12 @@ class AlarmService:
         return AlarmResponse(
             id=alarm.id,
             medication_name=alarm.current_med.medication_name if alarm.current_med else "알 수 없음",
-            alarm_time=alarm.alarm_time.strftime("%H:%M"),
+            alarm_time=self._format_time(alarm.alarm_time),
             is_active=alarm.is_active,
             current_med_id=alarm.current_med.id if alarm.current_med else 0,
         )
 
     async def delete_alarm(self, user: User, alarm_id: int) -> None:
-        """알람 삭제"""
         alarm = await Alarm.get_or_none(id=alarm_id, user=user)
         if not alarm:
             raise ValueError("알람을 찾을 수 없습니다.")

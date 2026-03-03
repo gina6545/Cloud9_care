@@ -54,10 +54,20 @@ class DefaultData:
             user=user,
             defaults={"added_from": "PILL_SCAN", "start_date": date(2026, 3, 1)},
         )
+        current_med2, _ = await CurrentMed.get_or_create(
+            medication_name="메트포로민 500mg",
+            user=user,
+            defaults={"added_from": "PILL_SCAN", "start_date": date(2025, 2, 1)},
+        )
 
         # 4. 알림 및 알림 내역 생성
         alarm, _ = await Alarm.get_or_create(
             current_med=current_med, user=user, defaults={"alarm_time": time(9, 0, 0), "is_active": True}
+        )
+        await AlarmHistory.get_or_create(alarm=alarm, defaults={"is_confirmed": True})
+
+        alarm, _ = await Alarm.get_or_create(
+            current_med=current_med2, user=user, defaults={"alarm_time": time(12, 0, 0), "is_active": True}
         )
         await AlarmHistory.get_or_create(alarm=alarm, defaults={"is_confirmed": True})
 
