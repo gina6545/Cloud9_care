@@ -1,10 +1,16 @@
 from typing import TYPE_CHECKING
-
+from enum import Enum
 from tortoise import fields, models
 
 if TYPE_CHECKING:
     from app.models.user import User
 
+class DoseTime(str, Enum):
+    BREAKFAST = "아침"
+    LUNCH = "점심"
+    DINNER = "저녁"
+    BEFORE_BEDTIME = "취침 전"
+    UNKNOWN = "UNKNOWN"
 
 class CurrentMed(models.Model):
     """
@@ -15,8 +21,14 @@ class CurrentMed(models.Model):
     id = fields.IntField(pk=True)
     # 승인된 약물 이름 (여기 데이터가 RAG의 핵심 소스)
     medication_name = fields.CharField(max_length=255)
+    one_dose = fields.CharField(max_length=255) # 1회 복용량
+    one_dose = fields.CharField(max_length=255) #1일 복용 횟수
+    one_dose_count = fields.CharField(max_length=255) # 1회 복용량
+    dose_time = fields.CharEnumField(
+        DoseTime, description="복용 시간"
+    )
     added_from = fields.CharField(max_length=20)  # 출처 (OCR_PRESCRIPTION, PILL_SCAN 등)
-    start_date = fields.DateField()  # 복용 시작 시점
+    start_date = fields.CharField(max_length=255)  # 복용 시작 시점
     user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="current_meds")
 
     class Meta:
