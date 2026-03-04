@@ -107,8 +107,12 @@ class DefaultData:
 
         # 6. 처방전 및 처방 약물 생성 (기존 유지)
         presc_upload, _ = await Upload.get_or_create(
-            file_url="/static/prescription_sample.png", file_type="png", category="prescription", user=user
+            file_path="/static/prescription_sample.png",
+            file_type="png",
+            category="prescription",
+            user=user,
         )
+
         prescription, _ = await Prescription.get_or_create(
             user=user,
             upload=presc_upload,
@@ -167,10 +171,10 @@ class DefaultData:
 
         # 9. 알약 식별 이력 (기존 유지)
         upload_front, _ = await Upload.get_or_create(
-            file_url="/static/pill_front.png", file_type="png", category="pill_front", user=user
+            file_path="/static/pill_front.png", file_type="png", category="pill_front", user=user
         )
         upload_back, _ = await Upload.get_or_create(
-            file_url="/static/pill_back.png", file_type="png", category="pill_back", user=user
+            file_path="/static/pill_back.png", file_type="png", category="pill_back", user=user
         )
         cnn_history, _ = await CNNHistory.get_or_create(
             user=user,
@@ -202,26 +206,27 @@ class DefaultData:
         )
 
         # 10. 건강 프로필 생성 (health_profiles) - [MODIFIED] weight_change, exercise_frequency 값 조정
-        await HealthProfile.get_or_create(
-            user=user,
-            defaults={
-                "family_history": True,
-                "family_history_father_note": "고혈압",
-                "family_history_mother_note": "당뇨",
-                "height_cm": 175.5,
-                "weight_kg": 72.0,
-                "weight_change": WeightChange.NO_CHANGE,
-                "sleep_hours": 7.0,
-                "sleep_change": SleepChange.NO_CHANGE,
-                "job": "개발자",
-                "smoking_status": SmokingStatus.NEVER,
-                "drinking_status": DrinkingStatus.CURRENT,
-                "drinking_years": 5,
-                "drinking_per_week": 1.5,
-                "exercise_frequency": ExerciseFrequency.WEEK_3_OR_MORE,
-                "diet_type": DietType.BALANCED,
-            },
-        )
+        health_profile_defaults = {
+            "family_history": True,
+            "family_history_father_note": "고혈압",
+            "family_history_mother_note": "당뇨",
+            "height_cm": 175.5,
+            "weight_kg": 72.0,
+            "weight_change": WeightChange.NO_CHANGE,
+            "sleep_hours": 7.0,
+            "sleep_change": SleepChange.NO_CHANGE,
+            "job": "개발자",
+            "smoking_status": SmokingStatus.NEVER,
+            "drinking_status": DrinkingStatus.CURRENT,
+            "drinking_years": 5,
+            "drinking_per_week": 1.5,
+            "exercise_frequency": ExerciseFrequency.WEEK_3_OR_MORE,
+            "diet_type": DietType.BALANCED,
+        }
+        hp, created = await HealthProfile.get_or_create(user=user, defaults=health_profile_defaults)
+        if not created:
+            # 필드 강제 업데이트 (새로 추가된 필드 반영을 위해)
+            await hp.update_from_dict(health_profile_defaults).save()
 
         # 11. 혈압 기록 생성 (blood_pressure_records) - [MODIFIED] 더 많은 기록 추가
         bp_records = [
@@ -232,8 +237,13 @@ class DefaultData:
             {"systolic": 125, "diastolic": 82, "pulse": 75, "recorded_at": datetime.now() - timedelta(days=1)},
             {"systolic": 118, "diastolic": 78, "pulse": 70, "recorded_at": datetime.now()},
         ]
-        for bp in bp_records:
-            await BloodPressureRecord.create(user=user, **bp)
+        existing_bp = await BloodPressureRecord.filter(user=user).count()
+
+        if existing_bp == 0:
+            for bp in bp_records:
+                await BloodPressureRecord.create(user=user, **bp)
+        else:
+            print("BloodPressureRecord already exists. Skipping creation.")
 
         # 12. 혈당 기록 생성 (blood_sugar_records) - [MODIFIED] 더 많은 기록 추가
         bs_records = [
@@ -268,8 +278,13 @@ class DefaultData:
                 "recorded_at": datetime.now(),
             },
         ]
-        for bs in bs_records:
-            await BloodSugarRecord.create(user=user, **bs)
+        existing_bs = await BloodSugarRecord.filter(user=user).count()
+
+        if existing_bs == 0:
+            for bs in bs_records:
+                await BloodSugarRecord.create(user=user, **bs)
+        else:
+            print("BloodSugarRecord already exists. Skipping creation.")
 
         # 14. 시스템 로그 생성
         # await SystemLog.create(

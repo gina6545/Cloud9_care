@@ -20,5 +20,5 @@ class HealthProfileRepository:
         Returns:
             HealthProfile | None: 사용자 객체 또는 없음
         """
-        health_profile: HealthProfile | None = await self._model.get_or_none(user_id=user_id)  # type: ignore[assignment]
+        health_profile: HealthProfile | None = await self._model.filter(user_id=user_id).first()
         return health_profile

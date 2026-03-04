@@ -5,12 +5,6 @@
 {% block head %}
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
-
-    .guide-page-container {
-        font-family: 'Pretendard', sans-serif;
-    }
-
     .glassmorphism {
         background: rgba(255, 255, 255, 0.75);
         backdrop-filter: blur(12px);
@@ -53,11 +47,11 @@
 {% endblock %}
 
 {% block content %}
-<div class="guide-page-container">
-    <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl shadow-sm">
-        <h2 class="text-xl font-bold text-gray-700">생활 안내 가이드</h2>
-        <div class="flex items-center gap-4 text-sm font-semibold text-gray-500">
-            <span class="text-indigo-600 border-b-2 border-indigo-600 pb-1">맞춤 가이드</span>
+<div class="guide-page-container p-8">
+    <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <h2 class="text-2xl font-bold text-gray-800">생활 안내 가이드</h2>
+        <div class="flex items-center gap-6 text-sm font-semibold text-gray-500">
+            <span class="text-indigo-600 border-b-2 border-indigo-600 pb-2 cursor-pointer">맞춤 가이드</span>
             <span class="hover:text-indigo-600 transition cursor-pointer">기록 확인</span>
         </div>
     </div>
@@ -93,13 +87,57 @@
                     </div>
                 </div>
 
+                <!-- Physical Info -->
+                <div class="bg-white/50 p-5 rounded-2xl border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-1.5 h-6 bg-emerald-400 rounded-full"></span>
+                        <h3 class="font-bold text-gray-700">신체 정보</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm" id="physical-info-container">
+                        <div class="bg-white/60 p-3 rounded-xl border border-gray-50">
+                            <p class="text-[10px] text-gray-400 font-bold mb-1">HEIGHT/WEIGHT</p>
+                            <p class="font-bold text-gray-700" id="height-weight-text">-</p>
+                        </div>
+                        <div class="bg-white/60 p-3 rounded-xl border border-gray-50">
+                            <p class="text-[10px] text-gray-400 font-bold mb-1">BMI</p>
+                            <p class="font-bold text-gray-700" id="bmi-text">-</p>
+                        </div>
+                        <div class="bg-white/60 p-3 rounded-xl border border-gray-50 col-span-2">
+                            <p class="text-[10px] text-gray-400 font-bold mb-1">SLEEP</p>
+                            <p class="font-bold text-gray-700" id="sleep-text">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Life Habits -->
+                <div class="bg-white/50 p-5 rounded-2xl border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-1.5 h-6 bg-purple-400 rounded-full"></span>
+                        <h3 class="font-bold text-gray-700">생활 습관</h3>
+                    </div>
+                    <div class="space-y-3 text-sm" id="habits-container">
+                        <div class="flex justify-between items-center py-1 border-b border-gray-50">
+                            <span class="text-gray-500">흡연/음주</span>
+                            <span class="font-bold text-gray-700" id="smoking-drinking-text">-</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1 border-b border-gray-50">
+                            <span class="text-gray-500">운동 빈도</span>
+                            <span class="font-bold text-gray-700" id="exercise-text">-</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-500">식습관</span>
+                            <span class="font-bold text-gray-700 text-right" id="diet-text">-</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Active Medications -->
                 <div class="bg-white/50 p-5 rounded-2xl border border-gray-100">
                     <div class="flex items-center gap-2 mb-4">
                         <span class="w-1.5 h-6 bg-indigo-400 rounded-full"></span>
                         <h3 class="font-bold text-gray-700">현재 복용 약</h3>
                     </div>
-                    <div id="medication-container" class="min-h-[100px]">
+                    <div id="medication-container" class="min-h-[60px]">
                         <div class="space-y-2.5" id="medication-list"></div>
                     </div>
                 </div>
@@ -218,7 +256,7 @@
     });
 
     // State
-    let currentStatus = { diseases: [], allergies: [], meds: [] };
+    let currentStatus = { diseases: [], allergies: [], meds: [], profile: null };
     let guideData = null;
     let isSpeaking2 = false;
     const synthesis2 = window.speechSynthesis;
@@ -269,15 +307,16 @@
         }
 
         try {
-            const healthRes = await fetchWithAuth(`/api/v1/health?id=?id=${encodeURIComponent(id)}`, { method: 'GET' });
+            const healthRes = await fetchWithAuth(`/api/v1/health`, { method: 'GET' });
 
-             if (!healthRes || !healthRes.ok) throw new Error("Fetch failed");
+            if (!healthRes || !healthRes.ok) throw new Error("Fetch failed");
             const health = await healthRes.json();
 
             // ✅ Unpack consolidated response
             currentStatus.diseases = health.chronic_diseases || [];
             currentStatus.allergies = health.allergies || [];
             currentStatus.meds = health.current_meds || [];
+            currentStatus.profile = health.health_profile || null;
 
             renderHealthProfile();
         } catch (err) {
@@ -285,6 +324,7 @@
             currentStatus.diseases = [];
             currentStatus.allergies = [];
             currentStatus.meds = [];
+            currentStatus.profile = null;
             renderHealthProfile();
         }
     }
@@ -314,22 +354,62 @@
         const diseaseList = document.getElementById('chronic-disease-list');
         diseaseList.innerHTML =
             currentStatus.diseases.length > 0
-                ? currentStatus.diseases.map(d => `<li>${d.disease_name}</li>`).join('')
-                : '<li class="text-gray-400">등록된 질환이 없습니다.</li>';
+                ? currentStatus.diseases.map(d => `<li class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-100">${d.disease_name}</li>`).join('')
+                : '<li class="text-gray-400 text-xs italic">등록된 질환이 없습니다.</li>';
 
         const allergyList = document.getElementById('allergy-list');
-
         allergyList.innerHTML =
             currentStatus.allergies.length > 0
-                ? currentStatus.allergies.map(a => `<li>${a.any_allergy}</li>`).join('')
-                : '<li class="text-gray-400">등록된 알레르기가 없습니다.</li>';
+                ? currentStatus.allergies.map(a => `<li class="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-100">${a.any_allergy}</li>`).join('')
+                : '<li class="text-gray-400 text-xs italic">등록된 알레르기가 없습니다.</li>';
 
         const medList = document.getElementById('medication-list');
-
         medList.innerHTML =
             currentStatus.meds.length > 0
-                ? currentStatus.meds.map(m => `<li>${m.medication_name}</li>`).join('')
-                : '<li class="text-gray-400">등록된 약물이 없습니다.</li>';
+                ? currentStatus.meds.map(m => `
+                    <div class="flex justify-between items-center p-2.5 bg-indigo-50/30 rounded-xl border border-indigo-100/50">
+                        <span class="text-sm font-bold text-indigo-900">${m.medication_name}</span>
+                        <span class="text-[10px] text-indigo-400 font-medium">${m.start_date || '기록없음'}</span>
+                    </div>`).join('')
+                : '<p class="text-gray-400 text-xs italic text-center py-2">등록된 약물이 없습니다.</p>';
+
+        // Render Profile Details
+        const prof = currentStatus.profile;
+        if (prof) {
+            // Physical Info
+            const hwText = document.getElementById('height-weight-text');
+            hwText.innerText = (prof.height_cm && prof.weight_kg)
+                ? `${prof.height_cm}cm / ${prof.weight_kg}kg`
+                : '-';
+
+            const bmiText = document.getElementById('bmi-text');
+            if (prof.height_cm && prof.weight_kg) {
+                const bmi = (prof.weight_kg / ((prof.height_cm / 100) ** 2)).toFixed(1);
+                let status = '';
+                if (bmi < 18.5) status = '(저체중)';
+                else if (bmi < 23) status = '(정상)';
+                else if (bmi < 25) status = '(과체중)';
+                else status = '(비만)';
+                bmiText.innerHTML = `${bmi} <span class="text-[10px] font-normal">${status}</span>`;
+            } else {
+                bmiText.innerText = '-';
+            }
+
+            const sleepText = document.getElementById('sleep-text');
+            sleepText.innerText = prof.sleep_hours ? `${prof.sleep_hours}시간/일 (${prof.sleep_change || '변화없음'})` : '-';
+
+            // Habits
+            const sdText = document.getElementById('smoking-drinking-text');
+            const smoke = prof.smoking_status === 'NEVER' ? '비흡연' : '흡연';
+            const drink = prof.drinking_status === 'NEVER' ? '비음주' : '음주';
+            sdText.innerText = `${smoke} / ${drink}`;
+
+            const exText = document.getElementById('exercise-text');
+            exText.innerText = prof.exercise_frequency || '-';
+
+            const dietText = document.getElementById('diet-text');
+            dietText.innerText = prof.diet_type || '-';
+        }
     }
 
     function renderGuide() {

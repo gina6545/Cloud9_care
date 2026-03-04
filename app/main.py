@@ -1,16 +1,31 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.apis.v1 import api_v1_router
-from app.core.logger import logging
 from app.db.databases import initialize_tortoise
+from app.utils.default_data import DefaultData
 
 app = FastAPI(
     default_response_class=ORJSONResponse, docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/openapi.json"
 )
 initialize_tortoise(app)
+
+logger = logging.getLogger("seed")
+
+
+# startup 이벤트 함수 추가
+@app.on_event("startup")
+async def seed_default_data():
+    logger.warning("🔥🔥🔥 [startup] seed_default_data called")
+    try:
+        await DefaultData().create_default_data()
+        logger.warning("✅✅✅ Default data population completed successfully.")
+    except Exception:
+        logger.exception("⚠️⚠️⚠️ Default data population failed")
 
 
 # Tortoise-ORM의 SQL 로그를 활성화

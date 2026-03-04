@@ -5,6 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Cloud9 Care{% endblock %}</title>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
     <link rel="stylesheet" href="/static/chatbot.css">
     {% block head %}{% endblock %}
     <style>
@@ -12,13 +14,16 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
         }
 
         body {
             height: 100vh;
             background: #f7f7f7;
             overflow: hidden;
+            font-size: 15px;
+            color: #334155;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* ===== HEADER ===== */
@@ -340,47 +345,67 @@
 
         /* ===== SIDEBAR ===== */
         .sidebar {
-            width: 220px;
-            border-right: 1px solid #ccc;
+            width: 240px;
+            /* 약간 넓힘 */
+            border-right: 1px solid #e2e8f0;
             background: #fff;
-            padding: 16px;
+            padding: 20px 16px;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
         }
 
+        /* SPECIFICITY BOOST: Tailwind Preflight 방지 */
+        .sidebar a button,
         .sidebar button {
-            margin-bottom: 10px;
-            padding: 8px;
-            border: 1px solid #333;
-            background: #fff;
-            cursor: pointer;
-            width: 100%;
-            text-align: center;
+            margin-bottom: 8px;
+            padding: 12px 16px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #fff !important;
+            cursor: pointer !important;
+            width: 100% !important;
+            text-align: center !important;
+            font-size: 14px !important;
+            line-height: 1.2 !important;
+            font-family: "Pretendard Variable", Pretendard, sans-serif !important;
+            color: #475569 !important;
+            border-radius: 10px !important;
+            transition: all 0.2s ease !important;
+            font-weight: 500 !important;
+            display: block !important;
+        }
+
+        .sidebar button:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
         }
 
         .sidebar a {
-            text-decoration: none;
-            color: inherit;
+            text-decoration: none !important;
+            display: block;
+            width: 100%;
         }
 
         .sidebar-footer {
             margin-top: auto;
         }
 
+        /* Active button style (SPECIFICITY BOOST) */
+        .sidebar button.nav-active {
+            background: #eff6ff !important;
+            border-color: #3b82f6 !important;
+            color: #2563eb !important;
+            font-weight: 700 !important;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1) !important;
+        }
+
         /* ===== MAIN ===== */
         .main {
             flex: 1;
-            padding: 24px;
+            padding: 0;
+            /* 각 페이지에서 p-6 등으로 처리 권장, 일관성을 위해 0으로 조정 */
             overflow-y: auto;
-            background: #f7f7f7;
-        }
-
-        /* Active button style */
-        .nav-active {
-            background: #eef2ff !important;
-            border-color: #4f46e5 !important;
-            font-weight: bold !important;
+            background: #f8fafc;
         }
     </style>
 </head>
@@ -425,7 +450,8 @@
                     및 약물</button>
             </a>
             <a href="/health-profile">
-                <button class="health-profile {% if request.url.path == '/health-profile' %}nav-active{% endif %}">건강정보</button>
+                <button
+                    class="health-profile {% if request.url.path == '/health-profile' %}nav-active{% endif %}">건강정보</button>
             </a>
 
             <div class="sidebar-footer">
