@@ -102,8 +102,7 @@ class HealthProfileService:
         if request.chronic_diseases:
             # DTO 필드명(name, when_to_Diagnose)을 모델 필드명(disease_name, when_to_diagnose)으로 매핑
             cd_data = [
-                {"disease_name": cd.name, "when_to_diagnose": cd.when_to_Diagnose}
-                for cd in request.chronic_diseases
+                {"disease_name": cd.name, "when_to_diagnose": cd.when_to_Diagnose} for cd in request.chronic_diseases
             ]
             await self.chronic_disease_repo.create_many(user_id, cd_data)
 

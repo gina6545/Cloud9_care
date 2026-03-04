@@ -34,9 +34,9 @@ class AllergyListResponse(BaseModel):
 
 
 class AllergySaveRequest(BaseModel):
-    category: str                      # 필수
-    allergy_name: str                  # 필수
-    symptom: str | None = None      # 선택
+    category: str  # 필수
+    allergy_name: str  # 필수
+    symptom: str | None = None  # 선택
 
 
 class BloodPressureRecordResponse(BaseModel):
@@ -71,8 +71,8 @@ class CurrentMedResponse(BaseModel):
 
 
 class CurrentMedSaveRequest(BaseModel):
-    medication_name: str          # 필수
-    dose_time: str                # 필수
+    medication_name: str  # 필수
+    dose_time: str  # 필수
     one_dose: str | None = None
     one_dose_count: str | None = None
     added_from: str | None = None

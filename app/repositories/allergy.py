@@ -23,6 +23,7 @@ class AllergyRepository:
             list[Allergy]: 알러지 객체 리스트
         """
         return cast(list[Allergy], await self._model.filter(user_id=user_id).all())
+
     async def delete_by_user_id(self, user_id: str):
         """
         사용자 아이디에 해당하는 모든 알러지 정보를 삭제합니다.

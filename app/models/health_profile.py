@@ -6,10 +6,12 @@ from tortoise import fields, models
 if TYPE_CHECKING:
     from app.models.user import User
 
+
 class FamilyHistory(str, Enum):
-    NO = '없음'
-    MAN = '부 있음'
-    WOMAN = '모 있음'
+    NO = "없음"
+    MAN = "부 있음"
+    WOMAN = "모 있음"
+
 
 class SmokingStatus(str, Enum):
     NEVER = "비흡연"
@@ -28,6 +30,7 @@ class WeightChange(str, Enum):
     GAIN = "증가"
     LOSS = "감소"
     UNKNOWN = "모름"
+
 
 class SleepChange(str, Enum):
     NO_CHANGE = "변화없음"
@@ -92,9 +95,7 @@ class HealthProfile(models.Model):
     drinking_per_week = fields.FloatField(null=True, description="주 평균 음주량(팀 기준 단위 통일)")
 
     # 생활습관 - 운동/식습관 (enum)
-    exercise_frequency = fields.CharEnumField(
-        ExerciseFrequency, description="운동 빈도"
-    )
+    exercise_frequency = fields.CharEnumField(ExerciseFrequency, description="운동 빈도")
     diet_type = fields.CharEnumField(DietType, description="식습관 유형")
 
     created_at = fields.DatetimeField(auto_now_add=True)

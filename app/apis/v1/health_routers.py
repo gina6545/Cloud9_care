@@ -36,6 +36,7 @@ async def update_health_profile(
     service = HealthProfileService()
     return await service.generate_health_profile(user)
 
+
 @health_router.post("/blood-sugar")
 async def create_blood_sugar(
     request: BloodSugarRequest,

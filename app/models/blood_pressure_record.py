@@ -6,10 +6,12 @@ from tortoise import fields, models
 if TYPE_CHECKING:
     from app.models.user import User
 
+
 class RecordTime(str, Enum):
     MORNING = "아침"
     DINNER = "저녁"
     RANDOM = "임의"
+
 
 class BloodPressureRecord(models.Model):
     """

@@ -23,6 +23,7 @@ class CurrentMedRepository:
             list[CurrentMed]: 현재 복용 약물 리스트
         """
         return cast(list[CurrentMed], await self._model.filter(user_id=user_id).all())
+
     async def delete_by_user_id(self, user_id: str):
         """
         사용자 아이디에 해당하는 모든 복용 약물 정보를 삭제합니다.
