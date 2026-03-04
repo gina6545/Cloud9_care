@@ -72,6 +72,8 @@ class HealthProfileDetailResponse(BaseModel):
     height_cm: float | None
     weight_kg: float | None
     weight_change: str
+    sleep_hours: float | None
+    sleep_change: str
     job: str | None
     smoking_status: str
     smoking_years: int | None
