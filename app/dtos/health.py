@@ -140,7 +140,6 @@ class BloodPressureRequest(BaseModel):
 
 
 class FullHealthProfileSaveRequest(BaseModel):
-
     # 기본 건강 정보
     family_history: str
     family_history_note: str | None = None

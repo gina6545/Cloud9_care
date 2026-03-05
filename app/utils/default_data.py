@@ -96,11 +96,46 @@ class DefaultData:
         ]
 
         pill_pool = [
-            {"name": "타이레놀정 500mg", "dose": "500mg", "count": "1정", "freq": "3회", "time": DoseTime.LUNCH, 'from': AddedFrom.HOSPITAL},
-            {"name": "메트포르민 500mg", "dose": "500mg", "count": "1정", "freq": "2회", "time": DoseTime.MORNING, 'from': AddedFrom.PHARMACY},
-            {"name": "아모디핀정 5mg", "dose": "5mg", "count": "1정", "freq": "1회", "time": DoseTime.MORNING, 'from': AddedFrom.UNKNOWN},
-            {"name": "고지혈정 10mg", "dose": "10mg", "count": "1정", "freq": "1회", "time": DoseTime.MORNING, 'from': AddedFrom.PHARMACY},
-            {"name": "비타민C 1000mg", "dose": "1000mg", "count": "1정", "freq": "1회", "time": DoseTime.DINNER, 'from': AddedFrom.UNKNOWN},
+            {
+                "name": "타이레놀정 500mg",
+                "dose": "500mg",
+                "count": "1정",
+                "freq": "3회",
+                "time": DoseTime.LUNCH,
+                "from": AddedFrom.HOSPITAL,
+            },
+            {
+                "name": "메트포르민 500mg",
+                "dose": "500mg",
+                "count": "1정",
+                "freq": "2회",
+                "time": DoseTime.MORNING,
+                "from": AddedFrom.PHARMACY,
+            },
+            {
+                "name": "아모디핀정 5mg",
+                "dose": "5mg",
+                "count": "1정",
+                "freq": "1회",
+                "time": DoseTime.MORNING,
+                "from": AddedFrom.UNKNOWN,
+            },
+            {
+                "name": "고지혈정 10mg",
+                "dose": "10mg",
+                "count": "1정",
+                "freq": "1회",
+                "time": DoseTime.MORNING,
+                "from": AddedFrom.PHARMACY,
+            },
+            {
+                "name": "비타민C 1000mg",
+                "dose": "1000mg",
+                "count": "1정",
+                "freq": "1회",
+                "time": DoseTime.DINNER,
+                "from": AddedFrom.UNKNOWN,
+            },
         ]
 
         disease_pool = [
@@ -111,9 +146,9 @@ class DefaultData:
         ]
 
         allergy_pool = [
-            {'allergy_type': "any", 'allergy_name': "꽃가루", "symptom": "두드러기, 가려움증"},
-            {'allergy_type': "any", 'allergy_name': "먼지", "symptom": "재채기, 콧물"},
-            {'allergy_type': "any", 'allergy_name': "고양이 털", "symptom": "호흡곤란, 부종"},
+            {"allergy_type": "any", "allergy_name": "꽃가루", "symptom": "두드러기, 가려움증"},
+            {"allergy_type": "any", "allergy_name": "먼지", "symptom": "재채기, 콧물"},
+            {"allergy_type": "any", "allergy_name": "고양이 털", "symptom": "호흡곤란, 부종"},
         ]
 
         for uinfo in users_info:
@@ -157,7 +192,7 @@ class DefaultData:
             await Allergy.get_or_create(
                 user=user,
                 allergy_type=a["allergy_type"],
-                allergy_name=a['allergy_name'],
+                allergy_name=a["allergy_name"],
                 symptom=a["symptom"],
             )
 
@@ -180,7 +215,7 @@ class DefaultData:
                     "daily_dose_count": p["freq"],
                     "one_dose_count": p["count"],
                     "dose_time": p["time"],
-                    "added_from": p['from'],
+                    "added_from": p["from"],
                     "start_date": (datetime.now() - timedelta(days=30)).strftime("%Y-%m"),
                 },
             )
@@ -199,15 +234,15 @@ class DefaultData:
         hp_hash = abs(hash(user.id))
         health_profile_defaults = {
             "family_history": FamilyHistory.MAN if hp_hash % 2 == 0 else FamilyHistory.NO,
-            'family_history_note': '암',
+            "family_history_note": "암",
             "height_cm": 160.0 + (hp_hash % 20),
             "weight_kg": 50.0 + (hp_hash % 30),
             "weight_change": WeightChange.NO_CHANGE,
             "sleep_hours": 7.0,
             "sleep_change": SleepChange.NO_CHANGE,
             "smoking_status": SmokingStatus.NEVER,
-            'smoking_years': 10,
-            'smoking_per_week': 1,
+            "smoking_years": 10,
+            "smoking_per_week": 1,
             "drinking_status": DrinkingStatus.NEVER,
             "drinking_years": 5,
             "drinking_per_week": 1,
