@@ -1,6 +1,5 @@
 import json
 import logging
-from datetime import datetime, timedelta
 
 from openai import AsyncOpenAI
 
@@ -36,14 +35,14 @@ class DashboardService:
             # 3. 프롬프트 구성
             context = f"""
 사용자 건강 정보:
-- 신장: {health_profile.height_cm if health_profile else 'N/A'}cm
-- 체중: {health_profile.weight_kg if health_profile else 'N/A'}kg
-- 흡연: {health_profile.smoking_status if health_profile else 'N/A'}
-- 음주: {health_profile.drinking_status if health_profile else 'N/A'}
-- 운동: {health_profile.exercise_frequency if health_profile else 'N/A'}
-- 식습관: {health_profile.diet_type if health_profile else 'N/A'}
-- 최근 7일 평균 혈압: {bp_avg or 'N/A'}
-- 최근 7일 평균 혈당: {f'{bs_avg:.0f}' if bs_avg else 'N/A'} mg/dL
+- 신장: {health_profile.height_cm if health_profile else "N/A"}cm
+- 체중: {health_profile.weight_kg if health_profile else "N/A"}kg
+- 흡연: {health_profile.smoking_status if health_profile else "N/A"}
+- 음주: {health_profile.drinking_status if health_profile else "N/A"}
+- 운동: {health_profile.exercise_frequency if health_profile else "N/A"}
+- 식습관: {health_profile.diet_type if health_profile else "N/A"}
+- 최근 7일 평균 혈압: {bp_avg or "N/A"}
+- 최근 7일 평균 혈당: {f"{bs_avg:.0f}" if bs_avg else "N/A"} mg/dL
 
 위 정보를 바탕으로 사용자에게 도움이 될 만한 건강 생활 팁 3개를 한 문장씩 작성해주세요.
 각 문장은 50자 이내여야 하고, 긍정적이고 실행 가능한 조언이어야 합니다.

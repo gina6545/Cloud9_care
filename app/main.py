@@ -70,7 +70,8 @@ async def dashboard(request: Request):
     대시보드. 로그인한 사용자만 접근 가능.
     """
     r = require_login(request)
-    if r: return r
+    if r:
+        return r
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
@@ -94,7 +95,8 @@ async def read_mypage(request: Request):
     사용자 마이페이지(정보 수정, 비밀번호 변경 등)를 반환합니다.
     """
     r = require_login(request)
-    if r: return r
+    if r:
+        return r
     return templates.TemplateResponse("mypage.html", {"request": request})
 
 
@@ -112,7 +114,8 @@ async def read_guide(request: Request):
     생활 안내 가이드 페이지를 반환합니다.
     """
     r = require_login(request)
-    if r: return r
+    if r:
+        return r
     return templates.TemplateResponse("guide.html", {"request": request})
 
 
@@ -122,7 +125,8 @@ async def read_alarm(request: Request):
     복용 알람 페이지를 반환합니다.
     """
     r = require_login(request)
-    if r: return r
+    if r:
+        return r
     return templates.TemplateResponse("alarm.html", {"request": request})
 
 
@@ -132,7 +136,8 @@ async def read_prescription_upload(request: Request):
     처방전 및 약물 업로드 페이지를 반환합니다.
     """
     r = require_login(request)
-    if r: return r
+    if r:
+        return r
     return templates.TemplateResponse("prescription_upload.html", {"request": request})
 
 
@@ -142,7 +147,8 @@ async def read_health_profile(request: Request):
     건강 정보 통합 관리 페이지를 반환합니다.
     """
     r = require_login(request)
-    if r: return r
+    if r:
+        return r
     return templates.TemplateResponse("health_profile_save.html", {"request": request})
 
 
@@ -152,7 +158,8 @@ async def read_blood_pressure(request: Request):
     혈압 기록 페이지를 반환합니다.
     """
     r = require_login(request)
-    if r: return r
+    if r:
+        return r
     return templates.TemplateResponse("blood_pressure_save.html", {"request": request})
 
 
@@ -162,7 +169,8 @@ async def read_blood_sugar(request: Request):
     혈당 기록 페이지를 반환합니다.
     """
     r = require_login(request)
-    if r: return r
+    if r:
+        return r
     return templates.TemplateResponse("blood_sugar_save.html", {"request": request})
 
 

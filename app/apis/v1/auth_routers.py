@@ -2,7 +2,8 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
-from fastapi.responses import ORJSONResponse as Response, JSONResponse
+from fastapi.responses import JSONResponse
+from fastapi.responses import ORJSONResponse as Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core import config
