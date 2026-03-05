@@ -1,7 +1,15 @@
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
-
+from app.models.health_profile import (
+    DietType,
+    DrinkingStatus,
+    ExerciseFrequency,
+    FamilyHistory,
+    SleepChange,
+    SmokingStatus,
+    WeightChange,
+)
 
 class ChronicDiseaseResponse(BaseModel):
     id: int
@@ -24,7 +32,7 @@ class AllergyResponse(BaseModel):
     id: int
     allergy_name: str | None = None
     symptom: str | None = None
-    category: str | None = None
+    allergy_type: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,7 +42,7 @@ class AllergyListResponse(BaseModel):
 
 
 class AllergySaveRequest(BaseModel):
-    category: str  # 필수
+    allergy_type: str  # 필수
     allergy_name: str  # 필수
     symptom: str | None = None  # 선택
 
@@ -64,8 +72,8 @@ class CurrentMedResponse(BaseModel):
     one_dose: str | None = None
     one_dose_count: str | None = None
     dose_time: str | None = None
-    added_from: str
-    start_date: str
+    added_from: str | None = None
+    start_date: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -81,13 +89,30 @@ class CurrentMedSaveRequest(BaseModel):
 
 class HealthProfileDetailResponse(BaseModel):
     id: int
-    height_cm: float | None = None
-    weight_kg: float | None = None
-    weight_change: str
-    smoking_status: str
-    drinking_status: str
-    exercise_frequency: str
-    diet_type: str
+
+    family_history: FamilyHistory
+    family_history_note: str | None = None
+
+    height_cm: float
+    weight_kg: float
+    weight_change: WeightChange
+
+    sleep_hours: float | None = None
+    sleep_change: SleepChange
+
+    smoking_status: SmokingStatus
+    smoking_years: int | None = None
+    smoking_per_week: float | None = None
+
+    drinking_status: DrinkingStatus
+    drinking_years: int | None = None
+    drinking_per_week: float | None = None
+
+    exercise_frequency: ExerciseFrequency
+    diet_type: DietType
+
+    created_at: datetime
+    updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -113,6 +138,7 @@ class BloodPressureRequest(BaseModel):
 
 
 class FullHealthProfileSaveRequest(BaseModel):
+
     # 기본 건강 정보
     family_history: str
     family_history_note: str | None = None
