@@ -12,7 +12,7 @@ from app.utils.common import redis_client
 
 # OAuth2PasswordBearer specifies that the client must send the token in an Authorization header with Bearer scheme.
 # The tokenUrl points to the login endpoint (relative to the API root).
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 async def get_request_user(token: Annotated[str, Depends(oauth2_scheme)]) -> User:

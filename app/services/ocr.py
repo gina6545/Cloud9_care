@@ -4,8 +4,6 @@ import time
 import uuid
 from typing import TYPE_CHECKING
 
-import httpx
-
 if TYPE_CHECKING:
     from pypdf import PdfReader
 else:
@@ -14,7 +12,11 @@ else:
     except ImportError:
         PdfReader = None  # type: ignore
 
+from fastapi import HTTPException, status
+
 from app.core import config
+from app.core.http_client import http_client
+from app.core.logger import default_logger
 from app.dtos.ocr import DrugInfo, OCRExtractResponse, PillAnalyzeResponse, PillCandidate
 
 
@@ -48,7 +50,7 @@ class OCRService:
             if len(native_text.strip()) > 50:
                 return native_text.strip()
         except Exception as e:
-            print(f"Native PDF extraction failed for {file_name}: {e}")
+            default_logger.error(f"Native PDF extraction failed for {file_name}: {e}")
         return None
 
     async def _extract_clova_ocr_text(self, image_bytes: bytes, file_name: str, file_ext: str) -> str:
@@ -57,7 +59,10 @@ class OCRService:
         secret_key = config.CLOVA_OCR_SECRET_KEY
 
         if not invoke_url or not secret_key:
-            return "Naver Clova OCR 설정이 누락되었습니다."
+            default_logger.error("Naver Clova OCR configuration is missing (URL or Secret Key).")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="OCR 서비스 설정이 누락되었습니다."
+            )
 
         request_json = {
             "images": [{"format": file_ext.replace(".", ""), "name": file_name}],
@@ -71,20 +76,29 @@ class OCRService:
         files = {"file": (file_name, image_bytes)}
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(invoke_url, headers=headers, data=payload, files=files, timeout=30.0)
-                if response.status_code != 200:
-                    return f"OCR API 오류: {response.text}"
+            client = http_client.client
+            response = await client.post(invoke_url, headers=headers, data=payload, files=files, timeout=30.0)
 
-                res_data = response.json()
-                all_text = []
-                for image in res_data.get("images", []):
-                    for field in image.get("fields", []):
-                        all_text.append(field.get("inferText", ""))
-                        all_text.append(" ")
-                return "".join(all_text).strip()
+            if response.status_code != 200:
+                default_logger.error(f"Naver Clova OCR API failed with status {response.status_code}: {response.text}")
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY, detail=f"OCR API 호출 실패: {response.status_code}"
+                )
+
+            res_data = response.json()
+            all_text = []
+            for image in res_data.get("images", []):
+                for field in image.get("fields", []):
+                    all_text.append(field.get("inferText", ""))
+                    all_text.append(" ")
+            return "".join(all_text).strip()
+        except HTTPException:
+            raise
         except Exception as e:
-            return f"OCR 요청 중 예외 발생: {str(e)}"
+            default_logger.exception(f"Unexpected error during OCR processing for {file_name}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"OCR 처리 중 오류 발생: {str(e)}"
+            ) from e
 
     # ==========================================
     # [추가된 기능] 필수 3: OCR 기반 의료정보 인식
