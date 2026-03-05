@@ -138,6 +138,7 @@ class DefaultData:
             "is_marketing_agreed": True,
             "is_alarm_agreed": True,
         }
+        user: User
         user, created = await User.get_or_create(id=user_data["id"], defaults=user_data)
         if not created:
             print(f"User {user.id} already exists.")
