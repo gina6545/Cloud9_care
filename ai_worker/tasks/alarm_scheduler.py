@@ -6,7 +6,7 @@
 import asyncio
 import logging
 import zoneinfo
-from datetime import datetime, timedelta, time
+from datetime import datetime, time, timedelta
 
 from ai_worker.core.config import Config
 from ai_worker.tasks.fcm import send_push_notification
@@ -44,7 +44,7 @@ def normalize_alarm_time(value: object) -> str:
         return f"{hours:02d}:{minutes:02d}"
 
     if hasattr(value, "strftime"):
-        return value.strftime("%H:%M")  # type: ignore[union-attr]
+        return str(value.strftime("%H:%M"))  # type: ignore[union-attr]
 
     text = str(value).strip()
 
@@ -65,6 +65,7 @@ def normalize_alarm_time(value: object) -> str:
 async def check_and_send_alarms() -> None:
     """현재 시간과 일치하는 알람을 찾아 FCM 발송 및 alarm_history 생성"""
     import os
+
     from app.models.alarm import Alarm
     from app.models.alarm_history import AlarmHistory
 
@@ -88,9 +89,7 @@ async def check_and_send_alarms() -> None:
         if alarm_time_str != current_time:
             continue
 
-        logging.info(
-            f"[SCHEDULER] MATCHED alarm_id={alarm.id} type={alarm.alarm_type} time={alarm_time_str}"
-        )
+        logging.info(f"[SCHEDULER] MATCHED alarm_id={alarm.id} type={alarm.alarm_type} time={alarm_time_str}")
 
         try:
             # alarm_history 생성

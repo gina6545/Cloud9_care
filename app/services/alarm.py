@@ -1,5 +1,4 @@
-from datetime import time
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from app.dtos.alarm import (
@@ -182,17 +181,11 @@ class AlarmService:
         today = now.date()
         tomorrow = today + timedelta(days=1)
 
-        alarms = (
-            await Alarm.filter(user=user, is_active=True)
-            .prefetch_related("current_med")
-            .order_by("alarm_time")
-        )
+        alarms = await Alarm.filter(user=user, is_active=True).prefetch_related("current_med").order_by("alarm_time")
 
         if not alarms:
             return DashboardAlarmSummaryResponse(
-                previous_alarm=None,
-                next_alarm=None,
-                remaining_text="예정된 다음 알림이 없습니다."
+                previous_alarm=None, next_alarm=None, remaining_text="예정된 다음 알림이 없습니다."
             )
 
         today_items: list[tuple[datetime, Alarm]] = []
@@ -212,14 +205,18 @@ class AlarmService:
         # 직전 알람 처리 (최근 history의 is_confirmed 확인)
         if previous_candidates:
             prev_dt, prev_alarm = previous_candidates[-1]
-            
+
             # 가장 최근 history 조회
-            latest_history = await AlarmHistory.filter(
-                alarm=prev_alarm,
-                sent_at__lte=now.astimezone(ZoneInfo("UTC")),
-            ).order_by("-sent_at").first()
+            latest_history = (
+                await AlarmHistory.filter(
+                    alarm=prev_alarm,
+                    sent_at__lte=now.astimezone(ZoneInfo("UTC")),
+                )
+                .order_by("-sent_at")
+                .first()
+            )
             is_confirmed = latest_history.is_confirmed if latest_history else False
-            
+
             previous_alarm_res = DashboardAlarmItemResponse(
                 time=self._normalize_alarm_time(prev_alarm.alarm_time).strftime("%H:%M"),
                 label=self._get_dashboard_alarm_label(prev_alarm),
@@ -288,11 +285,7 @@ class AlarmService:
         return [self._to_history_response(history) for history in histories]
 
     async def confirm_alarm_history(self, user: User, history_id: int) -> None:
-        history = (
-            await AlarmHistory.filter(id=history_id, alarm__user=user)
-            .prefetch_related("alarm")
-            .first()
-        )
+        history = await AlarmHistory.filter(id=history_id, alarm__user=user).prefetch_related("alarm").first()
 
         if not history:
             raise ValueError("알람 이력을 찾을 수 없습니다.")

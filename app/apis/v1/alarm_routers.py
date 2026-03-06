@@ -14,7 +14,6 @@ from app.dtos.alarm import (
     AlarmUpdateRequest,
     DashboardAlarmSummaryResponse,
 )
-from app.models.alarm import Alarm
 from app.models.alarm_history import AlarmHistory
 from app.models.user import User
 from app.services.alarm import AlarmService
@@ -142,14 +141,16 @@ async def get_due_alarms(user: Annotated[User, Depends(get_request_user)]) -> li
             title = "알람"
             body = "알람 시간이 되었습니다."
 
-        items.append({
-            "history_id": history.id,
-            "alarm_id": alarm.id,
-            "alarm_type": alarm.alarm_type,
-            "title": title,
-            "body": body,
-            "sent_at": history.sent_at.isoformat() if history.sent_at else None,
-        })
+        items.append(
+            {
+                "history_id": history.id,
+                "alarm_id": alarm.id,
+                "alarm_type": alarm.alarm_type,
+                "title": title,
+                "body": body,
+                "sent_at": history.sent_at.isoformat() if history.sent_at else None,
+            }
+        )
 
     return items
 
@@ -162,10 +163,14 @@ async def confirm_alarm(alarm_id: int, user: Annotated[User, Depends(get_request
     default_logger.info("[Alarm] confirm_alarm - 로그인")
     from app.models.alarm_history import AlarmHistory
 
-    history = await AlarmHistory.filter(
-        alarm_id=alarm_id,
-        alarm__user=user,
-    ).order_by("-sent_at").first()
+    history = (
+        await AlarmHistory.filter(
+            alarm_id=alarm_id,
+            alarm__user=user,
+        )
+        .order_by("-sent_at")
+        .first()
+    )
     if history:
         history.is_confirmed = True
         await history.save()
@@ -174,7 +179,7 @@ async def confirm_alarm(alarm_id: int, user: Annotated[User, Depends(get_request
 
 @alarm_router.get("/dashboard-summary", response_model=DashboardAlarmSummaryResponse)
 async def get_dashboard_alarm_summary(
-    user: Annotated[User, Depends(get_request_user)]
+    user: Annotated[User, Depends(get_request_user)],
 ) -> DashboardAlarmSummaryResponse:
     """
     [ALARM] 대시보드용 오늘의 복약 & 알림 요약
