@@ -72,8 +72,8 @@ class SocialLoginRequest(BaseModel):
     provider: str
 
 
-# 카카오 인가 URL 응답
-class KakaoAuthUrlResponse(BaseModel):
+# 구글 인가 URL 응답
+class GoogleAuthUrlResponse(BaseModel):
     auth_url: str
 
 
