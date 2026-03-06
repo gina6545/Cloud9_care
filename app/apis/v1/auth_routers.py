@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core import config
 from app.dtos.users import (
-    KakaoAuthUrlResponse,
+    GoogleAuthUrlResponse,
     LoginRequest,
     LoginResponse,
     NaverAuthUrlResponse,
@@ -39,35 +39,38 @@ async def login(
     return response
 
 
-@auth_router.get("/kakao/authorize", response_model=KakaoAuthUrlResponse)
-async def kakao_authorize() -> Response:
+@auth_router.get("/google/authorize", response_model=GoogleAuthUrlResponse)
+async def google_authorize() -> Response:
     """
-    [USER] 카카오 소셜 로그인 시작.
+    [USER] 구글 소셜 로그인 시작.
     프론트는 반환된 auth_url로 리다이렉트하여 인가코드(code)를 획득
     """
-    kakao_client_id = config.KAKAO_CLIENT_ID
-    redirect_uri = config.KAKAO_REDIRECT_URI
+    google_client_id = config.GOOGLE_CLIENT_ID
+    redirect_uri = config.GOOGLE_REDIRECT_URI
+    scope = "openid email profile"
     auth_url = (
-        f"https://kauth.kakao.com/oauth/authorize?response_type=code"
-        f"&client_id={kakao_client_id}&redirect_uri={redirect_uri}"
+        f"https://accounts.google.com/o/oauth2/v2/auth?response_type=code"
+        f"&client_id={google_client_id}&redirect_uri={redirect_uri}&scope={scope}"
     )
     return Response(content={"auth_url": auth_url}, status_code=status.HTTP_200_OK)
 
 
-@auth_router.get("/kakao/callback", response_model=SocialLoginResponse)
-async def kakao_callback(code: str, user_service: Annotated[UserManageService, Depends(UserManageService)]) -> Response:
+@auth_router.get("/google/callback", response_model=SocialLoginResponse)
+async def google_callback(
+    code: str, user_service: Annotated[UserManageService, Depends(UserManageService)]
+) -> Response:
     """
-    [USER] 카카오 로그인 콜백. service access_token 발급.
+    [USER] 구글 로그인 콜백. service access_token 발급.
     """
     # Using existing service logic for demo data mapping
 
     social_data = SocialLoginRequest(
-        id="kakao_user@kakao.com",
-        name="카카오사용자",
-        nickname="kakao_user_456",
+        id="google_user@gmail.com",
+        name="구글사용자",
+        nickname="google_user_456",
         phone_number="01098765432",
-        social_id="kakao_unique_id_abc",
-        provider="kakao",
+        social_id="google_unique_id_abc",
+        provider="google",
     )
     tokens = await user_service.social_login(social_data)
 

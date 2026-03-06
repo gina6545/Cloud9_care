@@ -55,7 +55,7 @@
         .btn-login {
             width: 100%;
             padding: 14px;
-            background-color: #28a745;
+            background-color: #2196f3;
             color: white;
             border: none;
             border-radius: 6px;
@@ -129,17 +129,18 @@
             text-decoration: none;
         }
 
-        /* 카카오 버튼 (공식 컬러: #FEE500) */
-        .btn-kakao {
-            background-color: #FEE500;
-            color: #191919;
+        /* 구글 버튼 (구글 색상) */
+        .btn-google {
+            background-color: #ffffff;
+            color: #757575;
+            border: 1px solid #ddd;
         }
 
-        .btn-kakao:hover {
-            background-color: #fada0a;
+        .btn-google:hover {
+            background-color: #f8f8f8;
         }
 
-        .btn-kakao img {
+        .btn-google img {
             width: 20px;
             margin-right: 10px;
             cursor: pointer;
@@ -149,15 +150,17 @@
         .btn-naver {
             background-color: #03C75A;
             color: white;
+            border: 1px solid #03C75A;
         }
 
         .btn-naver:hover {
             background-color: #02b350;
+            border-color: #02b350;
         }
 
-        .btn-naver img {
-            width: 25px;
-            margin-right: 6px;
+        .btn-naver svg {
+            width: 18px;
+            margin-right: 10px;
             cursor: pointer;
         }
     </style>
@@ -195,16 +198,36 @@
 
         <div class="divider">또는 소셜 계정으로 로그인</div>
 
-        <!-- 카카오 로그인 버튼 -->
-        <a href="/auth/kakao" class="social-btn btn-kakao">
-            <img src="../static/img/kakao_login_logo.png" alt="K">
-            카카오로 시작하기
+        <!-- 구글 로그인 버튼 -->
+        <a href="/api/v1/auth/google/authorize" class="social-btn btn-google">
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 48 48"
+                style="margin-right: 10px; cursor: pointer;">
+                <path fill="#EA4335"
+                    d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z">
+                </path>
+                <path fill="#4285F4"
+                    d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z">
+                </path>
+                <path fill="#FBBC05"
+                    d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z">
+                </path>
+                <path fill="#34A853"
+                    d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z">
+                </path>
+                <path fill="none" d="M0 0h48v48H0z"></path>
+            </svg>
+            구글로 시작하기
         </a>
 
         <!-- 네이버 로그인 버튼 -->
-        <a href="/auth/naver" class="social-btn btn-naver">
-            <img src="../static/img/naver_login_logo.png" alt="N">
-            네이버로 시작하기
+        <a href="/api/v1/auth/naver/authorize" class="social-btn btn-naver">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                style="margin-right: 10px; cursor: pointer; width: 18px; height: 18px;">
+                <path
+                    d="M16 20.4545L7.70114 9.07682V20.4545H2.66699V3.54541H7.51325L15.8274 14.9231V3.54541H20.876V20.4545H16Z"
+                    fill="white" />
+            </svg>
+            네이버 로그인
         </a>
     </div>
 
@@ -254,15 +277,15 @@
 <!-- 챗봇 UI -->
 <button id="chatbot-button" class="chatbot-button">🤖</button>
 <div id="chatbot-container" class="chatbot-container">
-  <div class="chatbot-header">
-    <h3>💬 Cloud9 Care 챗봇</h3>
-    <button id="chatbot-close" class="chatbot-close">×</button>
-  </div>
-  <div id="chatbot-messages" class="chatbot-messages"></div>
-  <div class="chatbot-input">
-    <input id="chatbot-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off">
-    <button id="chatbot-send" class="chatbot-send">➤</button>
-  </div>
+    <div class="chatbot-header">
+        <h3>💬 Cloud9 Care 챗봇</h3>
+        <button id="chatbot-close" class="chatbot-close">×</button>
+    </div>
+    <div id="chatbot-messages" class="chatbot-messages"></div>
+    <div class="chatbot-input">
+        <input id="chatbot-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off">
+        <button id="chatbot-send" class="chatbot-send">➤</button>
+    </div>
 </div>
 <script src="/static/chatbot.js"></script>
 

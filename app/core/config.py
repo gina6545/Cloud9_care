@@ -61,12 +61,12 @@ class Config(BaseSettings):
     # Naver Social Login
     NAVER_CLIENT_ID: str = ""
     NAVER_CLIENT_SECRET: str = ""
-    NAVER_REDIRECT_URI: str = "http://localhost:8000/api/v1/users/auth/naver/callback"
+    NAVER_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/naver/callback"
 
-    # Kakao Social Login
-    KAKAO_CLIENT_ID: str = ""
-    KAKAO_CLIENT_SECRET: str = ""
-    KAKAO_REDIRECT_URI: str = "http://localhost:8000/api/v1/users/auth/kakao/callback"
+    # Google Social Login
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/google/callback"
 
     # Security & Encryption
     AES_SECRET_KEY: str = f"aes-default-secret-{uuid.uuid4().hex[:16]}"
