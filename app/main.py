@@ -183,4 +183,12 @@ async def read_blood_sugar(request: Request):
     return templates.TemplateResponse("blood_sugar_save.html", {"request": request})
 
 
+@app.get("/pill-identifier", response_class=HTMLResponse)
+async def pill_identifier(request: Request):
+    """
+    알약 처리 페이지
+    """
+    return templates.TemplateResponse("pill_identifier.html", {"request": request})
+
+
 app.include_router(api_v1_router)

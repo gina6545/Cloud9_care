@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timedelta
+from typing import cast
 from zoneinfo import ZoneInfo
 
 from app.dtos.alarm import (
@@ -143,16 +144,16 @@ class AlarmService:
 
     def _get_dashboard_alarm_label(self, alarm: Alarm) -> str:
         if alarm.alarm_type == "MED":
-            return alarm.current_med.medication_name if alarm.current_med else "복약 알람"
+            return cast(str, alarm.current_med.medication_name if alarm.current_med else "복약 알람")
 
-        label_map = {
+        label_map: dict[str, str] = {
             "BP_MORNING": "아침 혈압 측정",
             "BP_EVENING": "저녁 혈압 측정",
             "BS_FASTING": "아침 공복 혈당",
             "BS_POSTMEAL": "식후 2시간 혈당",
             "BS_BEDTIME": "취침 전 혈당",
         }
-        return label_map.get(alarm.alarm_type, "알람")
+        return cast(str, label_map.get(alarm.alarm_type, "알람"))
 
     def _build_alarm_datetime_kst(self, alarm: Alarm, target_date: date) -> datetime:
         normalized_time = self._normalize_alarm_time(alarm.alarm_time)

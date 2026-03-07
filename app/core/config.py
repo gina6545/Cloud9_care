@@ -80,3 +80,5 @@ class Config(BaseSettings):
     # Naver Clova OCR
     CLOVA_OCR_INVOKE_URL: str = ""
     CLOVA_OCR_SECRET_KEY: str = ""
+
+    UPLOAD_DIR: str = ""
