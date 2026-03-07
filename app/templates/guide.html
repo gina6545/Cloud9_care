@@ -363,6 +363,146 @@
         }
     }
 
+    .guide-head-card {
+        padding: 18px 20px;
+        border-radius: 20px;
+    }
+
+    .guide-head-card .c9-section-head {
+        margin-bottom: 0;
+    }
+
+    .guide-head-card .c9-btn {
+        flex-shrink: 0;
+    }
+
+    /* ===== Guide typography sync with alarm page ===== */
+    .guide-page-container .c9-page-title {
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.25;
+        color: #1f2937;
+    }
+
+    .guide-page-container .guide-page-head-copy {
+        margin-top: 8px;
+        font-size: 15px;
+        line-height: 1.7;
+        color: #6b7280;
+    }
+
+    .guide-head-card .c9-section-title {
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.3;
+        color: #1f2937;
+    }
+
+    .guide-mode-tab {
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .guide-section-title {
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.35;
+        color: #1f2937;
+    }
+
+    .guide-section-body {
+        font-size: 15px;
+        line-height: 1.8;
+        color: #4b5563;
+    }
+
+    .guide-note-title {
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .guide-note-list {
+        font-size: 14px;
+        line-height: 1.8;
+    }
+
+    .guide-disease-title {
+        font-size: 15px;
+        font-weight: 800;
+    }
+
+    .guide-disease-list {
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .guide-check-title {
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.5;
+    }
+
+    .guide-check-sub {
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .guide-reason-text {
+        font-size: 14px;
+        line-height: 1.9;
+    }
+
+    .guide-header-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-left: auto;
+    }
+
+    .guide-mode-tabs {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+    }
+
+    .guide-mode-tab {
+        min-width: 96px;
+        height: 40px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 999px;
+        background: transparent;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .guide-mode-tab:hover {
+        background: #eef2ff;
+        color: #4338ca;
+    }
+
+    .guide-mode-tab.is-active {
+        background: #eef2ff;
+        color: #4338ca;
+        box-shadow: inset 0 0 0 1px #c7d2fe;
+    }
+
+    .guide-mode-panel {
+        display: none;
+    }
+
+    .guide-mode-panel.active {
+        display: block;
+    }
+
     .guide-accordion-btn {
         width: 100%;
         display: flex;
@@ -451,212 +591,254 @@
 <div class="page-wrap">
     <div class="guide-page-container">
         <div class="c9-page-header">
-            <h2 class="c9-page-title">생활 안내 가이드</h2>
-            <div class="c9-tabs">
-                <span class="c9-tab is-active">맞춤 가이드</span>
-                <span class="c9-tab">기록 확인</span>
+            <div>
+                <h1 class="c9-page-title">생활 안내 가이드</h1>
+                <p class="guide-page-head-copy">
+                    진료 기록을 바탕으로, 오늘 실천할 수 있는 건강 가이드를 바로 확인해요.
+                </p>
+            </div>
+
+            <div class="guide-header-meta">
+                <div class="guide-mode-tabs" role="tablist" aria-label="생활 안내 가이드 화면 모드">
+                    <button
+                        type="button"
+                        class="guide-mode-tab is-active"
+                        id="guide-mode-tab-custom"
+                        onclick="switchGuideMode('custom', this)">
+                        맞춤 가이드
+                    </button>
+                    <button
+                        type="button"
+                        class="guide-mode-tab"
+                        id="guide-mode-tab-history"
+                        onclick="switchGuideMode('history', this)">
+                        기록 확인
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="guide-layout">
-            <section class="guide-left-column c9-stack-20">
-                <div class="c9-section-head">
-                    <div class="c9-section-title">
-                        <span class="c9-section-title-icon" style="background:#3b82f6;">📈</span>
-                        <span>나의 건강 요약</span>
-                    </div>
-                </div>
-
-                <div class="c9-soft-card guide-summary-panel">
-                    <div class="c9-subcard">
-                        <div class="c9-subcard-title">
-                            <span class="c9-subcard-bar" style="background:#60a5fa;"></span>
-                            <span>보유 질환</span>
-                        </div>
-                        <div id="chronic-disease-container" class="min-h-[60px]">
-                            <ul class="flex flex-wrap gap-2" id="chronic-disease-list"></ul>
-                        </div>
-                    </div>
-
-                    <div class="c9-subcard">
-                        <div class="c9-subcard-title">
-                            <span class="c9-subcard-bar" style="background:#fbbf24;"></span>
-                            <span>보유 알레르기</span>
-                        </div>
-                        <div id="allergy-container" class="min-h-[60px]">
-                            <ul class="flex flex-wrap gap-2" id="allergy-list"></ul>
-                        </div>
-                    </div>
-
-                    <div class="c9-subcard">
-                        <div class="c9-subcard-title">
-                            <span class="c9-subcard-bar" style="background:#10b981;"></span>
-                            <span>신체 정보</span>
-                        </div>
-                        <div class="guide-info-grid" id="physical-info-container">
-                            <div class="guide-info-box">
-                                <p class="guide-kicker">HEIGHT/WEIGHT</p>
-                                <p class="guide-value" id="height-weight-text">-</p>
-                            </div>
-                            <div class="guide-info-box">
-                                <p class="guide-kicker">BMI</p>
-                                <p class="guide-value" id="bmi-text">-</p>
-                            </div>
-                            <div class="guide-info-box full">
-                                <p class="guide-kicker">SLEEP</p>
-                                <p class="guide-value" id="sleep-text">-</p>
+        <div id="guide-mode-custom" class="guide-mode-panel active">
+            <div class="guide-layout">
+                <section class="guide-left-column c9-stack-20">
+                    <div class="c9-soft-card guide-head-card">
+                        <div class="c9-section-head">
+                            <div class="c9-section-title">
+                                <span class="c9-section-title-icon" style="background:#3b82f6;">📈</span>
+                                <span>나의 건강 요약</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="c9-subcard">
-                        <div class="c9-subcard-title">
-                            <span class="c9-subcard-bar" style="background:#8b5cf6;"></span>
-                            <span>생활 습관</span>
-                        </div>
-                        <div class="c9-stack-16" id="habits-container">
-                            <div class="guide-habit-row">
-                                <span class="guide-habit-label">흡연/음주</span>
-                                <span class="guide-habit-value" id="smoking-drinking-text">-</span>
+                    <div class="c9-soft-card guide-summary-panel">
+                        <div class="c9-subcard">
+                            <div class="c9-subcard-title">
+                                <span class="c9-subcard-bar" style="background:#60a5fa;"></span>
+                                <span>보유 질환</span>
                             </div>
-                            <div class="guide-habit-row">
-                                <span class="guide-habit-label">운동 빈도</span>
-                                <span class="guide-habit-value" id="exercise-text">-</span>
-                            </div>
-                            <div class="guide-habit-row">
-                                <span class="guide-habit-label">식습관</span>
-                                <span class="guide-habit-value" id="diet-text">-</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="c9-subcard">
-                        <div class="c9-subcard-title">
-                            <span class="c9-subcard-bar" style="background:#6366f1;"></span>
-                            <span>현재 복용 약</span>
-                        </div>
-                        <div id="medication-container" class="min-h-[60px]">
-                            <div class="guide-med-list" id="medication-list"></div>
-                        </div>
-                    </div>
-
-                    <button id="update-btn" class="c9-btn c9-btn-primary w-full">
-                        🔄 가이드 새로고침
-                    </button>
-                </div>
-            </section>
-
-            <section class="guide-right-column c9-stack-20">
-                <div class="c9-section-head">
-                    <div class="c9-section-title">
-                        <span class="c9-section-title-icon" style="background:#f43f5e;">✨</span>
-                        <span>AI 맞춤 생활 안내 가이드</span>
-                    </div>
-                    <button id="tts-btn" class="c9-btn c9-btn-soft">
-                        <span id="tts-icon">📢</span>
-                        <span id="tts-text">가이드 읽어주기</span>
-                    </button>
-                </div>
-
-                <div id="guide-container" class="c9-stack-20 w-full min-h-[500px]">
-
-                    <div id="guide-loading-state" class="guide-loading-state hidden">
-                        <div id="guide-loading-note" class="guide-loading-note">
-                            <span>⏳</span>
-                            <span>AI 맞춤 가이드를 새로 생성 중입니다. 잠시만 기다려주세요.</span>
-                        </div>
-
-                        <div class="guide-section-card line-emerald animate-pulse">
-                            <div class="h-7 bg-gray-200 rounded w-1/3 mb-5"></div>
-                            <div class="space-y-3 mb-6">
-                                <div class="h-4 bg-gray-200 rounded w-full"></div>
-                                <div class="h-4 bg-gray-200 rounded w-5/6"></div>
-                            </div>
-                            <div class="h-28 bg-gray-100 rounded-2xl"></div>
-                        </div>
-
-                        <div class="guide-section-card line-emerald animate-pulse">
-                            <div class="h-7 bg-gray-200 rounded w-1/3 mb-5"></div>
-                            <div class="guide-loading-card-grid">
-                                <div class="h-32 bg-gray-100 rounded-2xl"></div>
-                                <div class="h-32 bg-gray-100 rounded-2xl"></div>
+                            <div id="chronic-disease-container" class="min-h-[60px]">
+                                <ul class="flex flex-wrap gap-2" id="chronic-disease-list"></ul>
                             </div>
                         </div>
 
-                        <div class="guide-section-card line-indigo animate-pulse">
-                            <div class="h-7 bg-gray-200 rounded w-1/3 mb-5"></div>
-                            <div class="space-y-3">
-                                <div class="h-16 bg-gray-100 rounded-2xl"></div>
-                                <div class="h-16 bg-gray-100 rounded-2xl"></div>
-                                <div class="h-16 bg-gray-100 rounded-2xl"></div>
+                        <div class="c9-subcard">
+                            <div class="c9-subcard-title">
+                                <span class="c9-subcard-bar" style="background:#fbbf24;"></span>
+                                <span>보유 알레르기</span>
+                            </div>
+                            <div id="allergy-container" class="min-h-[60px]">
+                                <ul class="flex flex-wrap gap-2" id="allergy-list"></ul>
                             </div>
                         </div>
 
-                        <div class="guide-section-card line-slate animate-pulse">
-                            <div class="h-7 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                    </div>
-
-                    <div id="guide-sections" class="hidden c9-stack-20 w-full">
-                        <div id="section-1" class="guide-section-card line-emerald">
-                            <div class="guide-section-title-row">
-                                <h3 class="guide-section-title">1) 복약 안전성 및 주의사항</h3>
-                                <span id="safety-status-tag" class="c9-badge c9-badge-success"></span>
+                        <div class="c9-subcard">
+                            <div class="c9-subcard-title">
+                                <span class="c9-subcard-bar" style="background:#10b981;"></span>
+                                <span>신체 정보</span>
                             </div>
-                            <p id="safety-content" class="guide-section-body"></p>
-                            <div class="guide-note-box">
-                                <h4 class="guide-note-title">
-                                    <span class="text-blue-500">⏰</span> 일반 주의사항
-                                </h4>
-                                <ul id="general-cautions-list" class="guide-note-list"></ul>
-                            </div>
-                        </div>
-
-                        <div id="section-2" class="guide-section-card line-emerald">
-                            <h3 class="guide-section-title" style="margin-bottom:18px;">2) 질환 기반 생활습관 가이드</h3>
-                            <div id="disease-guides-container" class="guide-disease-grid"></div>
-                            <div class="guide-integrated-box">
-                                <span class="text-emerald-500 text-xl font-bold">🔄</span>
-                                <div>
-                                    <h4 class="text-sm font-bold text-emerald-800 mb-1">통합 관리 포인트</h4>
-                                    <p id="integrated-point" class="text-sm text-emerald-700 leading-relaxed"></p>
+                            <div class="guide-info-grid" id="physical-info-container">
+                                <div class="guide-info-box">
+                                    <p class="guide-kicker">HEIGHT/WEIGHT</p>
+                                    <p class="guide-value" id="height-weight-text">-</p>
+                                </div>
+                                <div class="guide-info-box">
+                                    <p class="guide-kicker">BMI</p>
+                                    <p class="guide-value" id="bmi-text">-</p>
+                                </div>
+                                <div class="guide-info-box full">
+                                    <p class="guide-kicker">SLEEP</p>
+                                    <p class="guide-value" id="sleep-text">-</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="section-3" class="guide-section-card line-indigo">
-                            <div class="flex justify-between items-end mb-6">
-                                <div>
-                                    <h3 class="guide-section-title mb-1">3) 오늘의 실행 플랜</h3>
-                                    <p class="text-sm text-gray-500">체크한 항목은 나의 관리 기록으로 저장됩니다.</p>
+                        <div class="c9-subcard">
+                            <div class="c9-subcard-title">
+                                <span class="c9-subcard-bar" style="background:#8b5cf6;"></span>
+                                <span>생활 습관</span>
+                            </div>
+                            <div class="c9-stack-16" id="habits-container">
+                                <div class="guide-habit-row">
+                                    <span class="guide-habit-label">흡연/음주</span>
+                                    <span class="guide-habit-value" id="smoking-drinking-text">-</span>
                                 </div>
-                                <div class="text-right">
-                                    <span class="text-2xl font-black text-indigo-600" id="progress-percent">0%</span>
-                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">SUCCESS RATE</p>
+                                <div class="guide-habit-row">
+                                    <span class="guide-habit-label">운동 빈도</span>
+                                    <span class="guide-habit-value" id="exercise-text">-</span>
+                                </div>
+                                <div class="guide-habit-row">
+                                    <span class="guide-habit-label">식습관</span>
+                                    <span class="guide-habit-value" id="diet-text">-</span>
                                 </div>
                             </div>
-                            <div class="guide-progress-box">
-                                <div id="progress-bar" class="guide-progress-fill"></div>
-                            </div>
-                            <div id="checklist-container" class="guide-checklist"></div>
                         </div>
 
-                        <div id="section-4" class="accordion guide-section-card line-slate">
-                            <button type="button" onclick="toggleAccordion('section-4')" class="guide-accordion-btn">
-                                <h3 class="guide-section-title" style="display:flex; align-items:center; gap:10px; margin:0;">
-                                    <span class="guide-title-emoji">❓</span>
-                                    왜 이런 가이드가 생성되었나요?
-                                </h3>
-                                <span class="guide-accordion-icon">⌃</span>
+                        <div class="c9-subcard">
+                            <div class="c9-subcard-title">
+                                <span class="c9-subcard-bar" style="background:#6366f1;"></span>
+                                <span>현재 복용 약</span>
+                            </div>
+                            <div id="medication-container" class="min-h-[60px]">
+                                <div class="guide-med-list" id="medication-list"></div>
+                            </div>
+                        </div>
+
+                        <button id="update-btn" class="c9-btn c9-btn-primary w-full">
+                            🔄 가이드 새로고침
+                        </button>
+                    </div>
+                </section>
+
+                <section class="guide-right-column c9-stack-20">
+                    <div class="c9-soft-card guide-head-card">
+                        <div class="c9-section-head">
+                            <div class="c9-section-title">
+                                <span class="c9-section-title-icon" style="background:#f43f5e;">✨</span>
+                                <span>AI 맞춤 생활 안내 가이드</span>
+                            </div>
+                            <button id="tts-btn" class="c9-btn c9-btn-soft">
+                                <span id="tts-icon">📢</span>
+                                <span id="tts-text">가이드 읽어주기</span>
                             </button>
+                        </div>
+                    </div>
 
-                            <div class="accordion-content">
-                                <div class="guide-reason-box">
-                                    <p id="explain-reason" class="guide-reason-text"></p>
+                    <div id="guide-container" class="c9-stack-20 w-full min-h-[500px]">
+
+                        <div id="guide-loading-state" class="guide-loading-state hidden">
+                            <div id="guide-loading-note" class="guide-loading-note">
+                                <span>⏳</span>
+                                <span>AI 맞춤 가이드를 새로 생성 중입니다. 잠시만 기다려주세요.</span>
+                            </div>
+
+                            <div class="guide-section-card line-emerald animate-pulse">
+                                <div class="h-7 bg-gray-200 rounded w-1/3 mb-5"></div>
+                                <div class="space-y-3 mb-6">
+                                    <div class="h-4 bg-gray-200 rounded w-full"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                                </div>
+                                <div class="h-28 bg-gray-100 rounded-2xl"></div>
+                            </div>
+
+                            <div class="guide-section-card line-emerald animate-pulse">
+                                <div class="h-7 bg-gray-200 rounded w-1/3 mb-5"></div>
+                                <div class="guide-loading-card-grid">
+                                    <div class="h-32 bg-gray-100 rounded-2xl"></div>
+                                    <div class="h-32 bg-gray-100 rounded-2xl"></div>
+                                </div>
+                            </div>
+
+                            <div class="guide-section-card line-indigo animate-pulse">
+                                <div class="h-7 bg-gray-200 rounded w-1/3 mb-5"></div>
+                                <div class="space-y-3">
+                                    <div class="h-16 bg-gray-100 rounded-2xl"></div>
+                                    <div class="h-16 bg-gray-100 rounded-2xl"></div>
+                                    <div class="h-16 bg-gray-100 rounded-2xl"></div>
+                                </div>
+                            </div>
+
+                            <div class="guide-section-card line-slate animate-pulse">
+                                <div class="h-7 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                        </div>
+
+                        <div id="guide-sections" class="hidden c9-stack-20 w-full">
+                            <div id="section-1" class="guide-section-card line-emerald">
+                                <div class="guide-section-title-row">
+                                    <h3 class="guide-section-title">1) 복약 안전성 및 주의사항</h3>
+                                    <span id="safety-status-tag" class="c9-badge c9-badge-success"></span>
+                                </div>
+                                <p id="safety-content" class="guide-section-body"></p>
+                                <div class="guide-note-box">
+                                    <h4 class="guide-note-title">
+                                        <span class="text-blue-500">⏰</span> 일반 주의사항
+                                    </h4>
+                                    <ul id="general-cautions-list" class="guide-note-list"></ul>
+                                </div>
+                            </div>
+
+                            <div id="section-2" class="guide-section-card line-emerald">
+                                <h3 class="guide-section-title" style="margin-bottom:18px;">2) 질환 기반 생활습관 가이드</h3>
+                                <div id="disease-guides-container" class="guide-disease-grid"></div>
+                                <div class="guide-integrated-box">
+                                    <span class="text-emerald-500 text-xl font-bold">🔄</span>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-emerald-800 mb-1">통합 관리 포인트</h4>
+                                        <p id="integrated-point" class="text-sm text-emerald-700 leading-relaxed"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="section-3" class="guide-section-card line-indigo">
+                                <div class="flex justify-between items-end mb-6">
+                                    <div>
+                                        <h3 class="guide-section-title mb-1">3) 오늘의 실행 플랜</h3>
+                                        <p class="text-sm text-gray-500">체크한 항목은 나의 관리 기록으로 저장됩니다.</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-2xl font-black text-indigo-600" id="progress-percent">0%</span>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">SUCCESS RATE</p>
+                                    </div>
+                                </div>
+                                <div class="guide-progress-box">
+                                    <div id="progress-bar" class="guide-progress-fill"></div>
+                                </div>
+                                <div id="checklist-container" class="guide-checklist"></div>
+                            </div>
+
+                            <div id="section-4" class="accordion guide-section-card line-slate">
+                                <button type="button" onclick="toggleAccordion('section-4')" class="guide-accordion-btn">
+                                    <h3 class="guide-section-title" style="display:flex; align-items:center; gap:10px; margin:0;">
+                                        <span class="guide-title-emoji">❓</span>
+                                        왜 이런 가이드가 생성되었나요?
+                                    </h3>
+                                    <span class="guide-accordion-icon">⌃</span>
+                                </button>
+
+                                <div class="accordion-content">
+                                    <div class="guide-reason-box">
+                                        <p id="explain-reason" class="guide-reason-text"></p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </section>
+            </div>
+        </div>
+
+        <div id="guide-mode-history" class="guide-mode-panel">
+            <section class="c9-soft-card" style="padding: 28px;">
+                <div class="c9-section-head">
+                    <h3 class="c9-section-title">
+                        <span class="c9-section-title-icon" style="background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);">🗂️</span>
+                        생활 안내 기록 확인
+                    </h3>
+                    <span class="c9-badge c9-badge-slate">준비 중</span>
+                </div>
+
+                <div style="min-height: 240px; display:flex; align-items:center; justify-content:center; text-align:center; color:#64748b; font-size:15px;">
+                    생활 안내 기록 확인 화면은 다음 단계에서 연결할 수 있어요.
                 </div>
             </section>
         </div>
@@ -914,6 +1096,23 @@
 
     function toggleAccordion(id) {
         document.getElementById(id).classList.toggle('accordion-active');
+    }
+
+    function switchGuideMode(mode, buttonEl) {
+        const tabs = document.querySelectorAll('.guide-mode-tab');
+        const panels = document.querySelectorAll('.guide-mode-panel');
+
+        tabs.forEach(tab => tab.classList.remove('is-active'));
+        panels.forEach(panel => panel.classList.remove('active'));
+
+        if (buttonEl) {
+            buttonEl.classList.add('is-active');
+        }
+
+        const target = document.getElementById(`guide-mode-${mode}`);
+        if (target) {
+            target.classList.add('active');
+        }
     }
 
     function setupGuideEventListeners() {
