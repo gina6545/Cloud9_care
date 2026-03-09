@@ -14,14 +14,14 @@ from app.models.user import User
 
 
 class GuideService:
-    def load_rag_docs(self) -> list[dict[str, str]]:
+    def load_rag_docs(self) -> list[dict]:
         """
         [RAG] 로컬 문서 로드.
         app/data/docs/ 아래의 모든 .txt 파일을 읽어와
         파일명과 본문을 함께 반환합니다.
         """
         docs_dir = Path("app/data/docs")
-        docs: list[dict[str, str]] = []
+        docs = []
 
         if not docs_dir.exists():
             return docs
@@ -32,54 +32,59 @@ class GuideService:
 
         return docs
 
-    def _score_document(self, doc_text: str, doc_filename: str, keywords: list[str]) -> int:
-        score = 0
-        doc_filename_lower = doc_filename.lower()
-
-        mapping = {
-            "고혈압": "hypertension",
-            "당뇨병": "diabetes",
-            "복용": "medication",
-            "저염식": "low_salt",
-            "운동": "exercise",
-        }
-
-        for keyword in keywords:
-            if not keyword:
-                continue
-
-            if keyword in doc_text:
-                score += 1
-
-            keyword_lower = keyword.lower()
-            if keyword_lower in doc_filename_lower:
-                score += 2
-
-            if keyword in mapping and mapping[keyword] in doc_filename_lower:
-                score += 2
-
-        return score
-
     def select_relevant_docs(
         self,
-        rag_docs: list[dict[str, str]],
+        rag_docs: list[dict],
         disease_list: list[str],
         med_list: list[str],
-    ) -> list[dict[str, str]]:
+    ) -> list[dict]:
         keywords = []
         keywords.extend(disease_list)
         keywords.extend(med_list)
+
+        # 생활습관/복약 관련 기본 키워드도 같이 넣기
         keywords.extend(["운동", "복용", "저염식", "혈압", "혈당"])
 
         scored_docs = []
+
         for doc in rag_docs:
-            score = self._score_document(doc["text"], doc["filename"], keywords)
+            score = 0
+            doc_text = doc["text"]
+            doc_filename = doc["filename"].lower()
+
+            for keyword in keywords:
+                if not keyword:
+                    continue
+
+                if keyword in doc_text:
+                    score += 1
+
+                keyword_lower = keyword.lower()
+
+                if keyword_lower in doc_filename:
+                    score += 2
+
+                if keyword == "고혈압" and "hypertension" in doc_filename:
+                    score += 2
+                if keyword == "당뇨병" and "diabetes" in doc_filename:
+                    score += 2
+                if keyword == "복용" and "medication" in doc_filename:
+                    score += 2
+                if keyword == "저염식" and "low_salt" in doc_filename:
+                    score += 2
+                if keyword == "운동" and "exercise" in doc_filename:
+                    score += 2
+
             scored_docs.append((score, doc))
 
         scored_docs.sort(key=lambda x: x[0], reverse=True)
+
         selected_docs = [doc for score, doc in scored_docs if score > 0]
 
-        return selected_docs[:3] if selected_docs else rag_docs[:3]
+        if not selected_docs:
+            return rag_docs[:3]
+
+        return selected_docs[:3]
 
     # ==========================================
     # 필수 1: LLM 기반 안내 가이드 생성
