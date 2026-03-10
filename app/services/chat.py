@@ -2,8 +2,10 @@ from typing import Any
 
 from app.dtos.chat import ChatRequest, ChatResponse
 from app.models.user import User
+from app.repositories.blood_pressure_record import BloodPressureRecordRepository
+from app.repositories.blood_sugar_record import BloodSugarRecordRepository
 from app.repositories.chat_memory_repository import ChatMemoryRepository
-from app.services.guide import GuideService
+from app.repositories.llm_life_guide import LLMLifeGuideRepository
 from app.services.llm_service import LLMService
 from app.services.rag_service import RagService
 
@@ -12,8 +14,11 @@ class ChatService:
     def __init__(self):
         self.memory_repo = ChatMemoryRepository()
         self.llm_service = LLMService()
-        self.guide_service = GuideService()
         self.rag_service = RagService()
+        
+        self.llm_life_guide_repo = LLMLifeGuideRepository()
+        self.bp_repo = BloodPressureRecordRepository()
+        self.bs_repo = BloodSugarRecordRepository()
 
     def detect_emergency(self, text: str) -> bool:
         """응급 상황 감지"""
@@ -28,6 +33,54 @@ class ChatService:
             return "증상"
         else:
             return "일반"
+
+    async def _build_user_health_context(self, user_id: str) -> str | None:
+        """
+        저장된 생활안내가이드 + 최근 혈압 + 최근 혈당을 합쳐
+        챗봇용 사용자 맞춤 건강 정보 문자열 생성
+        """
+        try:
+            user = await User.get_or_none(id=user_id)
+            if not user:
+                return None
+
+            life_guide = await self.llm_life_guide_repo.get_by_user_id(user_id)
+            bp_records = await self.bp_repo.get_by_user_id(user_id)
+            bs_records = await self.bs_repo.get_by_user_id(user_id)
+
+            recent_bp = bp_records[:5]
+            recent_bs = bs_records[:5]
+
+            bp_lines = [
+                f"- {record.systolic}/{record.diastolic} mmHg ({record.measure_type}, {record.created_at.strftime('%Y-%m-%d %H:%M')})"
+                for record in recent_bp
+            ] or ["- 최근 혈압 기록 없음"]
+
+            bs_lines = [
+                f"- {record.glucose_mg_dl} mg/dL ({record.measure_type}, {record.created_at.strftime('%Y-%m-%d %H:%M')})"
+                for record in recent_bs
+            ] or ["- 최근 혈당 기록 없음"]
+
+            guide_status = life_guide.user_current_status if life_guide else "저장된 생활안내 가이드 상태 정보 없음"
+            guide_content = life_guide.generated_content if life_guide else "저장된 생활안내 가이드 내용 없음"
+
+            return f"""[사용자 맞춤 건강 정보]
+사용자 상태 요약:
+{guide_status}
+
+저장된 생활안내 가이드:
+{guide_content}
+
+최근 혈압 기록:
+{chr(10).join(bp_lines)}
+
+최근 혈당 기록:
+{chr(10).join(bs_lines)}
+""".strip()
+
+        except Exception as e:
+            print(f"[ChatService] user health context build failed: {e}")
+            return None
 
     async def process_chat(self, request: ChatRequest) -> ChatResponse:
         """
@@ -61,32 +114,8 @@ class ChatService:
             # 6. 최근 대화 이력 조회
             recent_history = await self.memory_repo.get_recent_messages(session_id, request.user_id)
 
-            # 6.5 사용자 맞춤 생활안내 가이드 생성
-            guide_summary = None
-            try:
-                user = await User.get_or_none(id=request.user_id)
-                if user:
-                    # 현재 복용약 직접 조회
-                    from app.models.current_med import CurrentMed
-
-                    current_meds = await CurrentMed.filter(user=user).all()
-                    med_names = [med.medication_name for med in current_meds]
-
-                    # 가이드 생성
-                    guide = await self.guide_service.generate_guide(user)
-                    guide_data = guide.get("guide_data", {})
-
-                    section1 = guide_data.get("section1", {})
-                    section2 = guide_data.get("section2", {})
-                    section3 = guide_data.get("section3", {})
-
-                    guide_summary = f"""현재 복용약: {", ".join(med_names) if med_names else "등록된 약물 없음"}
-복약 주의 상태: {section1.get("status", "정보 없음")}
-복약 주의 요약: {section1.get("content", "정보 없음")}
-질환 생활 가이드: {section2.get("integrated_point", "정보 없음")}
-오늘 실행 플랜: {", ".join(section3.get("checklist", [])) if section3.get("checklist") else "정보 없음"}""".strip()
-            except Exception:
-                guide_summary = None
+            # 6.5 사용자 맞춤 건강 정보 조회 (저장된 데이터 기반)
+            user_health_context = await self._build_user_health_context(request.user_id)
 
             # 7. RAG 문서 검색
             keywords = self.rag_service.extract_keywords_from_query(recent_msg)
@@ -98,15 +127,15 @@ class ChatService:
 사용자의 복약 관리, 건강 상담, 증상 문의에 친절하고 정확하게 답변해주세요.
 의학적 진단은 하지 말고, 필요시 전문의와 상담을 권유하세요.
 답변은 간결하고 친근하게 작성해주세요.
-사용자 맞춤 건강 정보가 있더라도, 사용자가 묻지 않은 약 목록, 알람 일정, 건강 상태를 먼저 나열하지 마세요.
+사용자 맞춤 건강 정보가 있더라도, 사용자가 묻지 않은 건강 상태를 먼저 길게 나열하지 마세요.
 질문과 직접 관련된 경우에만 사용자 맞춤 정보를 활용해 답변하세요.
 응급이 의심되는 표현이 있으면 즉시 119 또는 응급실 방문을 우선 권고하세요."""
 
             messages = [{"role": "system", "content": system_prompt}]
 
             # 사용자 맞춤 건강 정보 추가
-            if guide_summary:
-                messages.append({"role": "system", "content": f"[사용자 맞춤 건강 정보]\n{guide_summary}"})
+            if user_health_context:
+                messages.append({"role": "system", "content": user_health_context})
 
             # 이전 대화 이력 추가 (현재 메시지 제외)
             for msg in recent_history[:-1]:  # 현재 메시지 제외
@@ -132,7 +161,8 @@ class ChatService:
                 )
                 if not reply:
                     reply = "응답을 생성할 수 없습니다."
-            except Exception:
+            except Exception as e:
+                print(f"[ChatService] llm generate failed: {e}")
                 reply = "죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해주세요."
 
         # 10. AI 응답 저장
