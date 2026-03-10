@@ -59,7 +59,7 @@ class ChatMemoryRepository:
             filter_query["user_id"] = user_id
 
         result = await self.collection.delete_many(filter_query)
-        return result.deleted_count > 0
+        return bool(result.deleted_count > 0)
 
     async def verify_session_owner(self, session_id: str, user_id: str) -> bool:
         """세션 소유자 검증"""
