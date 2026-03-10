@@ -84,6 +84,8 @@ class HealthProfileService:
             "smoking_years": request.smoking_years,
             "smoking_per_week": request.smoking_per_week,
             "drinking_status": request.drinking_status,
+            "drinking_years": request.drinking_years,
+            "drinking_per_week": request.drinking_per_week,
             "exercise_frequency": request.exercise_frequency,
             "diet_type": request.diet_type,
         }

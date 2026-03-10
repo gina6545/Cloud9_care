@@ -14,15 +14,15 @@ class LLMLifeGuideRepository:
     # 사용자에 해당하는 질병 가져오기
     async def get_by_user_id(self, user_id: str) -> LLMLifeGuide | None:
         """
-        사용자 아이디를 이용해 알러지를 조회합니다.
+        사용자 아이디를 이용해 최신 생활안내 가이드를 조회합니다.
 
         Args:
             user_id (str): 조회할 사용자 아이디
 
         Returns:
-            HealthProfile | None: 사용자 객체 또는 없음
+            LLMLifeGuide | None: 최신 생활안내 가이드 객체 또는 없음
         """
-        llm_life_guide: LLMLifeGuide | None = await self._model.filter(user_id=user_id).first()
+        llm_life_guide: LLMLifeGuide | None = await self._model.filter(user_id=user_id).order_by("-created_at").first()
         return llm_life_guide
 
     async def update_or_create(self, user_id: str, data: dict) -> LLMLifeGuide:
