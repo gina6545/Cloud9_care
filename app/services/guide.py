@@ -1,9 +1,4 @@
-import json
-import os
 from datetime import datetime
-from pathlib import Path
-
-from openai import AsyncOpenAI
 
 from app.models.allergy import Allergy
 from app.models.blood_pressure_record import BloodPressureRecord
@@ -11,75 +6,14 @@ from app.models.blood_sugar_record import BloodSugarRecord
 from app.models.chronic_disease import ChronicDisease
 from app.models.current_med import CurrentMed
 from app.models.user import User
+from app.services.llm_service import LLMService
+from app.services.rag_service import RagService
 
 
 class GuideService:
-    def load_rag_docs(self) -> list[dict[str, str]]:
-        """
-        [RAG] 로컬 문서 로드.
-        app/data/docs/ 아래의 모든 .txt 파일을 읽어와
-        파일명과 본문을 함께 반환합니다.
-        """
-        docs_dir = Path("app/data/docs")
-        docs: list[dict[str, str]] = []
-
-        if not docs_dir.exists():
-            return docs
-
-        for path in docs_dir.glob("*.txt"):
-            text = path.read_text(encoding="utf-8")
-            docs.append({"filename": path.name, "text": text})
-
-        return docs
-
-    def _score_document(self, doc_text: str, doc_filename: str, keywords: list[str]) -> int:
-        score = 0
-        doc_filename_lower = doc_filename.lower()
-
-        mapping = {
-            "고혈압": "hypertension",
-            "당뇨병": "diabetes",
-            "복용": "medication",
-            "저염식": "low_salt",
-            "운동": "exercise",
-        }
-
-        for keyword in keywords:
-            if not keyword:
-                continue
-
-            if keyword in doc_text:
-                score += 1
-
-            keyword_lower = keyword.lower()
-            if keyword_lower in doc_filename_lower:
-                score += 2
-
-            if keyword in mapping and mapping[keyword] in doc_filename_lower:
-                score += 2
-
-        return score
-
-    def select_relevant_docs(
-        self,
-        rag_docs: list[dict[str, str]],
-        disease_list: list[str],
-        med_list: list[str],
-    ) -> list[dict[str, str]]:
-        keywords = []
-        keywords.extend(disease_list)
-        keywords.extend(med_list)
-        keywords.extend(["운동", "복용", "저염식", "혈압", "혈당"])
-
-        scored_docs = []
-        for doc in rag_docs:
-            score = self._score_document(doc["text"], doc["filename"], keywords)
-            scored_docs.append((score, doc))
-
-        scored_docs.sort(key=lambda x: x[0], reverse=True)
-        selected_docs = [doc for score, doc in scored_docs if score > 0]
-
-        return selected_docs[:3] if selected_docs else rag_docs[:3]
+    def __init__(self):
+        self.llm_service = LLMService()
+        self.rag_service = RagService()
 
     # ==========================================
     # 필수 1: LLM 기반 안내 가이드 생성
@@ -90,8 +24,8 @@ class GuideService:
         실제 사용자의 기저질환, 알러지, 복용약을 바탕으로 OpenAI를 통해 구조화된 가이드를 생성합니다.
         (DB 연결 실패 시 기본값으로 대체)
         """
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
+        # API 키가 없으면 더미 데이터 반환
+        if not self.llm_service.client:
             # If API key is missing, return a dummy JSON directly to show the UI
             return {
                 "id": 1,
@@ -160,11 +94,13 @@ class GuideService:
             bp_list = ["120/80 mmHg"]
             bs_list = ["95 mg/dL (FASTING)"]
 
-        rag_docs = self.load_rag_docs()
-        selected_docs = self.select_relevant_docs(rag_docs, disease_list, med_list)
-        rag_context = "\n\n".join(docs["text"] for docs in selected_docs) if selected_docs else "참고 문서 없음"
+        keywords = self.rag_service.build_health_keywords(disease_list, med_list)
 
-        client = AsyncOpenAI(api_key=api_key)
+        selected_docs = self.rag_service.select_relevant_docs_by_keywords(
+            keywords=keywords,
+            max_docs=3,
+        )
+        rag_context = self.rag_service.build_rag_context(selected_docs)
 
         prompt = f"""
     신중하고 전문적인 의료 도우미로서, 아래 환자의 건강 상태를 바탕으로 '생활 안내 가이드'를 작성해줘.
@@ -215,8 +151,7 @@ class GuideService:
     """.strip()
 
         try:
-            res = await client.chat.completions.create(
-                model="gpt-4o-mini",
+            content_json = await self.llm_service.generate_json(
                 messages=[
                     {
                         "role": "system",
@@ -224,11 +159,9 @@ class GuideService:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                response_format={"type": "json_object"},
+                model="gpt-4o-mini",
                 temperature=0.4,
             )
-
-            content_json = json.loads(res.choices[0].message.content or "{}")
             # ✅ 질환 누락 보정: disease_list에 있는 질환은 모두 disease_guides에 포함되도록 강제
             try:
                 sec2 = content_json.get("section2") or {}
