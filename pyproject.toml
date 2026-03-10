@@ -69,7 +69,6 @@ asyncio_default_fixture_loop_scope = "session"
 # 기본 라인 길이 설정
 line-length = 120
 target-version = "py312"
-ignore = ["B008"]
 
 [tool.ruff.lint]
 # 사용할 린트 규칙들 선택
@@ -83,7 +82,7 @@ select = [
     "UP",  # pyupgrade
     "N",   # pep8-naming
 ]
-ignore = ["E501"]
+ignore = ["E501", "B008"]
 
 # 특정 파일에서 무시할 규칙들
 [tool.ruff.lint.per-file-ignores]
