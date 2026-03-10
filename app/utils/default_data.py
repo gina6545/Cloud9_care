@@ -359,11 +359,9 @@ class DefaultData:
         # AI 가이드
         guide, _ = await LLMLifeGuide.get_or_create(
             user=user,
-            guide_type="복약주의",
             defaults={
                 "user_current_status": f"{uinfo['name']}님 맞춤형 상태",
                 "generated_content": "고혈압 약 복용 시 자몽 주스를 피하세요.",
-                "is_emergency_alert": False,
             },
         )
         await MultimodalAsset.get_or_create(
