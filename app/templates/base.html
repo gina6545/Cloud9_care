@@ -558,6 +558,10 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
+        .mega-grid-health {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
         .mega-card {
             background: rgba(79, 70, 229, 0.06);
             border: 1px solid rgba(79, 70, 229, 0.12);
@@ -594,6 +598,10 @@
         }
 
         body.zoom-large .mega-grid-alarm {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        body.zoom-large .mega-grid-health {
             grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
@@ -1317,15 +1325,19 @@
                 </a>
                 <div class="mega-panel" aria-hidden="true">
                     <div class="mega-title">건강정보</div>
-                    <div class="mega-desc">내 건강 프로필과 기록을 모아, 더 정확한 맞춤 가이드를 만들어요.</div>
-                    <div class="mega-grid">
+                    <div class="mega-desc">건강 프로필, 알레르기, 질환, 복용 약물을 등록해 맞춤 가이드 정확도를 높여보세요.</div>
+                    <div class="mega-grid mega-grid-health">
                         <div class="mega-card">
                             <div class="mega-card-title">건강 프로필</div>
-                            <div class="mega-card-desc">질환·알레르기·복용약·생활습관을 등록해요.</div>
+                            <div class="mega-card-desc">기본 신체정보와 생활습관을 등록하고 관리해요.</div>
                         </div>
                         <div class="mega-card">
-                            <div class="mega-card-title">혈압 수첩</div>
-                            <div class="mega-card-desc">최근 기록을 모아 변화 추이를 확인하고 관리할 수 있어요.</div>
+                            <div class="mega-card-title">알레르기 · 질환</div>
+                            <div class="mega-card-desc">알레르기 정보와 만성질환 기록을 정리해 맞춤 가이드 정확도를 높여요.</div>
+                        </div>
+                        <div class="mega-card">
+                            <div class="mega-card-title">현재 복용 약물</div>
+                            <div class="mega-card-desc">복용 중인 약물과 복용법을 등록해 안전한 건강 관리를 도와줘요.</div>
                         </div>
                     </div>
                     <div class="mega-hint">클릭하면 건강정보로 이동해요 →</div>
