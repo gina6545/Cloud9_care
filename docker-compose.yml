@@ -44,6 +44,23 @@ services:
       timeout: 5s
       retries: 5
 
+  # 2-1. MongoDB (챗봇 메시지 저장용)
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    networks:
+      - ws
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # 3. API Server (FastAPI)
   fastapi:
     container_name: fastapi
@@ -68,6 +85,8 @@ services:
       - ws
     depends_on:
       mysql:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -109,6 +128,7 @@ services:
 
 volumes:
   mysql_data:
+  mongodb_data:
   static_volume:
 
 

@@ -1,12 +1,78 @@
 // 챗봇 상태 관리
 const chatbot = {
   isOpen: false,
-  sessionId: null,
+  sessionId: localStorage.getItem('chatbot_session_id'),
   messages: [],
 };
 
 let isSpeaking = false;
 const synthesis = window.speechSynthesis;
+
+// 인증 토큰 가져오기 (통합)
+function getAuthToken() {
+  return (
+    localStorage.getItem('access_token') ||
+    localStorage.getItem('auth_token') ||
+    ''
+  ).trim();
+}
+
+// 대화 내역 복원
+async function restoreChatHistory() {
+  const token = getAuthToken();
+  if (!token || !chatbot.sessionId) return;
+
+  try {
+    const response = await fetch(`/api/v1/chat/history/${chatbot.sessionId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.warn('대화 내역 조회 실패:', response.status);
+      
+      // 세션이 유효하지 않으면 localStorage도 정리
+      if (response.status === 401 || response.status === 404) {
+        chatbot.sessionId = null;
+        chatbot.messages = [];
+        localStorage.removeItem('chatbot_session_id');
+      }
+      
+      const messagesContainer = document.getElementById('chatbot-messages');
+      if (messagesContainer && messagesContainer.children.length === 0) {
+        addMessage('assistant', '안녕하세요! 👋 Cloud9 Care 챗봇입니다. 무엇을 도와드릴까요?');
+      }
+      return;
+    }
+
+    const data = await response.json();
+    const messagesContainer = document.getElementById('chatbot-messages');
+    if (!messagesContainer) return;
+
+    // 기존 메시지 초기화
+    messagesContainer.innerHTML = '';
+    chatbot.messages = [];
+
+    if (data.messages && data.messages.length > 0) {
+      // 이전 대화 복원
+      data.messages.forEach((msg) => {
+        addMessage(msg.role, msg.content);
+      });
+    } else {
+      // 대화 내역이 없으면 환영 메시지
+      addMessage('assistant', '안녕하세요! 👋 Cloud9 Care 챗봇입니다. 무엇을 도와드릴까요?');
+    }
+  } catch (error) {
+    console.error('대화 복원 오류:', error);
+    // 오류 시 환영 메시지 표시
+    const messagesContainer = document.getElementById('chatbot-messages');
+    if (messagesContainer && messagesContainer.children.length === 0) {
+      addMessage('assistant', '안녕하세요! 👋 Cloud9 Care 챗봇입니다. 무엇을 도와드릴까요?');
+    }
+  }
+}
 
 // 챗봇 초기화
 function initChatbot() {
@@ -25,8 +91,8 @@ function initChatbot() {
   }
 
   // 챗봇 열기/닫기
-  button.addEventListener('click', toggleChatbot);
-  closeBtn.addEventListener('click', toggleChatbot);
+  button.addEventListener('click', () => { toggleChatbot(); });
+  closeBtn.addEventListener('click', () => { toggleChatbot(); });
 
   // 챗 종료
   endBtn.addEventListener('click', endChat);
@@ -43,17 +109,37 @@ function initChatbot() {
     }
   });
 
-  // 초기 환영 메시지
-  addMessage('assistant', '안녕하세요! 👋 Cloud9 Care 챗봇입니다. 무엇을 도와드릴까요?');
+  // 초기 환영 메시지 (세션이 없고 메시지 창이 비어있을 때만)
+  if (!chatbot.sessionId) {
+    const messagesContainer = document.getElementById('chatbot-messages');
+    if (messagesContainer && messagesContainer.children.length === 0) {
+      addMessage('assistant', '안녕하세요! 👋 Cloud9 Care 챗봇입니다. 무엇을 도와드릴까요?');
+    }
+  }
 }
 
 // 챗봇 토글
-function toggleChatbot() {
-  chatbot.isOpen = !chatbot.isOpen;
+async function toggleChatbot() {
   const container = document.getElementById('chatbot-container');
+  if (!container) return;
+  
+  chatbot.isOpen = !chatbot.isOpen;
   
   if (chatbot.isOpen) {
     container.classList.add('open');
+
+    const messagesContainer = document.getElementById('chatbot-messages');
+    if (!messagesContainer) return;
+
+    // 화면에 아직 메시지가 없고, 세션이 있으면 복원 시도
+    if (chatbot.sessionId && chatbot.messages.length === 0) {
+      await restoreChatHistory();
+    }
+
+    // 세션도 없고, 화면도 비어 있으면 환영 메시지
+    if (!chatbot.sessionId && messagesContainer.children.length === 0) {
+      addMessage('assistant', '안녕하세요! 👋 Cloud9 Care 챗봇입니다. 무엇을 도와드릴까요?');
+    }
   } else {
     container.classList.remove('open');
   }
@@ -62,9 +148,29 @@ function toggleChatbot() {
 // 메시지 전송
 async function sendMessage() {
   const input = document.getElementById('chatbot-input');
+  if (!input) return;
+  
   const message = input.value.trim();
   
   if (!message) return;
+
+  // 로그인 토큰 확인
+  const token = getAuthToken();
+  if (!token) {
+    addMessage('assistant', '로그인 후 이용할 수 있는 기능입니다.');
+    return;
+  }
+
+  // TTS 중단
+  if (isSpeaking) {
+    synthesis.cancel();
+    isSpeaking = false;
+    const ttsBtn = document.getElementById('chatbot-tts');
+    if (ttsBtn) {
+      ttsBtn.textContent = '🔊';
+      ttsBtn.style.background = 'none';
+    }
+  }
 
   // 사용자 메시지 추가
   addMessage('user', message);
@@ -79,6 +185,7 @@ async function sendMessage() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
         message: message,
@@ -87,6 +194,9 @@ async function sendMessage() {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('로그인이 필요합니다.');
+      }
       throw new Error('메시지 전송 실패');
     }
 
@@ -95,6 +205,7 @@ async function sendMessage() {
     // 세션 ID 저장
     if (data.session_id) {
       chatbot.sessionId = data.session_id;
+      localStorage.setItem('chatbot_session_id', data.session_id);
     }
 
     // 로딩 제거
@@ -103,21 +214,28 @@ async function sendMessage() {
     // 봇 응답 추가
     addMessage('assistant', data.assistant_message || '응답을 받지 못했습니다.');
 
-    // 응급 상황 처리
-    if (data.action_type === 'EMERGENCY') {
+    // 응급 상황 처리 (백엔드와 맞춤)
+    if (data.risk_level === 'Emergency') {
       addEmergencyAlert();
     }
 
   } catch (error) {
     console.error('챗봇 오류:', error);
     hideTypingIndicator();
-    addMessage('assistant', '죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해주세요.');
+    
+    const errorMessage = error instanceof Error
+      ? error.message
+      : '죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해주세요.';
+    
+    addMessage('assistant', errorMessage);
   }
 }
 
 // 메시지 추가
 function addMessage(role, content) {
   const messagesContainer = document.getElementById('chatbot-messages');
+  if (!messagesContainer) return;
+  
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${role}`;
 
@@ -144,6 +262,8 @@ function addMessage(role, content) {
 // 타이핑 인디케이터 표시
 function showTypingIndicator() {
   const messagesContainer = document.getElementById('chatbot-messages');
+  if (!messagesContainer) return;
+  
   const typingDiv = document.createElement('div');
   typingDiv.className = 'message assistant';
   typingDiv.id = 'typing-indicator';
@@ -178,6 +298,8 @@ function hideTypingIndicator() {
 // 응급 알림 추가
 function addEmergencyAlert() {
   const messagesContainer = document.getElementById('chatbot-messages');
+  if (!messagesContainer) return;
+  
   const alertDiv = document.createElement('div');
   alertDiv.className = 'message assistant';
   alertDiv.style.background = '#fff3cd';
@@ -198,25 +320,41 @@ function addEmergencyAlert() {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// 액세스 토큰 가져오기 (로컬 스토리지 또는 쿠키에서)
-function getAccessToken() {
-  // 비로그인 상태에서도 챗봇 사용 가능하므로 빈 문자열 반환
-  return localStorage.getItem('access_token') || '';
-}
-
 // 챗 종료 기능
 async function endChat() {
   if (!confirm('챗을 종료하시겠습니까? 모든 대화 내용이 삭제됩니다.')) {
     return;
   }
 
-  // 세션 초기화
+  // 백엔드 세션 종료 API 호출
+  try {
+    const token = getAuthToken();
+    if (chatbot.sessionId && token) {
+      await fetch('/api/v1/chat/end', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          session_id: chatbot.sessionId,
+        }),
+      });
+    }
+  } catch (error) {
+    console.error('챗 종료 오류:', error);
+  }
+
+  // 프론트 상태 초기화
   chatbot.sessionId = null;
   chatbot.messages = [];
+  localStorage.removeItem('chatbot_session_id');
 
   // 메시지 창 초기화
   const messagesContainer = document.getElementById('chatbot-messages');
-  messagesContainer.innerHTML = '';
+  if (messagesContainer) {
+    messagesContainer.innerHTML = '';
+  }
 
   // 환영 메시지 다시 표시
   addMessage('assistant', '안녕하세요! 👋 Cloud9 Care 챗봇입니다. 무엇을 도와드릴까요?');

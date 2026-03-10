@@ -52,6 +52,16 @@ class Config(BaseSettings):
     # OpenAI API
     OPENAI_API_KEY: str = ""
 
+    # MongoDB
+    MONGODB_URI: str = "mongodb://localhost:27017"
+    MONGODB_DB_NAME: str = "cloud9care"
+    MONGODB_CHAT_COLLECTION: str = "chat_messages"
+
+    # Chat Settings
+    CHAT_MODEL: str = "gpt-4o-mini"
+    CHAT_HISTORY_LIMIT: int = 8
+    RESET_DB_ON_STARTUP: bool = False
+
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 30 * 24 * 60  # 자동로그인 체크 시 30일 유지
@@ -82,3 +92,6 @@ class Config(BaseSettings):
     CLOVA_OCR_SECRET_KEY: str = ""
 
     UPLOAD_DIR: str = ""
+
+
+config = Config()
