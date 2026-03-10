@@ -36,4 +36,3 @@ class GuideGenerateResponse(BaseModel):
     user_summary: str
     retrieved_docs: list[str]
     guide: str
-

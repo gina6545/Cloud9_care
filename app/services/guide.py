@@ -8,7 +8,6 @@ from app.models.current_med import CurrentMed
 from app.models.user import User
 from app.services.llm_service import LLMService
 from app.services.rag_service import RagService
-from app.dtos.llm_life_guide import LlmLifeGuideResponse
 
 
 class GuideService:
@@ -19,7 +18,7 @@ class GuideService:
     # ==========================================
     # 필수 1: LLM 기반 안내 가이드 생성
     # ==========================================
-    async def generate_guide(self, user_id: str) -> dict:
+    async def generate_guide(self, user_id: str | None) -> dict:
         """
         [GUIDE] 맞춤 가이드 생성(RAG 핵심).
         실제 사용자의 기저질환, 알러지, 복용약을 바탕으로 OpenAI를 통해 구조화된 가이드를 생성합니다.
@@ -55,8 +54,10 @@ class GuideService:
                 data={
                     "activity": True,
                     "user_current_status": "가이드 생성 중...",
-                    "generated_content": (await self.llm_service.get_by_user_id(user_id)).generated_content if await self.llm_service.get_by_user_id(user_id) else {}
-                }
+                    "generated_content": (await self.llm_service.get_by_user_id(user_id)).generated_content
+                    if await self.llm_service.get_by_user_id(user_id)
+                    else {},
+                },
             )
         except Exception:
             pass
@@ -172,12 +173,8 @@ class GuideService:
             except Exception:
                 pass
 
-            data={
-                'user_current_status' : prompt,
-                'generated_content': content_json,
-                'activity': False
-            }
-            llm_life_guide:LlmLifeGuideResponse =  await self.llm_service.update_or_create(user_id=user_id,data=data)
+            data = {"user_current_status": prompt, "generated_content": content_json, "activity": False}
+            await self.llm_service.update_or_create(user_id=user_id, data=data)
 
             return {
                 "user_current_status": prompt,
@@ -195,17 +192,25 @@ class GuideService:
                         "activity": False,
                         "user_current_status": "Error occurred during generation",
                         "generated_content": {
-                            "section1": {"title": "오류 안내", "status": "데이터 확인 불가", "content": f"오류: {str(e)}"},
-                        }
-                    }
+                            "section1": {
+                                "title": "오류 안내",
+                                "status": "데이터 확인 불가",
+                                "content": f"오류: {str(e)}",
+                            },
+                        },
+                    },
                 )
-            except:
+            except Exception:
                 pass
 
             return {
                 "user_current_status": "Error occurred",
                 "generated_content": {
-                    "section1": {"title": "오류 안내", "status": "데이터 확인 불가", "content": "네트워크 연결 불안정 또는 API 오류"},
+                    "section1": {
+                        "title": "오류 안내",
+                        "status": "데이터 확인 불가",
+                        "content": "네트워크 연결 불안정 또는 API 오류",
+                    },
                 },
                 "activity": False,
                 "created_at": datetime.now(),
@@ -217,6 +222,19 @@ class GuideService:
         - 저장된 가이드가 있으면 그대로 반환
         - 없으면 새로 생성해서 저장 후 반환
         """
+        if not user or not user.id:
+            return {
+                "user_current_status": "Guest User",
+                "generated_content": {
+                    "section1": {
+                        "title": "안내",
+                        "status": "로그인 필요",
+                        "content": "로그인하시면 맞춤형 건강 가이드를 받아보실 수 있습니다.",
+                    }
+                },
+                "activity": False,
+                "created_at": datetime.now(),
+            }
 
         saved = await self.llm_service.get_by_user_id(str(user.id))
         if saved:
