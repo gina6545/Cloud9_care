@@ -5,15 +5,16 @@ from app.models.blood_pressure_record import BloodPressureRecord
 from app.models.blood_sugar_record import BloodSugarRecord
 from app.models.chronic_disease import ChronicDisease
 from app.models.current_med import CurrentMed
+from app.models.health_profile import HealthProfile
+from app.rag.rag_pipeline import generate_rag_context
 from app.models.user import User
 from app.services.llm_service import LLMService
-from app.services.rag_service import RagService
+
 
 
 class GuideService:
     def __init__(self):
         self.llm_service = LLMService()
-        self.rag_service = RagService()
 
     # ==========================================
     # 필수 1: LLM 기반 안내 가이드 생성
@@ -67,6 +68,7 @@ class GuideService:
             diseases = await ChronicDisease.filter(user_id=user_id).all()
             allergies = await Allergy.filter(user_id=user_id).all()
             meds = await CurrentMed.filter(user_id=user_id).all()
+            health_profile = await HealthProfile.get_or_none(user_id=user_id)
 
             # 최근 혈압, 혈당 데이터
             bp_records = await BloodPressureRecord.filter(user_id=user_id).order_by("-created_at").limit(1)
@@ -84,62 +86,113 @@ class GuideService:
             disease_list, allergy_list, med_list = [], [], []
             bp_list = []
             bs_list = []
+            health_profile = None
 
-        keywords = self.rag_service.build_health_keywords(disease_list, med_list)
+        # 3. 생활습관 정보 추출 : DB 조회 끝
+        if health_profile:
+            lifestyle = {
+                "smoking_status": health_profile.smoking_status,
+                "drinking_status": health_profile.drinking_status,
+                "exercise_frequency": health_profile.exercise_frequency,
+                "diet_type": health_profile.diet_type,
+                "sleep_change": health_profile.sleep_change,
+                "sleep_hours": health_profile.sleep_hours,
+                "weight_change": health_profile.weight_change,
+            }
+        else:
+            lifestyle = {
+                "smoking_status": None,
+                "drinking_status": None,
+                "exercise_frequency": None,
+                "diet_type": None,
+                "sleep_change": None,
+                "sleep_hours": None,
+                "weight_change": None,
+            }
 
-        selected_docs = self.rag_service.select_relevant_docs_by_keywords(
-            keywords=keywords,
-            max_docs=3,
-        )
-        rag_context = self.rag_service.build_rag_context(selected_docs)
+        # prompt용 변수 생성
+        smoking_status = lifestyle.get("smoking_status") or "정보 없음"
+        drinking_status = lifestyle.get("drinking_status") or "정보 없음"
+        exercise_frequency = lifestyle.get("exercise_frequency") or "정보 없음"
+        diet_type = lifestyle.get("diet_type") or "정보 없음"
+        sleep_change = lifestyle.get("sleep_change") or "정보 없음"
+        sleep_hours = lifestyle.get("sleep_hours")
+        sleep_hours_text = f"{sleep_hours}시간" if sleep_hours is not None else "정보 없음"
+        weight_change = lifestyle.get("weight_change") or "정보 없음"
+
+        # 4. RAG
+        try:
+            rag_context = generate_rag_context(
+                selected_diseases=disease_list,
+                other_disease=None,
+                lifestyle=lifestyle,
+                max_queries=5,
+                top_k=2,
+            )
+        except Exception as e:
+            print(f"[RAG ERROR] {e}")
+            rag_context = "[참고 문서]\n관련 참고 문서를 불러오지 못했습니다."
+
+        print("\n===== LIFESTYLE INPUT =====")
+        print(lifestyle)
+
+        print("\n===== RAG CONTEXT IN GUIDE SERVICE =====")
+        print(rag_context)
 
         prompt = f"""
-    신중하고 전문적인 의료 도우미로서, 아래 환자의 건강 상태를 바탕으로 '생활 안내 가이드'를 작성해줘.
+        신중하고 전문적인 의료 도우미로서, 아래 환자의 건강 상태를 바탕으로 '생활 안내 가이드'를 작성해줘.
 
-    [환자 상태]
-    - 만성 질환: {", ".join(disease_list) if disease_list else "없음"}
-    - 알레르기: {", ".join(allergy_list) if allergy_list else "없음"}
-    - 현재 복용 약: {", ".join(med_list) if med_list else "없음"}
-    - 최근 혈압 기록: {", ".join(bp_list) if bp_list else "없음"}
-    - 최근 혈당 기록: {", ".join(bs_list) if bs_list else "없음"}
+        [환자 상태]
+        - 만성 질환: {", ".join(disease_list) if disease_list else "없음"}
+        - 알레르기: {", ".join(allergy_list) if allergy_list else "없음"}
+        - 현재 복용 약: {", ".join(med_list) if med_list else "없음"}
+        - 최근 혈압 기록: {", ".join(bp_list) if bp_list else "없음"}
+        - 최근 혈당 기록: {", ".join(bs_list) if bs_list else "없음"}
+        - 흡연 상태: {smoking_status}
+        - 음주 상태: {drinking_status}
+        - 운동 빈도: {exercise_frequency}
+        - 식습관: {diet_type}
+        - 최근 수면 변화: {sleep_change}
+        - 수면 시간: {sleep_hours_text}
+        - 최근 체중 변화: {weight_change}
 
-    [참고 문서]
-    {rag_context}
+        [참고 문서]
+        {rag_context}
 
-    [작성 가이드라인]
-    1. 과한 확정 진단(예: ~병입니다)은 피하고, '권장합니다', '주의가 필요합니다' 등의 조언 톤을 유지할 것.
-    2. 약물 상호작용 및 알레르기 성분을 최우선으로 체크할 것.
-    3. 반드시 아래의 JSON 구조로 응답할 것.
-    4. 만성 질환이 2개 이상이면 disease_guides를 질환 개수만큼 반드시 생성할 것(누락 금지).
-    5. disease_guides의 name은 입력된 만성 질환명(disease_list)에 있는 문자열을 그대로 사용할 것.
-    6. 참고 문서의 내용을 우선 반영하여 생활습관 및 복약 안내를 작성할 것.
+        [작성 가이드라인]
+        1. 과한 확정 진단(예: ~병입니다)은 피하고, '권장합니다', '주의가 필요합니다' 등의 조언 톤을 유지할 것.
+        2. 약물 상호작용 및 알레르기 성분을 최우선으로 체크할 것.
+        3. 반드시 아래의 JSON 구조로 응답할 것.
+        4. 만성 질환이 2개 이상이면 disease_guides를 질환 개수만큼 반드시 생성할 것(누락 금지).
+        5. disease_guides의 name은 입력된 만성 질환명(disease_list)에 있는 문자열을 그대로 사용할 것.
+        6. 참고 문서의 내용을 우선 반영하여 생활습관 및 복약 안내를 작성할 것.
 
-    [응답 JSON 구조]
-    {{
-    "section1": {{
-        "title": "복약 안전성 및 주의사항",
-        "status": "상호작용 없음 | 주의 필요 | 위험 가능성",
-        "content": "상태에 따른 상세 설명 문구",
-        "general_cautions": ["주의사항 1", "주의사항 2"]
-    }},
-    "section2": {{
-        "title": "질환 기반 생활습관 가이드",
-        "disease_guides": [
-        {{ "name": "질환명", "tips": ["가이드 1", "가이드 2"] }}
-        ],
-        "integrated_point": "종합 관리 포인트 문구"
-    }},
-    "section3": {{
-        "title": "오늘의 실행 플랜",
-        "checklist": ["체크리스트 1", "체크리스트 2", "체크리스트 3"]
-    }},
-    "section4": {{
-        "title": "왜 이런 가이드가 생성되었나요?",
-        "reason": "입력된 정보(질환, 약물 등)가 가이드에 어떻게 반영되었는지에 대한 설명"
-    }},
-    "disclaimer": "본 서비스는 의료 진단이나 처방을 제공하지 않으며, 참고용 안내입니다."
-    }}
-    """.strip()
+        [응답 JSON 구조]
+        {{
+        "section1": {{
+            "title": "복약 안전성 및 주의사항",
+            "status": "상호작용 없음 | 주의 필요 | 위험 가능성",
+            "content": "상태에 따른 상세 설명 문구",
+            "general_cautions": ["주의사항 1", "주의사항 2"]
+        }},
+        "section2": {{
+            "title": "질환 기반 생활습관 가이드",
+            "disease_guides": [
+            {{ "name": "질환명", "tips": ["가이드 1", "가이드 2"] }}
+            ],
+            "integrated_point": "종합 관리 포인트 문구"
+        }},
+        "section3": {{
+            "title": "오늘의 실행 플랜",
+            "checklist": ["체크리스트 1", "체크리스트 2", "체크리스트 3"]
+        }},
+        "section4": {{
+            "title": "왜 이런 가이드가 생성되었나요?",
+            "reason": "입력된 정보(질환, 약물 등)가 가이드에 어떻게 반영되었는지에 대한 설명"
+        }},
+        "disclaimer": "본 서비스는 의료 진단이나 처방을 제공하지 않으며, 참고용 안내입니다."
+        }}
+        """.strip()
 
         try:
             content_json = await self.llm_service.generate_json(
