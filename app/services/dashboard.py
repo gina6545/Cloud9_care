@@ -167,13 +167,17 @@ class DashboardService:
                             "label": "아침",
                             "value": f"{morning.systolic} / {morning.diastolic} mmHg" if morning else "미기록",
                             "status": "recorded" if morning else "pending",
-                            "value_class": get_bp_value_class(morning.systolic, morning.diastolic) if morning else "pending",
+                            "value_class": get_bp_value_class(morning.systolic, morning.diastolic)
+                            if morning
+                            else "pending",
                         },
                         {
                             "label": "저녁",
                             "value": f"{evening.systolic} / {evening.diastolic} mmHg" if evening else "미기록",
                             "status": "recorded" if evening else "pending",
-                            "value_class": get_bp_value_class(evening.systolic, evening.diastolic) if evening else "pending",
+                            "value_class": get_bp_value_class(evening.systolic, evening.diastolic)
+                            if evening
+                            else "pending",
                         },
                     ],
                 },
@@ -190,13 +194,17 @@ class DashboardService:
                             "label": "식후 2시간",
                             "value": f"{int(postmeal.glucose_mg_dl)} mg/dL" if postmeal else "미기록",
                             "status": "recorded" if postmeal else "pending",
-                            "value_class": get_bs_value_class("식후 2시간", postmeal.glucose_mg_dl) if postmeal else "pending",
+                            "value_class": get_bs_value_class("식후 2시간", postmeal.glucose_mg_dl)
+                            if postmeal
+                            else "pending",
                         },
                         {
                             "label": "취침 전",
                             "value": f"{int(bedtime.glucose_mg_dl)} mg/dL" if bedtime else "미기록",
                             "status": "recorded" if bedtime else "pending",
-                            "value_class": get_bs_value_class("취침 전", bedtime.glucose_mg_dl) if bedtime else "pending",
+                            "value_class": get_bs_value_class("취침 전", bedtime.glucose_mg_dl)
+                            if bedtime
+                            else "pending",
                         },
                     ],
                 },
