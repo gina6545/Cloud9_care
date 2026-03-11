@@ -1,5 +1,5 @@
 import random
-from datetime import date, datetime, time, timedelta
+from datetime import datetime, time, timedelta
 from typing import cast
 
 from app.models.alarm import Alarm
@@ -25,8 +25,6 @@ from app.models.llm_life_guide import LLMLifeGuide
 from app.models.multimodal_asset import MultimodalAsset
 from app.models.ocr_history import OCRHistory
 from app.models.pill_recognition import PillRecognition
-from app.models.prescription import Prescription
-from app.models.prescription_drug import PrescriptionDrug
 from app.models.upload import Upload
 from app.models.user import User
 from app.utils.security import hash_password
@@ -331,29 +329,6 @@ class DefaultData:
         )
         upload_back, _ = await Upload.get_or_create(
             user=user, file_path="/static/pill_back.png", file_type="png", category="pill_back"
-        )
-
-        # 처방전
-        prescription, _ = await Prescription.get_or_create(
-            user=user,
-            upload=presc_upload,
-            defaults={"hospital_name": "서울대학교병원", "prescribed_date": date(2026, 2, 20)},
-        )
-        await PrescriptionDrug.get_or_create(
-            prescription=prescription,
-            standard_drug_name="아모디핀정",
-            defaults={"dosage_amount": 1.0, "daily_frequency": 1, "duration_days": 30, "is_linked_to_meds": True},
-        )
-
-        # 처방전 OCR History
-        await OCRHistory.get_or_create(
-            user=user,
-            front_upload=presc_upload,
-            defaults={
-                "raw_text": f"처방전\n환자 성명: {uinfo['name']}\n의료기관: 서울대학교병원\n처방 의약품: 아모디핀정 5mg\n투약량: 1정\n투여횟수: 1일 1회\n투약일수: 30일",
-                "is_valid": True,
-                "inference_metadata": {"time_spent": 1500, "model": "clova_ocr"},
-            },
         )
 
         # AI 가이드
