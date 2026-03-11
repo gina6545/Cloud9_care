@@ -90,7 +90,24 @@
     .guide-med-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
+        max-height: 250px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .guide-med-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .guide-med-list::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+
+    .guide-med-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
     }
 
     .guide-med-item {
@@ -98,7 +115,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 12px 14px;
+        padding: 10px 14px;
         background: #f8fbff;
         border: 1px solid #e6edff;
         border-radius: 14px;
@@ -727,32 +744,39 @@
                     </div>
 
                     <div class="c9-soft-card guide-summary-panel">
+                        <!-- 통합: 기저 질환 및 알레르기 -->
                         <div class="c9-subcard">
                             <div class="c9-subcard-title">
                                 <span class="c9-subcard-bar" style="background:#60a5fa;"></span>
-                                <span>보유 질환</span>
+                                <span>기저 질환 및 알레르기</span>
                             </div>
-                            <div id="chronic-disease-container" class="min-h-[60px]">
-                                <ul class="flex flex-wrap gap-2" id="chronic-disease-list"></ul>
-                            </div>
-                        </div>
-
-                        <div class="c9-subcard">
-                            <div class="c9-subcard-title">
-                                <span class="c9-subcard-bar" style="background:#fbbf24;"></span>
-                                <span>보유 알레르기</span>
-                            </div>
-                            <div id="allergy-container" class="min-h-[60px]">
-                                <ul class="flex flex-wrap gap-2" id="allergy-list"></ul>
+                            <div id="medical-background-container" class="min-h-[60px] flex flex-col gap-3">
+                                <div id="disease-box">
+                                    <p class="guide-kicker">CHRONIC DISEASES</p>
+                                    <ul class="flex flex-wrap gap-2" id="chronic-disease-list"></ul>
+                                </div>
+                                <div id="allergy-box">
+                                    <p class="guide-kicker">ALLERGIES</p>
+                                    <ul class="flex flex-wrap gap-2" id="allergy-list"></ul>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- 통합: 건강 지표 -->
                         <div class="c9-subcard">
                             <div class="c9-subcard-title">
-                                <span class="c9-subcard-bar" style="background:#10b981;"></span>
-                                <span>신체 정보</span>
+                                <span class="c9-subcard-bar" style="background:#f87171;"></span>
+                                <span>건강 지표</span>
                             </div>
-                            <div class="guide-info-grid" id="physical-info-container">
+                            <div class="guide-info-grid" id="health-metrics-container">
+                                <div class="guide-info-box">
+                                    <p class="guide-kicker">BLOOD PRESSURE</p>
+                                    <p class="guide-value" id="recent-bp-text">-</p>
+                                </div>
+                                <div class="guide-info-box">
+                                    <p class="guide-kicker">BLOOD SUGAR</p>
+                                    <p class="guide-value" id="recent-bs-text">-</p>
+                                </div>
                                 <div class="guide-info-box">
                                     <p class="guide-kicker">HEIGHT/WEIGHT</p>
                                     <p class="guide-value" id="height-weight-text">-</p>
@@ -821,10 +845,6 @@
                                 <button id="tts-btn" class="c9-btn c9-btn-soft">
                                     <span id="tts-icon">📢</span>
                                     <span id="tts-text">가이드 읽어주기</span>
-                                </button>
-
-                                <button id="update-btn" class="c9-btn c9-btn-primary">
-                                    🔄 가이드 새로고침
                                 </button>
                             </div>
                         </div>
@@ -947,7 +967,7 @@
         initGuide();
     });
 
-    let currentStatus = { diseases: [], allergies: [], meds: [], profile: null };
+    let currentStatus = { diseases: [], allergies: [], meds: [], profile: null, bp_records: [], bs_records: [] };
     let guideData = null;
     let isSpeaking2 = false;
     const synthesis2 = window.speechSynthesis;
@@ -975,6 +995,8 @@
             currentStatus.allergies = health.allergies || [];
             currentStatus.meds = health.current_meds || [];
             currentStatus.profile = health.health_profile || null;
+            currentStatus.bp_records = health.blood_pressure_records || [];
+            currentStatus.bs_records = health.blood_sugar_records || [];
 
             renderHealthProfile();
         } catch (err) {
@@ -1081,8 +1103,26 @@
         const allergyList = document.getElementById('allergy-list');
         allergyList.innerHTML =
             currentStatus.allergies.length > 0
-                ? currentStatus.allergies.map(a => `<li class="c9-chip c9-chip-amber">${a.any_allergy}</li>`).join('')
+                ? currentStatus.allergies.map(a => `<li class="c9-chip c9-chip-amber">${a.allergy_name}</li>`).join('')
                 : '<li class="c9-muted">등록된 알레르기가 없습니다.</li>';
+
+        // 최근 기록 렌더링
+        const bpText = document.getElementById('recent-bp-text');
+        const bsText = document.getElementById('recent-bs-text');
+
+        if (currentStatus.bp_records.length > 0) {
+            const latestBP = currentStatus.bp_records[0]; // Assuming API returns sorted by latest
+            bpText.innerText = `${latestBP.systolic}/${latestBP.diastolic}`;
+        } else {
+            bpText.innerText = '기록 없음';
+        }
+
+        if (currentStatus.bs_records.length > 0) {
+            const latestBS = currentStatus.bs_records[0];
+            bsText.innerText = `${latestBS.glucose_mg_dl}mg/dL`;
+        } else {
+            bsText.innerText = '기록 없음';
+        }
 
         const medList = document.getElementById('medication-list');
         medList.innerHTML =
@@ -1219,19 +1259,7 @@
     }
 
     function setupGuideEventListeners() {
-        const updateBtn = document.getElementById('update-btn');
         const ttsBtn = document.getElementById('tts-btn');
-
-        if (updateBtn) {
-            updateBtn.addEventListener('click', async () => {
-                const btn = document.getElementById('update-btn');
-                btn.innerHTML = `갱신 중...`;
-                btn.disabled = true;
-                await generateNewGuide();
-                btn.innerHTML = `🔄 가이드 새로고침`;
-                btn.disabled = false;
-            });
-        }
 
         if (ttsBtn) {
             ttsBtn.addEventListener('click', toggleTTS);
