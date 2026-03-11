@@ -44,6 +44,54 @@ function resetSlideTimer() {
   startSlideTimer();
 }
 
+// Dashboard Summary
+async function loadDashboardSummary() {
+  const token = localStorage.getItem('access_token');
+  if (!token) return;
+
+  try {
+    const response = await fetch('/api/v1/dashboard/summary', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      console.error('[Dashboard Summary] Failed:', response.status, response.statusText);
+      return;
+    }
+
+    const data = await response.json();
+
+    const sleepData = document.getElementById('sleep-data');
+    const weightData = document.getElementById('weight-data');
+
+    if (sleepData && data.sleep) {
+      sleepData.innerHTML = `
+        <div class="trend-value">${data.sleep.value ?? '-'}</div>
+        <div class="trend-label">${data.sleep.label ?? '평균 수면 시간'}</div>
+        <div class="trend-change ${getTrendClass(data.sleep.change)}">${data.sleep.change ?? '➖ 정보 없음'}</div>
+      `;
+    }
+
+    if (weightData && data.weight) {
+      weightData.innerHTML = `
+        <div class="trend-value">${data.weight.value ?? '-'}</div>
+        <div class="trend-label">${data.weight.label ?? '현재 체중'}</div>
+        <div class="trend-change ${getTrendClass(data.weight.change)}">${data.weight.change ?? '➖ 정보 없음'}</div>
+      `;
+    }
+  } catch (error) {
+    console.error('[Dashboard Summary] Error:', error);
+  }
+}
+
+function getTrendClass(changeText = '') {
+  if (changeText.includes('감소')) return 'decrease';
+  if (changeText.includes('증가')) return 'increase';
+  return 'stable';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // indicator 클릭 연결
   getIndicators().forEach((indicator, idx) => {
@@ -57,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   showSlideByIndex(0);
   startSlideTimer();
   loadDashboardAlarmSummary();
+  loadDashboardSummary();
 });
 
 // 탭 숨김이면 멈췄다가 돌아오면 재시작
