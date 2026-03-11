@@ -180,14 +180,16 @@
 .trend-change {
   font-size: 12px;
   margin-top: 4px;
+  font-weight: 600;
 }
 
-.trend-change.decrease {
-  color: #e74c3c;
+.trend-change.decrease,
+.trend-change.increase {
+  color: #ef4444;
 }
 
 .trend-change.stable {
-  color: #95a5a6;
+  color: #111827;
 }
 
 /* Medication */
