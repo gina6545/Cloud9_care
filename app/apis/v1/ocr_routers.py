@@ -92,10 +92,14 @@ async def extract_prescription_ocr(
 
     # 4. LLM 파싱 실행 (안전성 확보: 저장된 데이터를 바탕으로 파싱 및 에러 핸들링)
     parsed_prescription = None
+    drugs = []
     try:
         parsed_prescription = await prescription_service.process_prescription_parsing(
             user=user, upload=upload_record, raw_text=ocr_record.raw_text
         )
+        if parsed_prescription:
+            # 연관된 약물 목록 가져오기
+            drugs = await parsed_prescription.drugs.all()
     except Exception as e:
         logger.error(f"LLM 처방전 파싱 실패 (원본 데이터 ID: {ocr_record.id}): {str(e)}")
 
@@ -105,10 +109,49 @@ async def extract_prescription_ocr(
         "hospital_name": parsed_prescription.hospital_name if parsed_prescription else None,
         "prescribed_date": parsed_prescription.prescribed_date if parsed_prescription else None,
         "drug_list_raw": parsed_prescription.drug_list_raw if parsed_prescription else None,
+        "drug_names": (
+            [name.strip() for name in parsed_prescription.drug_list_raw.split(",") if name.strip()]
+            if parsed_prescription and parsed_prescription.drug_list_raw
+            else []
+        ),
+        "drugs": [
+            {
+                "id": d.id,
+                "standard_drug_name": d.standard_drug_name,
+                "dosage": d.dosage_amount,
+                "frequency": d.daily_frequency,
+                "duration": d.duration_days,
+            }
+            for d in drugs
+        ],
         "is_valid": ocr_record.is_valid,
         "preview_text": ocr_record.raw_text[:50] + "..." if len(ocr_record.raw_text) > 50 else ocr_record.raw_text,
         "message": "처방전 분석 및 파싱 완료" if parsed_prescription else "처방전 분석 완료 (파싱 실패)",
     }
+
+
+@ocr_router.post("/prescriptions/{prescription_id}/sync", status_code=status.HTTP_200_OK)
+async def sync_prescription_meds(
+    prescription_id: int,
+    user: Annotated[User, Depends(get_request_user)],
+):
+    """
+    [OCR] 분석된 처방전 약물들을 '현재 복용 약물'로 연동
+    """
+    try:
+        created_meds = await prescription_service.sync_to_current_meds(prescription_id=prescription_id, user=user)
+        return {
+            "success": True,
+            "count": len(created_meds),
+            "message": f"{len(created_meds)}개의 약물이 현재 복용 목록에 추가되었습니다.",
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except Exception as e:
+        logger.error(f"약물 연동 에러: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="약물 연동 중 오류가 발생했습니다."
+        ) from e
 
 
 @ocr_router.post("/pill", status_code=status.HTTP_201_CREATED)

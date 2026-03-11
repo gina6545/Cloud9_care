@@ -98,16 +98,63 @@ class PrescriptionService:
         )
 
         # 4. Step 5: PrescriptionDrug 테이블 저장 (개별 약물 상세 정보)
-        for drug in drugs_data:
-            try:
-                await self.repo.create_drug(
-                    prescription=prescription,
-                    standard_drug_name=drug.get("name"),
-                    dosage_amount=drug.get("dosage"),
-                    daily_frequency=drug.get("frequency"),
-                    duration_days=drug.get("duration"),
-                )
-            except Exception as e:
-                logger.error(f"약물 데이터 저장 실패: {drug.get('name')}, 에러: {str(e)}")
+        if not drugs_data and drug_list_raw:
+            # drugs_data가 비어있다면 drug_list_raw를 파싱해서 최소한의 약물 정보라도 저장
+            raw_drugs = [name.strip() for name in drug_list_raw.split(",") if name.strip()]
+            for name in raw_drugs:
+                try:
+                    await self.repo.create_drug(
+                        prescription=prescription,
+                        standard_drug_name=name,
+                        dosage_amount=None,
+                        daily_frequency=None,
+                        duration_days=None,
+                    )
+                except Exception as e:
+                    logger.error(f"약물 데이터(raw) 저장 실패: {name}, 에러: {str(e)}")
+        else:
+            for drug in drugs_data:
+                try:
+                    await self.repo.create_drug(
+                        prescription=prescription,
+                        standard_drug_name=drug.get("name"),
+                        dosage_amount=drug.get("dosage"),
+                        daily_frequency=drug.get("frequency"),
+                        duration_days=drug.get("duration"),
+                    )
+                except Exception as e:
+                    logger.error(f"약물 데이터 저장 실패: {drug.get('name')}, 에러: {str(e)}")
 
         return prescription
+
+    async def sync_to_current_meds(self, prescription_id: int, user: User) -> list[Any]:
+        """
+        [Step 6] 처방전의 약물들을 현재 복용 중인 약물(CurrentMed) 테이블로 복사(연동)합니다.
+        """
+        from app.models.current_med import AddedFrom, CurrentMed, DoseTime
+
+        prescription = await self.repo.get_by_id(prescription_id)
+        if not prescription or prescription.user_id != user.id:
+            raise ValueError("처방전을 찾을 수 없거나 권한이 없습니다.")
+
+        drugs = await prescription.drugs.all()
+        created_meds = []
+
+        for drug in drugs:
+            # 기본적으로 아침 복용으로 설정 (사용자가 나중에 수정 가능하도록 가이드)
+            med = await CurrentMed.create(
+                user=user,
+                medication_name=drug.standard_drug_name,
+                one_dose=f"{drug.dosage_amount or ''}".strip(),
+                daily_dose_count=str(drug.daily_frequency or ""),
+                one_dose_count="1",  # 기본값
+                dose_time=DoseTime.MORNING,
+                added_from=AddedFrom.HOSPITAL,
+                start_date=str(prescription.prescribed_date or date.today()),
+            )
+            # 연동 상태 업데이트
+            drug.is_linked_to_meds = True
+            await drug.save()
+            created_meds.append(med)
+
+        return created_meds
