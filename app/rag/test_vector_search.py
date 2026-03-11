@@ -2,8 +2,8 @@
 
 from app.rag.vector_store import (
     build_sample_vector_store,
-    search_similar_documents,
     pretty_print_results,
+    search_similar_documents,
 )
 
 
@@ -21,4 +21,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

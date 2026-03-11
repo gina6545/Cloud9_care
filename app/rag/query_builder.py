@@ -4,11 +4,11 @@
 from typing import Any
 
 from app.rag.taxonomy import (
-    TOPIC_TAXONOMY,
     LIFESTYLE_TOPIC_RULES,
     find_disease_group,
     is_known_disease,
 )
+
 
 # 사용자의 질환 목록을 RAG에서 쓰기 위한 표준 구조로 정리
 def normalize_user_diseases(selected_diseases: list[str], other_disease: str | None = None) -> list[dict[str, str]]:
@@ -24,26 +24,18 @@ def normalize_user_diseases(selected_diseases: list[str], other_disease: str | N
     normalized = []
 
     for disease in selected_diseases:
-        normalized.append({
-            "name": disease,
-            "group": find_disease_group(disease)
-        })
+        normalized.append({"name": disease, "group": find_disease_group(disease)})
 
     if other_disease:
         other_disease = other_disease.strip()
         if other_disease:
             if is_known_disease(other_disease):
-                normalized.append({
-                    "name": other_disease,
-                    "group": find_disease_group(other_disease)
-                })
+                normalized.append({"name": other_disease, "group": find_disease_group(other_disease)})
             else:
-                normalized.append({
-                    "name": other_disease,
-                    "group": "기타"
-                })
+                normalized.append({"name": other_disease, "group": "기타"})
 
     return normalized
+
 
 # 생활 습관을 보고, 어떤 주제를 더 검색할지 정함
 def extract_topics_from_lifestyle(lifestyle: dict[str, Any]) -> list[str]:
@@ -59,6 +51,7 @@ def extract_topics_from_lifestyle(lifestyle: dict[str, Any]) -> list[str]:
                 topics.add(topic)
 
     return list(topics)
+
 
 # 최종 검색 query를 만듬
 def build_queries(
@@ -95,4 +88,3 @@ def build_queries(
                 queries.add(f"{disease_name} {topic}")
 
     return sorted(list(queries))
-    

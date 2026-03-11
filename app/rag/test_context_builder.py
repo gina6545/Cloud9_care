@@ -1,8 +1,8 @@
 # app/rag/test_context_builder.py
 
-from app.rag.query_builder import normalize_user_diseases, build_queries
-from app.rag.vector_store import build_sample_vector_store, search_similar_documents
 from app.rag.context_builder import build_context_from_search_results
+from app.rag.query_builder import build_queries, normalize_user_diseases
+from app.rag.vector_store import build_sample_vector_store, search_similar_documents
 
 
 def main():
@@ -50,4 +50,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

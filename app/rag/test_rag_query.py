@@ -1,4 +1,4 @@
-from app.rag.query_builder import normalize_user_diseases, build_queries
+from app.rag.query_builder import build_queries, normalize_user_diseases
 
 selected_diseases = ["고혈압", "당뇨병"]
 other_disease = "역류성식도염"
@@ -22,4 +22,3 @@ for disease in diseases:
 print("\n생성된 query 목록:")
 for query in queries:
     print(query)
-    

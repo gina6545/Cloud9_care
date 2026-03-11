@@ -6,7 +6,6 @@ from typing import Any
 
 import chromadb
 
-
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 CHROMA_DIR = BASE_DIR / "chroma_db"
@@ -31,7 +30,7 @@ def load_jsonl_documents(file_path: str | Path) -> list[dict[str, Any]]:
     return documents
 
 
-def get_chroma_client() -> chromadb.PersistentClient:
+def get_chroma_client() -> Any:
     """
     로컬에 저장되는 Chroma PersistentClient를 생성한다.
     """
@@ -39,7 +38,7 @@ def get_chroma_client() -> chromadb.PersistentClient:
     return chromadb.PersistentClient(path=str(CHROMA_DIR))
 
 
-def get_or_create_collection():
+def get_or_create_collection() -> Any:
     """
     health_guidelines collection을 가져오거나 새로 만든다.
     """
@@ -91,7 +90,7 @@ def build_sample_vector_store() -> None:
     print(f"총 {len(ids)}개의 문서를 collection에 저장했습니다.")
 
 
-def search_similar_documents(query_text: str, n_results: int = 3) -> dict[str, Any]:
+def search_similar_documents(query_text: str, n_results: int = 3) -> Any:
     """
     query_text로 유사 문서를 검색한다.
     """
@@ -115,7 +114,7 @@ def pretty_print_results(results: dict[str, Any]) -> None:
 
     print("\n검색 결과:")
     for idx, (doc_id, doc_text, metadata, distance) in enumerate(
-        zip(ids, documents, metadatas, distances), start=1
+        zip(ids, documents, metadatas, distances, strict=False), start=1
     ):
         print(f"\n[{idx}] id: {doc_id}")
         print(f"topic: {metadata.get('topic')}")

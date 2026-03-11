@@ -106,4 +106,3 @@ def is_known_disease(disease_name: str) -> bool:
         if disease_name in disease_list:
             return True
     return False
-    

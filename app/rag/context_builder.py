@@ -10,14 +10,14 @@ def extract_unique_documents(results_list: list[dict[str, Any]]) -> list[dict[st
     중복 id를 제거해서 고유 문서 목록으로 반환한다.
     """
     unique_docs = {}
-    
+
     for results in results_list:
         ids = results.get("ids", [[]])[0]
         documents = results.get("documents", [[]])[0]
         metadatas = results.get("metadatas", [[]])[0]
         distances = results.get("distances", [[]])[0]
 
-        for doc_id, doc_text, metadata, distance in zip(ids, documents, metadatas, distances):
+        for doc_id, doc_text, metadata, distance in zip(ids, documents, metadatas, distances, strict=False):
             if doc_id not in unique_docs:
                 unique_docs[doc_id] = {
                     "id": doc_id,
@@ -35,6 +35,7 @@ def sort_documents_by_distance(documents: list[dict[str, Any]]) -> list[dict[str
     distance가 작을수록 더 유사한 문서다.
     """
     return sorted(documents, key=lambda x: x.get("distance", 999999))
+
 
 def filter_documents_by_disease(
     documents: list[dict[str, Any]],
@@ -57,6 +58,7 @@ def filter_documents_by_disease(
             filtered.append(doc)
 
     return filtered
+
 
 def build_rag_context(
     documents: list[dict[str, Any]],

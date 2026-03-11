@@ -1,9 +1,8 @@
-from app.rag.vector_store import build_sample_vector_store
 from app.rag.rag_pipeline import generate_rag_context
+from app.rag.vector_store import build_sample_vector_store
 
 
 def main():
-
     build_sample_vector_store()
 
     selected_diseases = ["고혈압", "당뇨병"]
@@ -30,4 +29,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

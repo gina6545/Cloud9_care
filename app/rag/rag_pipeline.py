@@ -3,9 +3,9 @@
 # 사용자 건강정보 → RAG 검색 → rag_context 생성
 # app/rag/rag_pipeline.py
 
-from app.rag.query_builder import normalize_user_diseases, build_queries
-from app.rag.vector_store import search_similar_documents
 from app.rag.context_builder import build_context_from_search_results
+from app.rag.query_builder import build_queries, normalize_user_diseases
+from app.rag.vector_store import search_similar_documents
 
 
 def generate_rag_context(
@@ -36,10 +36,10 @@ def generate_rag_context(
 
     # 4️⃣ rag_context 생성
     rag_context = build_context_from_search_results(
-    results_list=results_list,
-    selected_diseases=selected_diseases,
-    max_docs=5,
-    include_metadata=False,
-)
+        results_list=results_list,
+        selected_diseases=selected_diseases,
+        max_docs=5,
+        include_metadata=False,
+    )
 
     return rag_context
