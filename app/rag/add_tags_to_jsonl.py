@@ -45,7 +45,7 @@ def make_tags(doc: dict) -> list[str]:
 
 
 def add_tags_to_file(file_path: Path) -> None:
-    docs = []
+    docs: list[dict] = []
 
     with file_path.open("r", encoding="utf-8") as f:
         for line in f:

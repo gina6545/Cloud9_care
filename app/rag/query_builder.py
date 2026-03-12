@@ -73,4 +73,3 @@ def build_queries(
             queries.add(f"{disease_name} {topic} 관리")
 
     return sorted(list(queries))
-    

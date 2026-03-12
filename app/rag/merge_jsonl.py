@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-
 BASE_DIR = Path("app/rag/data")
 INPUT_FILES = [
     BASE_DIR / "kdca_documents.jsonl",
@@ -11,7 +10,7 @@ OUTPUT_FILE = BASE_DIR / "merged_documents.jsonl"
 
 
 def load_jsonl(file_path: Path) -> list[dict]:
-    documents = []
+    documents: list[dict] = []
 
     if not file_path.exists():
         print(f"[WARN] File not found: {file_path}")
@@ -34,7 +33,7 @@ def load_jsonl(file_path: Path) -> list[dict]:
 
 
 def merge_jsonl_files(input_files: list[Path], output_file: Path) -> None:
-    merged_docs = []
+    merged_docs: list[dict] = []
     seen_ids = set()
 
     for file_path in input_files:
@@ -65,4 +64,3 @@ def merge_jsonl_files(input_files: list[Path], output_file: Path) -> None:
 
 if __name__ == "__main__":
     merge_jsonl_files(INPUT_FILES, OUTPUT_FILE)
-    
