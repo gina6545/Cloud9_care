@@ -76,3 +76,21 @@ async def get_blood_pressure(
 ):
     service = BloodPressureRecordService()
     return await service.generate_blood_pressure(user)
+
+
+@health_router.delete("/blood-sugar/{record_id}")
+async def delete_blood_sugar(
+    record_id: int,
+    user: Annotated[User, Depends(get_request_user)],
+):
+    service = HealthProfileService()
+    return await service.blood_sugar_delete(user.id, record_id)
+
+
+@health_router.delete("/blood-pressure/{record_id}")
+async def delete_blood_pressure(
+    record_id: int,
+    user: Annotated[User, Depends(get_request_user)],
+):
+    service = HealthProfileService()
+    return await service.blood_pressure_delete(user.id, record_id)

@@ -111,3 +111,13 @@ class HealthProfileService:
             await self.current_med_repo.create_many(user_id, [m.model_dump() for m in request.medications])
 
         return {"status": "success", "detail": "건강 정보가 성공적으로 저장되었습니다."}
+
+    async def blood_sugar_delete(self, user_id: str, record_id: int):
+        """혈당 기록을 삭제합니다."""
+        await self.blood_sugar_record_repo.delete_by_id(user_id, record_id)
+        return {"status": "success", "detail": "혈당 기록이 삭제되었습니다."}
+
+    async def blood_pressure_delete(self, user_id: str, record_id: int):
+        """혈압 기록을 삭제합니다."""
+        await self.blood_pressure_record_repo.delete_by_id(user_id, record_id)
+        return {"status": "success", "detail": "혈압 기록이 삭제되었습니다."}
