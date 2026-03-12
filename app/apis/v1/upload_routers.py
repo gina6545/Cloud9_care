@@ -29,3 +29,13 @@ async def get_upload_file(user: Annotated[User, Depends(get_request_user)]):
     """
     upload_service = UploadService()
     return await upload_service.get_upload_file(user)
+
+
+@upload_router.get("/history")
+async def get_upload_history(user: Annotated[User, Depends(get_request_user)]):
+    """
+    [UPLOAD] 사용자의 전체 업로드 히스토리 조회
+    """
+    upload_service = UploadService()
+    history = await upload_service.get_upload_history(user)
+    return {"status": "success", "content": history}
