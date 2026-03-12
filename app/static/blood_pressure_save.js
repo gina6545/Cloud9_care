@@ -349,7 +349,7 @@ document.querySelector("#pressure-record-list").addEventListener("click", async 
       const result = await response.json();
       if (result.status == 'success') {
         e.target.parentNode.parentNode.remove()
-        loadBloodSugarRecords()
+        loadBloodPressureRecords()
       }
     }
 
