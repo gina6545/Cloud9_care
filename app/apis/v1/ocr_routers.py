@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from pydantic import BaseModel
 
 from app.dependencies.security import get_request_user
-from app.models.ocr_history import OCRHistory
 from app.models.upload import Upload
 from app.models.user import User
 from app.repositories.pill import PillRepository
@@ -93,7 +92,7 @@ async def extract_prescription_ocr(
         logger.error(f"Vision 처방전 파싱 실패 (Upload ID: {upload_record.id}): {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"처방전 분석 중 오류 발생: {str(e)}"
-        )
+        ) from e
 
     return {
         "prescription_id": parsed_prescription.id if parsed_prescription else None,

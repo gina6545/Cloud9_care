@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any
 from tortoise import fields, models
 
 if TYPE_CHECKING:
+    from app.models.prescription import Prescription
     from app.models.upload import Upload
     from app.models.user import User
 

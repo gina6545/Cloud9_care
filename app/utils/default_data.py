@@ -9,7 +9,6 @@ from app.models.blood_pressure_record import BloodPressureRecord, RecordTime
 from app.models.blood_sugar_record import BloodSugarRecord, GlucoseMeasureType
 from app.models.chat_message import ChatMessage
 from app.models.chronic_disease import ChronicDisease
-from app.models.pill_recognitions import PillRecognition
 from app.models.current_med import AddedFrom, CurrentMed, DoseTime
 from app.models.health_profile import (
     DietType,
@@ -24,6 +23,8 @@ from app.models.health_profile import (
 from app.models.llm_life_guide import LLMLifeGuide
 from app.models.multimodal_asset import MultimodalAsset
 from app.models.ocr_history import OCRHistory
+from app.models.pill_recognitions import PillRecognition
+
 # Removed app.models.pill_recognition import
 from app.models.upload import Upload
 from app.models.user import User
