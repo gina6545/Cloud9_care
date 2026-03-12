@@ -33,3 +33,9 @@ class UploadRepository:
         return await self._model.filter(user_id=user_id, created_at__gte=start, created_at__lt=end).prefetch_related(
             "prescription__drugs", "pill_recognition_front", "pill_recognition_back"
         )
+
+    async def get_all_uploads(self, user_id: str):
+        """
+        사용자의 모든 업로드 기록을 최신순으로 정렬하여 반환합니다.
+        """
+        return await self._model.filter(user_id=user_id).order_by("-created_at")

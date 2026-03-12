@@ -18,7 +18,7 @@ class LLMLifeGuide(models.Model):
     user_current_status = fields.TextField()
     # [대시보드 하단] AI가 생성한 맞춤 가이드 전문
     generated_content: fields.JSONField = fields.JSONField()
-    activity = fields.BooleanField(default=True)
+    activity = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:

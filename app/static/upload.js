@@ -687,3 +687,130 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// 업로드 히스토리 불러오기
+async function fetchUploadHistory() {
+    const list1 = document.getElementById('upload-history-list-prescription');
+    const list2 = document.getElementById('upload-history-list-pill');
+    
+    // 두 컨테이너 중 하나라도 없으면 여기서 에러표시를 할 필요는 없지만,
+    // 둘 다 없다면 굳이 페치할 필요 없음.
+    if (!list1 && !list2) return;
+
+    try {
+        const response = await fetchWithAuth('/api/v1/uploads/history');
+        if (response.ok) {
+            const result = await response.json();
+            const data = result.content || [];
+            if (list1) renderUploadHistory(list1, data);
+            if (list2) renderUploadHistory(list2, data);
+        } else {
+            console.error("히스토리 데이터를 불러오지 못했습니다.");
+            const errorHtml = `<div style="text-align: center; color: #ef4444; padding: 20px 0;">히스토리를 불러오는 중 오류가 발생했습니다.</div>`;
+            if (list1) list1.innerHTML = errorHtml;
+            if (list2) list2.innerHTML = errorHtml;
+        }
+    } catch (e) {
+        console.error("히스토리 Fetch 중 에러: ", e);
+        const errorHtml = `<div style="text-align: center; color: #ef4444; padding: 20px 0;">히스토리를 불러오는 중 오류가 발생했습니다.</div>`;
+        if (list1) list1.innerHTML = errorHtml;
+        if (list2) list2.innerHTML = errorHtml;
+    }
+}
+
+// 업로드 히스토리 렌더링
+function renderUploadHistory(container, historyList) {
+    if (!container) return;
+
+    if (!historyList || historyList.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 20px 0;">아직 업로드한 기록이 없습니다.</div>`;
+        return;
+    }
+
+    let html = '';
+    historyList.forEach((item, index) => {
+        const icon = item.type === '처방전' ? '📄' : '💊';
+        const dateStr = item.date;
+        const uniqueId = `history-images-${container.id}-${index}`;
+        
+        // 이미지 목록 서브 HTML 생성
+        let imagesHtml = '';
+        if (item.images && item.images.length > 0) {
+            item.images.forEach(img => {
+                // 이미지 이름이 길 경우 말줄임 처리, 클릭 시 속성으로 전달한 url을 이용해 확대 기능 수행
+                imagesHtml += `
+                    <div class="history-image-item" data-url="${img.url}" style="padding: 8px 10px; margin-top: 5px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #475569; transition: background 0.2s;">
+                        <span>🖼️</span> 
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${img.name}</span>
+                    </div>
+                `;
+            });
+        } else {
+            imagesHtml = `<div style="font-size: 13px; color: #94a3b8; padding: 5px;">이미지가 없습니다.</div>`;
+        }
+
+        html += `
+            <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                <!-- 타이틀 (클릭 시 아코디언 토글) -->
+                <div class="history-title-row" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; cursor: pointer;">
+                    <div style="display: flex; align-items: center; font-size: 16px; font-weight: 500; color: #334155;">
+                        <span style="font-size: 20px; margin-right: 12px; opacity: 0.8;">${icon}</span>
+                        <span>${dateStr} ${item.type}</span>
+                    </div>
+                    <div class="history-arrow" style="font-size: 16px; color: #94a3b8; transition: transform 0.3s;">
+                        ▼
+                    </div>
+                </div>
+                <!-- 확장 영역 (이미지 목록) -->
+                <div id="${uniqueId}" style="display: none; padding-left: 35px; padding-right: 10px; flex-direction: column; gap: 5px; margin-top: 5px;">
+                    ${imagesHtml}
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    // 이벤트 리스너 바인딩 (아코디언 토글)
+    const titleRows = container.querySelectorAll('.history-title-row');
+    titleRows.forEach(row => {
+        row.addEventListener('click', function() {
+            const arrow = this.querySelector('.history-arrow');
+            const expandArea = this.nextElementSibling;
+            if (expandArea.style.display === 'none') {
+                expandArea.style.display = 'flex';
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                expandArea.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        });
+    });
+
+    // 이벤트 리스너 바인딩 (이미지 이름 클릭 시 줌 모달 띄우기)
+    const imageItems = container.querySelectorAll('.history-image-item');
+    imageItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation(); // 부모 토글 이벤트 방지
+            const url = this.getAttribute('data-url');
+            if (url && typeof showZoomModal === 'function') {
+                showZoomModal(url);
+            } else {
+                // fall back logic
+                const zoomOverlay = document.getElementById('zoom-overlay');
+                const zoomImg = document.getElementById('zoom-img');
+                if (zoomOverlay && zoomImg) {
+                    zoomImg.src = url;
+                    zoomOverlay.classList.add('show');
+                } else {
+                    window.open(url, '_blank');
+                }
+            }
+        });
+    });
+}
+
+// 최초 로딩 시 데이터 패치
+document.addEventListener('DOMContentLoaded', () => {
+    fetchUploadHistory();
+});

@@ -284,6 +284,46 @@ class UploadService:
 
         return await self.upload_pull_status(processed_results)
 
+    async def get_upload_history(self, user: Any) -> list[dict]:
+        """
+        사용자의 전체 업로드 히스토리를 가져와 프론트엔드 표시에 맞게 가공합니다.
+        가공 형태: 여러 장의 사진이 같은 날짜에 올라가더라도 날짜와 카테고리를 기준으로 하나로 묶습니다.
+        """
+        if not user:
+            return []
+
+        uploads = await self._repo.get_all_uploads(user.id)
+        if not uploads:
+            return []
+
+        history_map = {}
+        for upload in uploads:
+            # 날짜 (YYYY-MM-DD 형식으로만)
+            created_date = upload.created_at.strftime("%Y-%m-%d")
+
+            # 카테고리 (UI 표시용)
+            if upload.category == "prescription":
+                display_type = "처방전"
+            elif upload.category in ["pill_front", "pill_back"]:
+                display_type = "알약 분석"
+            else:
+                display_type = upload.category
+
+            # 이미지 파일 URL 계산 (FastAPI StaticFiles 경로 기준)
+            file_name_only = os.path.basename(upload.file_path)
+            file_url = f"/uploads/{file_name_only}"
+            original_name = upload.original_name or file_name_only
+
+            # 같은 날짜 + 같은 타입인 경우 한 항목으로 보여줌
+            key = f"{created_date}_{display_type}"
+            if key not in history_map:
+                history_map[key] = {"id": upload.id, "date": created_date, "type": display_type, "images": []}
+
+            history_map[key]["images"].append({"name": original_name, "url": file_url})
+
+        # 딕셔너리의 값만 리스트로 반환 (최근순 정렬 유지)
+        return list(history_map.values())
+
     def _get_base_name(self, path: str) -> str:
         """파일명에서 핵심 이름을 추출합니다."""
         filename = os.path.basename(path)
