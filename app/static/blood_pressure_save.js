@@ -322,6 +322,7 @@ function renderPressureRecordList() {
   wrap.innerHTML = filtered.map(item => `
     <div class="notebook-record-item compact">
       <div class="notebook-record-left">
+        <div class="data-del" title="${item.id}">X</div>
         <div class="notebook-record-value-row">
           <span class="notebook-record-value">${Number(item.systolic)} / ${Number(item.diastolic)} mmHg</span>
           <span class="notebook-record-badge">${item.measure_type}</span>
@@ -338,3 +339,18 @@ function renderPressureRecordList() {
 document.addEventListener('DOMContentLoaded', async () => {
   await loadBloodPressureRecords();
 });
+
+document.querySelector("#pressure-record-list").addEventListener("click", async (e)=>{
+  if(e.target.className == 'data-del'){
+    if (confirm("정말 삭제하시겠습니까?")) {
+        const response = await BloodNotebook.fetchWithAuthSafe('/api/v1/health/blood-pressure/'+e.target.title, {
+          method: 'DELETE',
+        });
+        const result = await response.json();
+        if(result.status == 'success'){
+          e.target.parentNode.parentNode.remove()
+        }
+    }
+    
+  }
+})

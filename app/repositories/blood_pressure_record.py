@@ -21,3 +21,9 @@ class BloodPressureRecordRepository:
 
     async def create_blood_pressure(self, data: dict):
         return await self._model.create(**data)
+
+    async def delete_by_id(self, user_id: str, record_id: int):
+        """
+        사용자 아이디와 레코드 아이디가 일치하는 혈압 기록을 삭제합니다.
+        """
+        await self._model.filter(user_id=user_id, id=record_id).delete()

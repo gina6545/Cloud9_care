@@ -292,6 +292,16 @@
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  position: relative;
+}
+
+.notebook-record-left .data-del{
+  color: red;
+  font-size: 20px;
+  font-weight: 900;
+  position: absolute;
+  right: 0px;
+  cursor: pointer;
 }
 
 .notebook-record-top {
