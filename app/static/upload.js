@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSync = document.getElementById('btn-sync-prescription');
     const btnCancelSync = document.getElementById('btn-cancel-sync');
 
+    // --- Zoom Elements ---
+    const zoomOverlay = document.getElementById('zoom-overlay');
+    const zoomImg = document.getElementById('zoom-img');
+    const closeZoomBtn = document.querySelector('.btn-zoom-close');
+
     // --- Modal Control ---
 
     document.querySelectorAll('.open-upload-btn').forEach(btn => {
@@ -56,6 +61,26 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadOverlay.classList.remove('show');
         }
     });
+
+    // --- Zoom Modal Control ---
+    function showZoomModal(src) {
+        zoomImg.src = src;
+        zoomOverlay.classList.add('show');
+    }
+
+    if (zoomOverlay) {
+        zoomOverlay.addEventListener('click', (e) => {
+            if (e.target === zoomOverlay || e.target.classList.contains('btn-zoom-close')) {
+                zoomOverlay.classList.remove('show');
+            }
+        });
+    }
+
+    if (closeZoomBtn) {
+        closeZoomBtn.addEventListener('click', () => {
+            zoomOverlay.classList.remove('show');
+        });
+    }
 
     function resetUpload() {
         selectedFiles = [];
@@ -153,8 +178,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (file.type.startsWith('image/')) {
                     const img = document.createElement('img');
+                    img.style.cursor = 'zoom-in';
                     const reader = new FileReader();
-                    reader.onload = (e) => { img.src = e.target.result; };
+                    reader.onload = (e) => {
+                        img.src = e.target.result;
+                        img.onclick = (ev) => {
+                            ev.stopPropagation();
+                            showZoomModal(e.target.result);
+                        };
+                    };
                     reader.readAsDataURL(file);
                     previewItem.appendChild(img);
                 } else {
@@ -236,6 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (imageData.startsWith('data:image/')) {
                 const img = document.createElement('img');
                 img.src = imageData;
+                img.style.cursor = 'zoom-in';
+                img.onclick = (e) => {
+                    e.stopPropagation();
+                    showZoomModal(imageData);
+                };
                 previewItem.appendChild(img);
             } else {
                 // PDF Placeholder for main view

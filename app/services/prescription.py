@@ -23,6 +23,23 @@ class PrescriptionService:
         self.repo = PrescriptionRepository()
         self.client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
 
+    @staticmethod
+    def _clean_drug_name(raw_name: str) -> str:
+        """
+        약품명에서 불필요한 접두어(비), 급)) 및 잘린 괄호/성분명을 제거합니다.
+        """
+        import re
+
+        if not raw_name:
+            return ""
+
+        # 1. '비)' 또는 '급)' 제거
+        name = re.sub(r"^[비급]\)\s*", "", raw_name)
+        # 2. 첫 번째 괄호가 시작되는 지점 이후로 모두 제거 (잘린 성성분명/용량 제거)
+        name = name.split("(")[0]
+        # 3. 양끝 공백 제거
+        return name.strip()
+
     async def parse_prescription_with_vision(self, image_bytes: bytes) -> dict[str, Any]:
         """
         GPT-4o-mini Vision을 사용하여 처방전 이미지를 직접 분석하고 구조화된 데이터를 추출합니다.
@@ -31,39 +48,35 @@ class PrescriptionService:
         import base64
 
         if not config.OPENAI_API_KEY:
-            logger.warning("OPENAI_API_KEY가 설정되지 않았습니다. 파싱을 건너뜁니다.")
+            logger.warning("OPENAI_API_KEY가 설정되지 않았습니다. 파싱을 건너뜜니다.")
             return {"hospital_name": None, "prescribed_date": None, "drugs": []}
 
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
 
         system_prompt = """
-        당신은 한국의 처방전 및 약봉투 분석 전문가입니다. 이미지를 보고 '병원/약국명', '날짜', '약물 정보'를 JSON으로 추출하세요.
+        당신은 한국의 처방전 및 약봉투 분석 전문가입니다. 이미지를 보고 정보를 JSON으로 추출하세요.
 
-        ### [핵심 분석 규칙 - 매우 중요] ###
-        1. **컬럼 구분**:
-           - '약품명' 컬럼과 '복약안내' 컬럼을 엄격히 구분하세요.
-           - '약품명' 컬럼에 적힌 고유 이름(예: 셋락타민정, 나로펜정)만 'name' 필드에 담으세요.
-           - '복약안내' 컬럼에 적힌 설명(예: ~치료하는 약, ~해소하는 약)은 절대로 'name' 필드에 넣지 마세요.
-        2. **텍스트 정제**:
-           - 약품명 뒤의 특수문자(_), 괄호 안의 용량((0.5g)), 또는 잘린 텍스트 부분을 정제하여 깔끔한 제품명만 남기세요.
-        3. **불필요 정보 제외**:
-           - 조제약사명, 환자명, 영수증 금액 등 약품 리스트가 아닌 정보는 모두 무시하세요.
-        4. **개수 확인**:
-           - 표의 행(Row) 개수만큼 약물이 추출되어야 합니다. (예: 3줄이면 3개 추출)
-        5. **방향 무관**:
-           - 사진이 거꾸로 되어 있어도 글자 방향을 읽어 정확히 파악하세요.
+        ### [추출 및 정제 규칙] ###
+        1. **약품명 정제 (CRITICAL)**:
+           - 이름 앞의 '비)', '급)' 등 급여 구분 기호는 반드시 제거하세요.
+           - 이름 뒤에 잘린 괄호나 성분명(예: '(독시사이클린수')은 제거하고 순수 제품명만 남기세요.
+           - 예: "비)바이독시정(독시사이클린수" -> "바이독시정"
+           - 예: "비)생생장캡슐(바실루스리케니" -> "생생장캡슐"
+        2. **복약안내 제외**: '세균감염증 치료제', '정장제'와 같은 설명문은 `name`에 절대 포함하지 마세요.
+        3. **수치 데이터**: 투약량(1.00), 횟수(2), 일수(10)를 정확히 숫자로 매핑하세요.
+        4. **방향 무관**: 사진이 거꾸로 되어 있어도 글자 방향을 읽어 정확히 파악하세요.
 
-        ### JSON 구조 ###
+        ### JSON OUTPUT FORMAT ###
         {
             "hospital_name": "병원명 또는 약국명 (null 가능)",
             "prescribed_date": "YYYY-MM-DD (null 가능)",
             "drug_list_raw": "추출된 약물 이름들 (쉼표 구분)",
             "drugs": [
                 {
-                    "name": "정제된 표준 약품명",
-                    "dosage": 1.0, (1회 분량)
-                    "frequency": 3, (하루 횟수)
-                    "duration": 3 (복용 일수)
+                    "name": "바이독시정",
+                    "dosage": 1.0,
+                    "frequency": 2,
+                    "duration": 10
                 }
             ]
         }
@@ -108,7 +121,16 @@ class PrescriptionService:
         drug_list_raw = parsed_data.get("drug_list_raw")
         drugs_data = parsed_data.get("drugs", [])
 
-        # 2. 날짜 형식 검증
+        # 2. 약품명 2차 정제 (Python 레벨 후처리)
+        if drug_list_raw:
+            cleaned_names = [self._clean_drug_name(name) for name in drug_list_raw.split(",") if name.strip()]
+            drug_list_raw = ", ".join(cleaned_names)
+
+        for drug in drugs_data:
+            if "name" in drug:
+                drug["name"] = self._clean_drug_name(drug["name"])
+
+        # 3. 날짜 형식 검증
         prescribed_date = None
         if prescribed_date_str:
             try:
@@ -116,7 +138,7 @@ class PrescriptionService:
             except ValueError:
                 logger.warning(f"잘못된 날짜 형식: {prescribed_date_str}")
 
-        # 3. OCRHistory 생성 (Vision 분석 원본 결과 저장)
+        # 4. OCRHistory 생성 (Vision 분석 원본 결과 저장)
         ocr_history = await OCRHistory.create(
             user=user,
             raw_text=json.dumps(parsed_data, ensure_ascii=False),
@@ -125,7 +147,7 @@ class PrescriptionService:
             inference_metadata={"model": "gpt-4o-mini-vision"},
         )
 
-        # 4. Prescription 생성
+        # 5. Prescription 생성
         prescription = await self.repo.create(
             user=user,
             upload=upload,
@@ -135,7 +157,7 @@ class PrescriptionService:
             drug_list_raw=drug_list_raw,
         )
 
-        # 4. PrescriptionDrug 생성
+        # 6. PrescriptionDrug 생성
         for drug in drugs_data:
             try:
                 await self.repo.create_drug(
