@@ -3,200 +3,173 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>계정 찾기</title>
-    <link rel="stylesheet" href="/static/chatbot.css">
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            background-color: #f4f7f6;
-        }
-
-        .container {
-            width: 400px;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        /* 탭 스타일 */
-        .tab-menu {
-            display: flex;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #eee;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            color: #999;
-            font-weight: bold;
-        }
-
-        .tab-btn.active {
-            color: #007bff;
-            border-bottom: 2px solid #007bff;
-            margin-bottom: -2px;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .row {
-            display: flex;
-            gap: 5px;
-        }
-
-        .row input {
-            flex: 3;
-        }
-
-        .row button {
-            flex: 1;
-            white-space: nowrap;
-            font-size: 0.8em;
-            margin: 0px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .result-box {
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px dashed #abc;
-        }
-
-        .found-id {
-            font-weight: bold;
-            color: #007bff;
-            font-size: 1.2em;
-            margin: 10px 0;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계정 찾기 - Cloud9 Care</title>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="/static/auth.css">
 </head>
 
-<body>
-    <div class="container">
-        <div class="tab-menu">
-            <div class="tab-btn active" onclick="openTab('findId')">아이디 찾기</div>
-            <div class="tab-btn" onclick="openTab('findPw')">비밀번호 찾기</div>
-        </div>
+<body class="auth-body">
+    <div class="auth-shell">
+        <div class="auth-container">
+            <section class="auth-hero">
+                <div class="auth-hero-top">
+                    <div class="auth-brand">
+                        <a href="/">☁️ Cloud9 Care</a>
+                    </div>
+                    <h1 class="auth-hero-title">
+                        계정 정보를 찾고<br>
+                        다시 이어서 시작하세요
+                    </h1>
+                    <p class="auth-hero-desc">
+                        가입한 이름, 전화번호, 이메일 인증을 통해 아이디를 찾거나
+                        비밀번호를 안전하게 재설정할 수 있어요.
+                    </p>
 
-        <!-- 1. 아이디 찾기 탭 -->
-        <div id="findId" class="tab-content active">
-            <div id="idFormArea">
-                <div class="form-group">
-                    <label>이름</label>
-                    <input type="text" id="id_name" placeholder="가입하신 이름 입력">
+                    <ul class="auth-feature-list">
+                        <li><span class="auth-feature-icon">✓</span><span>이름과 전화번호로 아이디 찾기</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>이메일 인증 후 비밀번호 재설정</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>Cloud9 Care 계정 접근 복구 지원</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>로그인 페이지와 동일한 인증 경험</span></li>
+                    </ul>
                 </div>
-                <div class="form-group">
-                    <label>전화번호</label>
-                    <input type="text" id="id_phone" placeholder="01012345678">
-                </div>
-                <button type="button" onclick="handleFindId()">아이디 확인</button>
-                <button onclick="location.href='/login'">로그인하러 가기</button>
-            </div>
 
-            <div id="idResultBox" class="result-box">
-                <p>가입하신 이메일 아이디입니다.</p>
-                <div id="idResult" class="found-id"></div>
-                <button onclick="location.href='/login'">로그인하러 가기</button>
-            </div>
-        </div>
+                <div class="auth-hero-bottom">
+                    <div class="auth-hero-bottom-title">계정 찾기 안내</div>
+                    <div class="auth-hero-bottom-text">
+                        아이디 찾기 또는 비밀번호 재설정 중 필요한 절차를 선택해
+                        빠르게 계정에 다시 접근할 수 있어요.
+                    </div>
+                </div>
+            </section>
 
-        <!-- 2. 비밀번호 찾기 탭 -->
-        <div id="findPw" class="tab-content">
-            <div class="form-group">
-                <label>이메일 (ID)</label>
-                <div class="row">
-                    <input type="email" id="pw_id" name="pw_id" required placeholder="example@mail.com"
-                        value="ejrtn153@naver.com">
-                    <button type="button" class="btn-verify" onclick="sendCode()">인증 요청</button>
+            <section class="auth-card auth-card-find">
+                <div class="auth-card-header">
+                    <div class="auth-chip">Account Recovery</div>
+                    <h2 class="auth-title">계정 찾기</h2>
+                    <p class="auth-subtitle">
+                        아이디 찾기와 비밀번호 재설정 중 필요한 절차를 선택하세요.
+                    </p>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>인증번호</label>
-                <div class="row">
-                    <input type="text" id="pw_code" name="pw_code" required placeholder="6자리 번호 입력">
-                    <button type="button" class="btn-verify" onclick="checkCode()">인증 확인</button>
+
+                <div class="auth-tab-menu">
+                    <button type="button" class="auth-tab-btn active" onclick="openTab('findId', this)">아이디 찾기</button>
+                    <button type="button" class="auth-tab-btn" onclick="openTab('findPw', this)">비밀번호 찾기</button>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>이름</label>
-                <input type="text" id="pw_name" placeholder="실명 입력">
-            </div>
-            <div class="form-group">
-                <label>전화번호</label>
-                <input type="text" id="pw_phone" placeholder="01012345678">
-            </div>
-            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-            <div class="form-group">
-                <label>새 비밀번호 설정</label>
-                <input type="password" id="pw_new" placeholder="새로운 비밀번호 입력">
-            </div>
-            <button type="button" onclick="handleResetPw()">비밀번호 변경하기</button>
-            <button onclick="location.href='/login'">로그인하러 가기</button>
+
+                <div id="findId" class="auth-tab-content active">
+                    <div id="idFormArea" class="auth-form auth-form-section">
+                        <div class="auth-section-box">
+                            <h3 class="auth-section-title">아이디 찾기</h3>
+
+                            <div class="auth-form-group">
+                                <label for="id_name" class="auth-label">이름</label>
+                                <input class="auth-input" type="text" id="id_name" placeholder="가입하신 이름 입력">
+                            </div>
+
+                            <div class="auth-form-group">
+                                <label for="id_phone" class="auth-label">전화번호</label>
+                                <input class="auth-input" type="text" id="id_phone" placeholder="01012345678">
+                            </div>
+
+                            <div class="auth-stack-actions">
+                                <button type="button" class="auth-btn auth-btn-primary" onclick="handleFindId()">아이디 확인</button>
+                                <button type="button" class="auth-btn auth-btn-secondary" onclick="location.href='/login'">로그인하러 가기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="idResultBox" class="auth-result-box">
+                        <p>가입하신 이메일 아이디입니다.</p>
+                        <div id="idResult" class="auth-found-id"></div>
+                        <button type="button" class="auth-btn auth-btn-primary" onclick="location.href='/login'">로그인하러 가기</button>
+                    </div>
+                </div>
+
+                <div id="findPw" class="auth-tab-content">
+                    <div class="auth-form auth-form-section">
+                        <div class="auth-section-box">
+                            <h3 class="auth-section-title">이메일 인증</h3>
+
+                            <div class="auth-form-group">
+                                <label for="pw_id" class="auth-label">이메일 (ID)</label>
+                                <div class="auth-row">
+                                    <input class="auth-input" type="email" id="pw_id" name="pw_id" required placeholder="example@mail.com">
+                                    <button type="button" class="auth-btn-inline btn-verify" onclick="sendCode()">인증 요청</button>
+                                </div>
+                            </div>
+
+                            <div class="auth-form-group">
+                                <label for="pw_code" class="auth-label">인증번호</label>
+                                <div class="auth-row">
+                                    <input class="auth-input" type="text" id="pw_code" name="pw_code" required placeholder="6자리 번호 입력">
+                                    <button type="button" class="auth-btn-inline btn-verify" onclick="checkCode()">인증 확인</button>
+                                </div>
+                                <div id="pw-code-verified-status" class="auth-inline-status" style="display: none;">인증 완료</div>
+                            </div>
+                        </div>
+
+                        <div class="auth-section-box">
+                            <h3 class="auth-section-title">본인 확인 및 새 비밀번호 설정</h3>
+
+                            <div class="auth-form-group">
+                                <label for="pw_name" class="auth-label">이름</label>
+                                <input class="auth-input" type="text" id="pw_name" placeholder="실명 입력">
+                            </div>
+
+                            <div class="auth-form-group">
+                                <label for="pw_phone" class="auth-label">전화번호</label>
+                                <input class="auth-input" type="text" id="pw_phone" placeholder="01012345678">
+                            </div>
+
+                            <hr class="auth-divider-line">
+
+                            <div class="auth-form-group">
+                                <label for="pw_new" class="auth-label">새 비밀번호 설정</label>
+                                <input class="auth-input" type="password" id="pw_new" placeholder="새로운 비밀번호 입력">
+                            </div>
+
+                            <div class="auth-stack-actions">
+                                <button type="button" class="auth-btn auth-btn-primary" onclick="handleResetPw()">비밀번호 변경하기</button>
+                                <button type="button" class="auth-btn auth-btn-secondary" onclick="location.href='/login'">로그인하러 가기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 
     <script>
+        let isPwCodeVerified = false;
+
         // 탭 전환 로직
-        function openTab(tabName) {
-            const contents = document.querySelectorAll('.tab-content');
-            const buttons = document.querySelectorAll('.tab-btn');
+        function openTab(tabName, clickedBtn) {
+            const contents = document.querySelectorAll('.auth-tab-content');
+            const buttons = document.querySelectorAll('.auth-tab-btn');
 
             contents.forEach(content => content.classList.remove('active'));
             buttons.forEach(btn => btn.classList.remove('active'));
 
             document.getElementById(tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
+            if (clickedBtn) clickedBtn.classList.add('active');
+
+            if (tabName === 'findId') {
+                document.getElementById('idFormArea').style.display = 'flex';
+                document.getElementById('idResultBox').classList.remove('active');
+                document.getElementById('idResult').innerText = '';
+                document.getElementById('id_name').value = '';
+                document.getElementById('id_phone').value = '';
+            }
+
+            if (tabName === 'findPw') {
+                isPwCodeVerified = false;
+                const pwCodeVerifiedStatus = document.getElementById('pw-code-verified-status');
+                if (pwCodeVerifiedStatus) {
+                    pwCodeVerifiedStatus.style.display = 'none';
+                }
+            }
         }
 
         // 아이디 찾기 처리
@@ -213,7 +186,7 @@
 
                 if (result.email) {
                     document.getElementById('idFormArea').style.display = 'none';
-                    document.getElementById('idResultBox').style.display = 'block';
+                    document.getElementById('idResultBox').classList.add('active');
                     document.getElementById('idResult').innerText = result.email;
                 } else {
                     alert("일치하는 회원 정보가 없습니다.");
@@ -239,7 +212,7 @@
                     console.error("API Error:", response.status);
                     alert("에러가 발생했습니다.");
                     return;
-                }else{
+                } else {
                     const result = await response.json();
                     if (!result.detail.includes("이미")) {
                         alert(result.detail);
@@ -263,6 +236,13 @@
                 }
 
                 const result1 = await response1.json();
+                
+                isPwCodeVerified = false;
+                const pwCodeVerifiedStatus = document.getElementById('pw-code-verified-status');
+                if (pwCodeVerifiedStatus) {
+                    pwCodeVerifiedStatus.style.display = 'none';
+                }
+                
                 alert(result1.message);
 
             } catch (e) {
@@ -301,7 +281,12 @@
 
                 const result = await response.json();
                 alert(result.message);
-                document.querySelector("#pw_code").nextElementSibling.textContent = '인증 완료'
+                
+                isPwCodeVerified = true;
+                const pwCodeVerifiedStatus = document.getElementById('pw-code-verified-status');
+                if (pwCodeVerifiedStatus) {
+                    pwCodeVerifiedStatus.style.display = 'inline-flex';
+                }
 
             } catch (e) {
                 alert("발송 실패");
@@ -319,8 +304,9 @@
 
             if (Object.values(data).some(v => !v)) return alert("모든 항목을 입력해주세요.");
 
-            if(document.querySelector("#pw_code").nextElementSibling.textContent != '인증 완료'){
-                alert("이메일 인증 해주세요.")
+            if (!isPwCodeVerified) {
+                alert("이메일 인증 해주세요.");
+                return;
             }
 
             try {
@@ -343,20 +329,4 @@
         }
     </script>
 </body>
-
-<!-- 챗봇 UI -->
-<button id="chatbot-button" class="chatbot-button">🤖</button>
-<div id="chatbot-container" class="chatbot-container">
-  <div class="chatbot-header">
-    <h3>💬 Cloud9 Care 챗봇</h3>
-    <button id="chatbot-close" class="chatbot-close">×</button>
-  </div>
-  <div id="chatbot-messages" class="chatbot-messages"></div>
-  <div class="chatbot-input">
-    <input id="chatbot-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off">
-    <button id="chatbot-send" class="chatbot-send">➤</button>
-  </div>
-</div>
-<script src="/static/chatbot.js"></script>
-
 </html>
