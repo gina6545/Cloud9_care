@@ -533,6 +533,58 @@
     #hidden-file-input {
         display: none;
     }
+
+    /* ===== ZOOM MODAL STYLE ===== */
+    .zoom-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9999;
+        cursor: zoom-out;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(8px);
+    }
+
+    .zoom-overlay.show {
+        display: flex !important;
+    }
+
+    .zoom-modal-content {
+        position: relative;
+        max-width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .zoom-modal-content img {
+        display: block;
+        max-width: 100%;
+        max-height: 90vh;
+        object-fit: contain;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .btn-zoom-close {
+        position: absolute;
+        top: -40px;
+        right: 0;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 36px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 10000;
+    }
 </style>
 {% endblock %}
 
@@ -687,7 +739,16 @@
         </div>
     </div>
 </div>
+
+<!-- 이미지 확대 모달 -->
+<div class="zoom-overlay" id="zoom-overlay">
+    <div class="zoom-modal-content">
+        <button class="btn-zoom-close">&times;</button>
+        <img src="" id="zoom-img" alt="확대 이미지">
+    </div>
+</div>
 {% endblock %}
+
 
 {% block scripts %}
 <script>
