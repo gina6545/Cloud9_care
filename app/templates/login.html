@@ -3,232 +3,115 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>로그인</title>
-    <link rel="stylesheet" href="/static/chatbot.css">
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f7f6;
-        }
-
-        .login-container {
-            width: 400px;
-            background: white;
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            font-size: 0.9em;
-            color: #555;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1em;
-        }
-
-        /* 로그인 버튼 */
-        .btn-login {
-            width: 100%;
-            padding: 14px;
-            background-color: #2196f3;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        .btn-login:hover {
-            background-color: #03A9F4;
-        }
-
-        /* 하단 링크 */
-        .login-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-            font-size: 0.85em;
-            color: #666;
-        }
-
-        .login-links a {
-            color: #666;
-            text-decoration: none;
-        }
-
-        .login-links a:hover {
-            text-decoration: underline;
-        }
-
-        /* 소셜 로그인 구분선 */
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 30px 0;
-            color: #aaa;
-            font-size: 0.8em;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #eee;
-        }
-
-        .divider:not(:empty)::before {
-            margin-right: .5em;
-        }
-
-        .divider:not(:empty)::after {
-            margin-left: .5em;
-        }
-
-        /* 소셜 버튼 공통 */
-        .social-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 50px;
-            border-radius: 6px;
-            cursor: pointer;
-            border: none;
-            font-size: 1em;
-            font-weight: 500;
-            margin-bottom: 10px;
-            text-decoration: none;
-        }
-
-        /* 구글 버튼 (구글 색상) */
-        .btn-google {
-            background-color: #ffffff;
-            color: #757575;
-            border: 1px solid #ddd;
-        }
-
-        .btn-google:hover {
-            background-color: #f8f8f8;
-        }
-
-        .btn-google img {
-            width: 20px;
-            margin-right: 10px;
-            cursor: pointer;
-        }
-
-        /* 네이버 버튼 (공식 컬러: #03C75A) */
-        .btn-naver {
-            background-color: #03C75A;
-            color: white;
-            border: 1px solid #03C75A;
-        }
-
-        .btn-naver:hover {
-            background-color: #02b350;
-            border-color: #02b350;
-        }
-
-        .btn-naver svg {
-            width: 18px;
-            margin-right: 10px;
-            cursor: pointer;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - Cloud9 Care</title>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="/static/auth.css">
 </head>
 
-<body>
-    <div class="login-container">
-        <h2>로그인</h2>
+<body class="auth-body">
+    <div class="auth-shell">
+        <div class="auth-container">
+            <section class="auth-hero">
+                <div class="auth-hero-top">
+                    <div class="auth-brand">
+                        <a href="/">☁️ Cloud9 Care</a>
+                    </div>
+                    <h1 class="auth-hero-title">
+                        구름 위에 오른 듯한<br>
+                        건강한 일상
+                    </h1>
+                    <p class="auth-hero-desc">
+                        의료 기록을 이해하기 쉬운 맞춤형 건강 가이드로 연결하고,
+                        복약·혈압·혈당 루틴까지 한 곳에서 관리해보세요.
+                    </p>
 
-        <form id="loginForm">
-            <div class="form-group">
-                <label>이메일</label>
-                <input type="email" id="id" name="id" value="ejrtn153@naver.com" required
-                    placeholder="example@mail.com">
-            </div>
-            <div class="form-group">
-                <label>비밀번호</label>
-                <input type="password" id="password" name="password" value="!Qq123456789" required
-                    placeholder="비밀번호 입력">
-            </div>
-            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 25px;">
-                <input type="checkbox" id="remember_me" name="remember_me"
-                    style="width: auto; margin-top: 0; cursor: pointer;">
-                <label for="remember_me" style="margin-bottom: 0; cursor: pointer; font-size: 0.9em; color: #666;">자동
-                    로그인 (1개월 유지)</label>
-            </div>
-            <button type="submit" class="btn-login">로그인</button>
-        </form>
+                    <ul class="auth-feature-list">
+                        <li><span class="auth-feature-icon">✓</span><span>AI 기반 맞춤형 생활 안내 가이드</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>복약 알람과 건강 루틴 관리</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>처방전 분석과 건강 상담 챗봇</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>Cloud9 Care 디자인 시스템과 통일된 경험</span></li>
+                    </ul>
+                </div>
 
-        <div class="login-links">
-            <a href="/find-account">아이디/비밀번호 찾기</a>
-            <span>|</span>
-            <a href="/signup">회원가입</a>
+                <div class="auth-hero-bottom">
+                    <div class="auth-hero-bottom-title">오늘도 Cloud9 Care와 함께</div>
+                    <div class="auth-hero-bottom-text">
+                        로그인 후 대시보드에서 오늘의 건강 요약, 알람, 최근 기록을 바로 확인할 수 있어요.
+                    </div>
+                </div>
+            </section>
+
+            <section class="auth-card">
+                <div class="auth-card-header">
+                    <div class="auth-chip">Login</div>
+                    <h2 class="auth-title">로그인</h2>
+                    <p class="auth-subtitle">
+                        가입한 계정으로 로그인하고 Cloud9 Care 서비스를 이어서 이용하세요.
+                    </p>
+                </div>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="auth-form-group">
+                        <label for="id" class="auth-label">이메일</label>
+                        <input class="auth-input" type="email" id="id" name="id" required
+                            placeholder="example@mail.com">
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label for="password" class="auth-label">비밀번호</label>
+                        <input class="auth-input" type="password" id="password" name="password" required
+                            placeholder="비밀번호 입력">
+                    </div>
+
+                    <div class="auth-check-row">
+                        <input type="checkbox" id="remember_me" name="remember_me">
+                        <label for="remember_me">자동 로그인 (1개월 유지)</label>
+                    </div>
+
+                    <button type="submit" class="auth-btn auth-btn-primary">로그인</button>
+                </form>
+
+                <div class="auth-link-row">
+                    <a href="/find-account">아이디/비밀번호 찾기</a>
+                    <span>|</span>
+                    <a href="/signup">회원가입</a>
+                </div>
+
+                <div class="auth-divider">또는 소셜 계정으로 로그인</div>
+
+                <div class="auth-social-list">
+                    <button class="auth-social-btn btn-google" type="button">
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 48 48">
+                            <path fill="#EA4335"
+                                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z">
+                            </path>
+                            <path fill="#4285F4"
+                                d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z">
+                            </path>
+                            <path fill="#FBBC05"
+                                d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z">
+                            </path>
+                            <path fill="#34A853"
+                                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z">
+                            </path>
+                            <path fill="none" d="M0 0h48v48H0z"></path>
+                        </svg>
+                        구글로 시작하기
+                    </button>
+
+                    <button class="auth-social-btn btn-naver" type="button">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+                            <path
+                                d="M16 20.4545L7.70114 9.07682V20.4545H2.66699V3.54541H7.51325L15.8274 14.9231V3.54541H20.876V20.4545H16Z"
+                                fill="white" />
+                        </svg>
+                        네이버 로그인
+                    </button>
+                </div>
+            </section>
         </div>
-
-        <div class="divider">또는 소셜 계정으로 로그인</div>
-
-        <!-- 구글 로그인 버튼 -->
-        <button class="social-btn btn-google">
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 48 48"
-                style="margin-right: 10px; cursor: pointer;">
-                <path fill="#EA4335"
-                    d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z">
-                </path>
-                <path fill="#4285F4"
-                    d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z">
-                </path>
-                <path fill="#FBBC05"
-                    d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z">
-                </path>
-                <path fill="#34A853"
-                    d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z">
-                </path>
-                <path fill="none" d="M0 0h48v48H0z"></path>
-            </svg>
-            구글로 시작하기
-        </button>
-
-        <!-- 네이버 로그인 버튼 -->
-        <button class="social-btn btn-naver">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                style="margin-right: 10px; cursor: pointer; width: 18px; height: 18px;">
-                <path
-                    d="M16 20.4545L7.70114 9.07682V20.4545H2.66699V3.54541H7.51325L15.8274 14.9231V3.54541H20.876V20.4545H16Z"
-                    fill="white" />
-            </svg>
-            네이버 로그인
-        </button>
     </div>
 
     <script>
@@ -265,13 +148,14 @@
                     alert("로그인 성공!");
                     location.href = "/dashboard";
                 } else {
+                    const result = await response.json().catch(() => ({}));
                     alert("로그인 실패: " + (result.detail || "정보를 확인해주세요."));
                 }
             } catch (err) {
                 alert("서버 통신 오류가 발생했습니다.");
             }
         };
-        document.querySelector(".login-container .btn-google").addEventListener("click", async () => {
+        document.querySelector(".auth-social-btn.btn-google").addEventListener("click", async () => {
 
             const response = await fetch('/api/v1/auth/google/authorize', {
                 method: 'GET',
@@ -282,7 +166,7 @@
                 window.open(data.auth_url, 'socialLoginPopup', 'width=500,height=600,left=100,top=100');
             }
         })
-        document.querySelector(".login-container .btn-naver").addEventListener("click", async () => {
+        document.querySelector(".auth-social-btn.btn-naver").addEventListener("click", async () => {
 
             const response = await fetch('/api/v1/auth/naver/authorize', {
                 method: 'GET',
@@ -308,20 +192,4 @@
         });
     </script>
 </body>
-
-<!-- 챗봇 UI -->
-<button id="chatbot-button" class="chatbot-button">🤖</button>
-<div id="chatbot-container" class="chatbot-container">
-    <div class="chatbot-header">
-        <h3>💬 Cloud9 Care 챗봇</h3>
-        <button id="chatbot-close" class="chatbot-close">×</button>
-    </div>
-    <div id="chatbot-messages" class="chatbot-messages"></div>
-    <div class="chatbot-input">
-        <input id="chatbot-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off">
-        <button id="chatbot-send" class="chatbot-send">➤</button>
-    </div>
-</div>
-<script src="/static/chatbot.js"></script>
-
 </html>

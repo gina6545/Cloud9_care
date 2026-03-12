@@ -3,304 +3,177 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>회원가입 및 이메일 인증</title>
-    <link rel="stylesheet" href="/static/chatbot.css">
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            background-color: #f4f7f6;
-        }
-
-        .signup-container {
-            width: 400px;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group .head {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .row {
-            display: flex;
-            gap: 5px;
-        }
-
-        .row input {
-            flex: 3;
-        }
-
-        .row button {
-            flex: 1;
-            white-space: nowrap;
-            font-size: 0.8em;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-        }
-
-        button:hover {
-            background-color: #218838;
-        }
-
-        .btn-verify {
-            background-color: #007bff;
-        }
-
-        .btn-verify:hover {
-            background-color: #0069d9;
-        }
-
-
-        .agreement-section {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            background: #fafafa;
-            margin-bottom: 20px;
-        }
-
-        .agreement-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 0.9em;
-        }
-
-        .agreement-item input {
-            width: auto;
-            margin-right: 10px;
-        }
-
-        .all-agree {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .required {
-            color: red;
-            margin-left: 3px;
-        }
-
-        .item-open {
-            margin-left: auto;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .result-btn {
-            display: flex;
-            gap: 10px;
-        }
-
-        .birthday-gender-age {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-
-        .birthday-gender-age span {
-            flex-shrink: 0;
-        }
-
-        .birthday-gender-age input {}
-
-        .birthday-gender-age select {
-            height: 38px;
-        }
-
-        .custom-select {
-            position: relative;
-            width: 200px;
-            font-size: 14px;
-            margin-left: 10px;
-        }
-
-        .selected {
-            height: 28px;
-            line-height: 25px;
-            padding: 0 10px;
-            border: 1px solid #ccc;
-            cursor: pointer;
-        }
-
-        .custom-select .options {
-            display: none;
-            position: absolute;
-            width: 100%;
-            border: 1px solid #ccc;
-            background: #fff;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 0px;
-        }
-
-        .custom-select .options li {
-            padding: 10px;
-            list-style: none;
-            padding-top: 0px;
-        }
-
-        .custom-select .options li ul {
-            padding-left: 0px;
-        }
-
-        .custom-select .options li ul li {
-            padding: 5px;
-            cursor: pointer;
-        }
-
-        .custom-select .options li ul li::before {
-            content: "- ";
-            /* 점 대신 하이픈 추가 */
-            margin-right: 5px;
-            /* 하이픈과 텍스트 사이 간격 */
-        }
-
-        .custom-select .options li ul li:hover {
-            background: #f0f0f0;
-        }
-
-        .alarm_tf {
-            display: flex;
-            align-items: center;
-        }
-
-        .alarm_tf input {
-            width: 13px;
-            height: 100%;
-        }
-
-        .alarm_tf label {
-            margin: 0px;
-            margin-bottom: 2px;
-            padding: 0px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - Cloud9 Care</title>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+    <link rel="stylesheet" href="/static/auth.css">
 </head>
 
-<body>
-    <div class="signup-container">
-        <h2>회원가입</h2>
-        <form id="signupForm">
-            <div class="form-group">
-                <label>이메일 (ID)</label>
-                <div class="row">
-                    <input type="email" id="id" name="id" required placeholder="example@mail.com"
-                        value="ejrtn153@naver.com">
-                    <button type="button" class="btn-verify" onclick="sendCode()">인증 요청</button>
+<body class="auth-body">
+    <div class="auth-shell">
+        <div class="auth-container">
+            <section class="auth-hero">
+                <div class="auth-hero-top">
+                    <div class="auth-brand">
+                        <a href="/">☁️ Cloud9 Care</a>
+                    </div>
+                    <h1 class="auth-hero-title">
+                        나에게 맞는 건강관리,<br>
+                        지금 시작해보세요
+                    </h1>
+                    <p class="auth-hero-desc">
+                        회원가입 후 복약 알람, 혈압·혈당 기록, 생활 안내 가이드,
+                        건강 상담 챗봇까지 Cloud9 Care의 기능을 한 번에 이용할 수 있어요.
+                    </p>
+
+                    <ul class="auth-feature-list">
+                        <li><span class="auth-feature-icon">✓</span><span>건강 정보 기반 맞춤형 서비스 시작</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>복약·혈압·혈당 루틴 관리</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>AI 건강 가이드와 챗봇 연동</span></li>
+                        <li><span class="auth-feature-icon">✓</span><span>Cloud9 Care 대시보드와 자연스럽게 연결</span></li>
+                    </ul>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>인증번호</label>
-                <div class="row">
-                    <input type="text" id="code" name="code" required placeholder="6자리 번호 입력">
-                    <button type="button" class="btn-verify" onclick="checkCode()">인증 확인</button>
+
+                <div class="auth-hero-bottom">
+                    <div class="auth-hero-bottom-title">회원가입 후 바로 가능한 것</div>
+                    <div class="auth-hero-bottom-text">
+                        건강 프로필 등록, 알람 설정, 처방전 업로드, 생활 안내 가이드 확인까지
+                        하나의 흐름으로 이어집니다.
+                    </div>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>이름</label>
-                <input type="text" name="name" id="name" maxlength="20" required>
-            </div>
-            <div class="form-group">
-                <label>닉네임</label>
-                <input type="text" name="nickname" id="nickname" maxlength="20" required>
-            </div>
-            <div class="form-group">
-                <label>비밀번호</label>
-                <input type="password" name="password" id="password" required>
-            </div>
-            <div class="form-group">
-                <label>비밀번호 확인</label>
-                <input type="password" name="password_check" id="password_check" required>
-            </div>
-            <div class="form-group">
-                <label>전화번호</label>
-                <input type="text" name="phone_number" id="phone_number" maxlength="11" placeholder="01012345678" required>
-            </div>
-            <div class="form-group birthday-gender-age">
-                <span>생년월일</span>
-                <input type="date" class="birthday" id="birthday">
-                <select class="gender" id="gender">
-                    <option disabled selected style="display: none;">성별</option>
-                    <option>남자</option>
-                    <option>여자</option>
-                </select>
-            </div>
-            <div class="form-group alarm_tf">
-                <input type="checkbox">
-                <label>알람 전체 실행</label>
-            </div>
-            <div class="agreement-section">
-                <div class="agreement-item all-agree">
-                    <input type="checkbox" id="checkAll"> 전체 동의하기
+            </section>
+
+            <section class="auth-card auth-card-signup">
+                <div class="auth-card-header">
+                    <div class="auth-chip">Signup</div>
+                    <h2 class="auth-title">회원가입</h2>
+                    <p class="auth-subtitle">
+                        기본 정보와 약관 동의를 완료하고 Cloud9 Care 서비스를 시작하세요.
+                    </p>
                 </div>
-                <div class="agreement-item">
-                    <input type="checkbox" class="agree-item" id="is_terms_agreed" name="is_terms_agreed">
-                    <span>이용약관 동의<span class="required">(필수)</span></span>
-                    <span class="item-open">보기</span>
-                </div>
-                <div class="agreement-item">
-                    <input type="checkbox" class="agree-item" id="is_privacy_agreed" name="is_privacy_agreed">
-                    <span>개인정보 처리방침 동의<span class="required">(필수)</span></span>
-                    <span class="item-open">보기</span>
-                </div>
-                <div class="agreement-item">
-                    <input type="checkbox" class="agree-item" id="is_marketing_agreed" name="is_marketing_agreed">
-                    <span>마케팅 정보 수신 동의(선택)</span>
-                    <span class="item-open">보기</span>
-                </div>
-                <div class="agreement-item">
-                    <input type="checkbox" class="agree-item" id="is_alarm_agreed" name="is_alarm_agreed">
-                    <span>약 복용 알람 정보 수신 동의(선택)</span>
-                    <span class="item-open">보기</span>
-                </div>
-            </div>
-            <div class="result-btn">
-                <button type="button" class="cancel">회원가입 취소</button>
-                <button type="button" class="ok">회원가입 완료</button>
-            </div>
-        </form>
+
+                <form id="signupForm" class="auth-form auth-form-section">
+                    <div class="auth-section-box">
+                        <h3 class="auth-section-title">계정 정보</h3>
+
+                        <div class="auth-form-group">
+                            <label for="id" class="auth-label">이메일 (ID)</label>
+                            <div class="auth-row">
+                                <input class="auth-input" type="email" id="id" name="id" required placeholder="example@mail.com">
+                                <button type="button" class="auth-btn-inline btn-verify" onclick="sendCode()">인증 요청</button>
+                            </div>
+                        </div>
+
+                        <div class="auth-form-group">
+                            <label for="code" class="auth-label">인증번호</label>
+                            <div class="auth-row">
+                                <input class="auth-input" type="text" id="code" name="code" required placeholder="6자리 번호 입력">
+                                <button type="button" class="auth-btn-inline btn-verify" onclick="checkCode()">인증 확인</button>
+                            </div>
+                            <div id="code-verified-status" class="auth-inline-status" style="display: none;">인증 완료</div>
+                        </div>
+
+                        <div class="auth-split-2">
+                            <div class="auth-form-group">
+                                <label for="name" class="auth-label">이름</label>
+                                <input class="auth-input" type="text" name="name" id="name" maxlength="20" required>
+                            </div>
+
+                            <div class="auth-form-group">
+                                <label for="nickname" class="auth-label">닉네임</label>
+                                <input class="auth-input" type="text" name="nickname" id="nickname" maxlength="20" required>
+                            </div>
+                        </div>
+
+                        <div class="auth-split-2">
+                            <div class="auth-form-group">
+                                <label for="password" class="auth-label">비밀번호</label>
+                                <input class="auth-input" type="password" name="password" id="password" required>
+                            </div>
+
+                            <div class="auth-form-group">
+                                <label for="password_check" class="auth-label">비밀번호 확인</label>
+                                <input class="auth-input" type="password" name="password_check" id="password_check" required>
+                            </div>
+                        </div>
+
+                        <div class="auth-form-group">
+                            <label for="phone_number" class="auth-label">전화번호</label>
+                            <input class="auth-input" type="text" name="phone_number" id="phone_number" maxlength="11" placeholder="01012345678" required>
+                        </div>
+                    </div>
+
+                    <div class="auth-section-box">
+                        <h3 class="auth-section-title">기본 설정</h3>
+
+                        <div class="auth-inline-fields">
+                            <div class="auth-form-group">
+                                <label for="birthday" class="auth-label">생년월일</label>
+                                <input class="auth-input birthday" type="date" id="birthday">
+                            </div>
+
+                            <div class="auth-form-group">
+                                <label for="gender" class="auth-label">성별</label>
+                                <select class="auth-select gender" id="gender">
+                                    <option disabled selected style="display: none;">성별</option>
+                                    <option>남자</option>
+                                    <option>여자</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="auth-check-line alarm_tf" style="margin-top: 8px;">
+                            <input type="checkbox">
+                            <label>알람 전체 실행</label>
+                        </div>
+                    </div>
+                    <div class="auth-section-box">
+                        <h3 class="auth-section-title">약관 동의</h3>
+
+                        <div class="auth-agreement-box">
+                            <div class="auth-agreement-item auth-agreement-all">
+                                <input type="checkbox" id="checkAll">
+                                <span><strong>전체 동의하기</strong></span>
+                            </div>
+
+                            <div class="auth-agreement-item">
+                                <input type="checkbox" class="agree-item" id="is_terms_agreed" name="is_terms_agreed">
+                                <span>이용약관 동의 <span class="auth-required">(필수)</span></span>
+                                <span class="item-open">보기</span>
+                            </div>
+
+                            <div class="auth-agreement-item">
+                                <input type="checkbox" class="agree-item" id="is_privacy_agreed" name="is_privacy_agreed">
+                                <span>개인정보 처리방침 동의 <span class="auth-required">(필수)</span></span>
+                                <span class="item-open">보기</span>
+                            </div>
+
+                            <div class="auth-agreement-item">
+                                <input type="checkbox" class="agree-item" id="is_marketing_agreed" name="is_marketing_agreed">
+                                <span>마케팅 정보 수신 동의 (선택)</span>
+                                <span class="item-open">보기</span>
+                            </div>
+
+                            <div class="auth-agreement-item">
+                                <input type="checkbox" class="agree-item" id="is_alarm_agreed" name="is_alarm_agreed">
+                                <span>약 복용 알람 정보 수신 동의 (선택)</span>
+                                <span class="item-open">보기</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="auth-action-row">
+                        <button type="button" class="auth-btn auth-btn-secondary cancel">회원가입 취소</button>
+                        <button type="button" class="auth-btn auth-btn-primary ok">회원가입 완료</button>
+                    </div>
+                </form>
+            </section>
+        </div>
     </div>
 
     <script>
+
+        let isCodeVerified = false;
 
         // 쿠키에서 특정 이름의 값을 가져오는 헬퍼 함수
         function getCookie(name) {
@@ -317,14 +190,14 @@
 
         // DOM 로드 시 소셜 로그인 연동 회원가입 처리
         window.addEventListener('DOMContentLoaded', () => {
-            const socialEmail = getCookie('social_id').replaceAll('"','');
+            const rawSocialEmail = getCookie('social_id');
+            const socialEmail = rawSocialEmail ? rawSocialEmail.replaceAll('"', '') : null;
             const socialName = getCookie('social_name');
             const socialNickname = getCookie('social_nickname');
             const socialPhoneNumber = getCookie('social_phone_number');
             const socialBirthday = getCookie('social_birthday');
             const socialGender = getCookie('social_gender');
             const socialProvider = getCookie('social_provider')
-            console.log(socialEmail,socialName,socialNickname,socialPhoneNumber,socialBirthday,socialGender)
             if (socialEmail) {
                 const idInput = document.getElementById('id');
                 const nameInput = document.getElementById('name');
@@ -346,21 +219,23 @@
                     birthdayInput.value = decodeURIComponent(socialBirthday);
                     birthdayInput.readOnly = true;
                     genderInput.value = decodeURIComponent(socialGender);
-                    genderInput.readOnly = true;
+                    genderInput.disabled = true;
                 }
 
                 // 소셜 로그인은 이메일 인증 패스 처리
-                const verifyBtn = idInput.nextElementSibling;
+                const verifyBtn = idInput.closest('.auth-row')?.querySelector('.btn-verify');
                 if (verifyBtn) verifyBtn.style.display = 'none';
 
-                const codeGroup = document.getElementById('code').closest('.form-group');
-                if (codeGroup) codeGroup.style.display = 'none';
+                const codeInput = document.getElementById('code');
+                const codeRow = codeInput?.closest('.auth-row');
+                if (codeRow) codeRow.style.display = 'none';
 
-                // 임의로 인증 완료 상태 부여
-                const dummyStatus = document.createElement('span');
-                dummyStatus.textContent = '인증 완료';
-                dummyStatus.style.display = 'none';
-                document.getElementById('code').parentNode.after(dummyStatus);
+                // 소셜 로그인은 인증 완료 상태로 설정
+                isCodeVerified = true;
+                const codeVerifiedStatus = document.getElementById('code-verified-status');
+                if (codeVerifiedStatus) {
+                    codeVerifiedStatus.style.display = 'inline-flex';
+                }
 
                 // 일회성 데이터이므로 읽은 후 쿠키 삭제
                 deleteCookie('social_id');
@@ -392,7 +267,7 @@
                 } else {
                     const result = await response.json();
                     if (result.detail.includes("이미")) {
-                        alert(result);
+                        alert(result.detail);
                         return;
                     }
                 }
@@ -413,6 +288,13 @@
                 }
 
                 const result1 = await response1.json();
+                
+                isCodeVerified = false;
+                const codeVerifiedStatus = document.getElementById('code-verified-status');
+                if (codeVerifiedStatus) {
+                    codeVerifiedStatus.style.display = 'none';
+                }
+                
                 alert(result1.message);
 
             } catch (e) {
@@ -451,7 +333,12 @@
 
                 const result = await response.json();
                 alert(result.message);
-                document.querySelector("#code").nextElementSibling.textContent = '인증 완료'
+                
+                isCodeVerified = true;
+                const codeVerifiedStatus = document.getElementById('code-verified-status');
+                if (codeVerifiedStatus) {
+                    codeVerifiedStatus.style.display = 'inline-flex';
+                }
 
             } catch (e) {
                 alert("발송 실패");
@@ -490,15 +377,11 @@
                 alert("생년월일 입력해주세요.")
                 return;
             }
-            if (document.querySelector(".gender").value == '성별') {
+            if (!document.querySelector(".gender").value) {
                 alert("성별 입력해주세요.")
                 return;
             }
-            if (document.getElementById('password').value != document.getElementById('password_check').value) {
-                alert("비밀번호가 다릅니다..")
-                return;
-            }
-            if (document.querySelector("#code").nextElementSibling.textContent != '인증 완료') {
+            if (!isCodeVerified) {
                 alert("이메일 인증해주시기 바랍니다.")
                 return;
             }
@@ -556,7 +439,7 @@
 
         document.querySelector(".cancel").addEventListener("click", () => {
             if (confirm("정말 취소하시겠습니까??")) {
-                location.href = "login"
+                location.href = "/login"
             } else {
                 return false;
             }
@@ -571,20 +454,4 @@
 
     </script>
 </body>
-
-<!-- 챗봇 UI -->
-<button id="chatbot-button" class="chatbot-button">🤖</button>
-<div id="chatbot-container" class="chatbot-container">
-    <div class="chatbot-header">
-        <h3>💬 Cloud9 Care 챗봇</h3>
-        <button id="chatbot-close" class="chatbot-close">×</button>
-    </div>
-    <div id="chatbot-messages" class="chatbot-messages"></div>
-    <div class="chatbot-input">
-        <input id="chatbot-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off">
-        <button id="chatbot-send" class="chatbot-send">➤</button>
-    </div>
-</div>
-<script src="/static/chatbot.js"></script>
-
 </html>

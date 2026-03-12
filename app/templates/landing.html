@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>☁️ Cloud9 Care - 건강한 일상의 시작</title>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
     <style>
         * {
             margin: 0;
@@ -12,8 +14,11 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(151, 118, 255, 0.16), transparent 26%),
+                radial-gradient(circle at bottom right, rgba(245, 185, 255, 0.18), transparent 24%),
+                linear-gradient(180deg, #faf6ff 0%, #f7f1ff 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -22,11 +27,13 @@
         }
 
         .landing-container {
-            max-width: 900px;
+            max-width: 920px;
             width: 100%;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.90);
+            border: 1px solid #f1ebfb;
+            border-radius: 28px;
+            box-shadow: 0 20px 42px rgba(76, 29, 149, 0.12);
+            backdrop-filter: blur(12px);
             overflow: hidden;
         }
 
@@ -37,7 +44,8 @@
         }
 
         .landing-left {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            background: linear-gradient(155deg, #7a6df0 0%, #7c5fe8 36%, #8b5cf6 68%, #9f6cf4 100%);
             color: white;
             padding: 60px 40px;
             display: flex;
@@ -45,23 +53,44 @@
             justify-content: center;
         }
 
+        .landing-left::after {
+            content: "";
+            position: absolute;
+            right: -50px;
+            bottom: -50px;
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            background: rgba(255, 214, 244, 0.18);
+            filter: blur(10px);
+        }
+
         .landing-left h1 {
+            position: relative;
+            z-index: 1;
             font-size: 42px;
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: 20px;
             line-height: 1.2;
+            word-break: keep-all;
         }
 
         .landing-left p {
+            position: relative;
+            z-index: 1;
             font-size: 16px;
-            line-height: 1.6;
+            line-height: 1.7;
             opacity: 0.95;
             margin-bottom: 30px;
+            word-break: keep-all;
         }
 
         .features {
+            position: relative;
+            z-index: 1;
             list-style: none;
             margin-bottom: 40px;
+            padding: 0;
         }
 
         .features li {
@@ -70,12 +99,21 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            line-height: 1.6;
         }
 
         .features li:before {
             content: "✓";
-            font-weight: bold;
-            font-size: 18px;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.16);
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
         }
 
         .landing-right {
@@ -83,13 +121,16 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(10px);
         }
 
         .landing-right h2 {
             font-size: 28px;
-            color: #333;
+            color: #1f1733;
             margin-bottom: 30px;
             text-align: center;
+            font-weight: 800;
         }
 
         .auth-buttons {
@@ -100,43 +141,45 @@
 
         .btn {
             padding: 14px 24px;
-            border: none;
-            border-radius: 12px;
+            border: 1px solid transparent;
+            border-radius: 14px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 800;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
             text-decoration: none;
             text-align: center;
             display: inline-block;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #7568f4 0%, #8656f3 52%, #9d63f7 100%);
             color: white;
+            box-shadow: 0 12px 24px rgba(134, 86, 243, 0.24);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 16px 28px rgba(134, 86, 243, 0.30);
         }
 
         .btn-secondary {
-            background: #f0f0f0;
-            color: #333;
-            border: 2px solid #e0e0e0;
+            background: #ffffff;
+            color: #475569;
+            border-color: #ddd0ff;
         }
 
         .btn-secondary:hover {
-            background: #e8e8e8;
-            border-color: #d0d0d0;
+            background: #f8f5ff;
+            border-color: #c8b5ff;
         }
 
         .divider {
             text-align: center;
             margin: 20px 0;
-            color: #999;
+            color: #9b93b0;
             font-size: 14px;
+            font-weight: 600;
         }
 
         @media (max-width: 768px) {
