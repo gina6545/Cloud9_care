@@ -254,7 +254,7 @@ class DefaultData:
             await hp.update_from_dict(health_profile_defaults).save()
 
         # 혈압 기록 (히스토리 생성)
-        base_time = datetime.now()
+        base_time = datetime.now() - timedelta(days=1)
         bp_records = []
 
         for i in range(15):
@@ -279,7 +279,7 @@ class DefaultData:
 
         # 혈당 기록 (히스토리 생성)
         # 현재 시간 기준
-        base_time = datetime.now()
+        base_time = datetime.now() - timedelta(days=1)
         bs_records = []
 
         for i in range(15):

@@ -148,7 +148,6 @@
         </div>
 
         <div class="notebook-filter-row" id="view-filter-chip-group">
-          <button type="button" class="notebook-chip sugar-chip is-active" data-filter="전체" onclick="applySugarFilter('전체', this)">전체</button>
           <button type="button" class="notebook-chip sugar-chip" data-filter="공복" onclick="applySugarFilter('공복', this)">공복</button>
           <button type="button" class="notebook-chip sugar-chip" data-filter="식후 2시간" onclick="applySugarFilter('식후 2시간', this)">식후 2시간</button>
           <button type="button" class="notebook-chip sugar-chip" data-filter="취침 전" onclick="applySugarFilter('취침 전', this)">취침 전</button>
@@ -190,5 +189,5 @@
 
 {% block scripts %}
 <script src="/static/blood_notebook.js"></script>
-<script src="/static/blood_sugar_save.js"></script>
+<script src="/static/blood_sugar_save.js?v=1"></script>
 {% endblock %}
