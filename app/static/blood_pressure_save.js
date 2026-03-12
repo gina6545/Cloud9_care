@@ -179,6 +179,7 @@ function renderPressureSummary() {
   }
 
   const latest = filtered[0];
+  console.log(latest)
   latestValueEl.textContent = `${Number(latest.systolic)} / ${Number(latest.diastolic)}`;
   latestMetaEl.textContent = `${latest.measure_type || '기록'} · ${BloodNotebook.formatDateTime(latest.created_at)}`;
 
