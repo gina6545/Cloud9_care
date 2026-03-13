@@ -5,6 +5,7 @@ from tortoise import fields, models
 if TYPE_CHECKING:
     from app.models.allergy import Allergy
     from app.models.chronic_disease import ChronicDisease
+    from app.models.prescription import Prescription
 
 
 class User(models.Model):
@@ -31,6 +32,7 @@ class User(models.Model):
     # Reverse relations for Mypy
     chronic_diseases: fields.ReverseRelation["ChronicDisease"]
     allergies: fields.ReverseRelation["Allergy"]
+    prescriptions: fields.ReverseRelation["Prescription"]
 
     class Meta:
         table = "users"

@@ -4,6 +4,7 @@ from tortoise import fields, models
 
 if TYPE_CHECKING:
     from app.models.ocr_history import OCRHistory
+    from app.models.prescription_drug import PrescriptionDrug
     from app.models.upload import Upload
     from app.models.user import User
 
@@ -26,6 +27,8 @@ class Prescription(models.Model):
     ocr_history: fields.OneToOneRelation["OCRHistory"] | None = fields.OneToOneField(
         "models.OCRHistory", related_name="prescription", null=True
     )
+    # Reverse relations for Mypy
+    drugs: fields.ReverseRelation["PrescriptionDrug"]
     created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:
