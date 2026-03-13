@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from tortoise import fields, models
 
 if TYPE_CHECKING:
+    from app.models.prescription import Prescription
     from app.models.user import User
 
 
@@ -19,6 +20,7 @@ class Upload(models.Model):
     category = fields.CharField(max_length=50, null=True)  # 분류 (prescription, pill_front, pill_back)
     created_at = fields.DatetimeField(auto_now_add=True)
     user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="uploads")
+    prescription: fields.OneToOneRelation["Prescription"]
 
     class Meta:
         table = "uploads"

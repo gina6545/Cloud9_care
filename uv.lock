@@ -83,7 +83,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "anyio", specifier = ">=4.12.1" },
-    { name = "chromadb", specifier = ">=0.5.0" },
     { name = "chromadb", specifier = ">=1.5.5" },
     { name = "cryptography", specifier = ">=46.0.3" },
     { name = "fastapi-mail", specifier = ">=1.6.2" },
