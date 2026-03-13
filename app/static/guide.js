@@ -204,17 +204,14 @@ function renderGuide() {
     const statusTag = document.getElementById('safety-status-tag');
 
     statusTag.innerText = s1.status;
-    section1.className = 'guide-section-card';
+    section1.className = 'guide-section-card line-indigo';
 
     if (s1.status.includes('위험')) {
         statusTag.className = 'c9-badge c9-badge-danger';
-        section1.classList.add('line-rose');
     } else if (s1.status.includes('주의')) {
         statusTag.className = 'c9-badge c9-badge-warn';
-        section1.classList.add('line-amber');
     } else {
         statusTag.className = 'c9-badge c9-badge-success';
-        section1.classList.add('line-emerald');
     }
 
     document.getElementById('safety-content').innerText = s1.content;
