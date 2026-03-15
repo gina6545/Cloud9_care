@@ -5,6 +5,18 @@ let healthAlarms = {};
 let alarmHistories = [];
 let masterAlarmEnabled = true;
 
+let editingAlarmId = null;
+
+const WEEKDAY_LABELS = [
+    { key: 'MON', label: '월' },
+    { key: 'TUE', label: '화' },
+    { key: 'WED', label: '수' },
+    { key: 'THU', label: '목' },
+    { key: 'FRI', label: '금' },
+    { key: 'SAT', label: '토' },
+    { key: 'SUN', label: '일' }
+];
+
 function getMasterDisabledAttr() {
     return !masterAlarmEnabled ? 'disabled' : '';
 }
@@ -316,10 +328,102 @@ function renderMeds() {
     showMedDetail(targetMedId);
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatAlarmDisplayTime(time24) {
+    if (!time24) return '--:--';
+
+    const [rawHour, rawMinute] = String(time24).split(':');
+    const hour = Number(rawHour);
+    const minute = rawMinute ?? '00';
+
+    if (Number.isNaN(hour)) return time24;
+
+    const period = hour < 12 ? '오전' : '오후';
+    let hour12 = hour % 12;
+    if (hour12 === 0) hour12 = 12;
+
+    return `${period} ${String(hour12).padStart(2, '0')}:${minute}`;
+}
+
+function normalizeRepeatDays(repeatDays) {
+    if (!Array.isArray(repeatDays)) return [];
+    return repeatDays.filter(day => WEEKDAY_LABELS.some(item => item.key === day));
+}
+
+function detectRepeatPreset(days) {
+    const sorted = normalizeRepeatDays(days);
+    const same = (arr) => sorted.length === arr.length && arr.every(d => sorted.includes(d));
+
+    if (!sorted.length || same(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'])) return 'EVERYDAY';
+    if (same(['MON', 'TUE', 'WED', 'THU', 'FRI'])) return 'WEEKDAY';
+    if (same(['SAT', 'SUN'])) return 'WEEKEND';
+    return null;
+}
+
+function renderWeekdayChips(selectedDays = [], inputName = 'repeatDays', disabled = false) {
+    const normalized = normalizeRepeatDays(selectedDays);
+
+    return `
+        <div class="weekday-chip-group">
+            ${WEEKDAY_LABELS.map(day => `
+                <label class="weekday-chip ${normalized.includes(day.key) ? 'is-selected' : ''} ${disabled ? 'is-disabled' : ''}">
+                    <input
+                        type="checkbox"
+                        name="${inputName}"
+                        value="${day.key}"
+                        ${normalized.includes(day.key) ? 'checked' : ''}
+                        ${disabled ? 'disabled' : ''}
+                    >
+                    <span>${day.label}</span>
+                </label>
+            `).join('')}
+        </div>
+    `;
+}
+
+function getSelectedRepeatDaysByName(inputName) {
+    return Array.from(document.querySelectorAll(`input[name="${inputName}"]:checked`))
+        .map(input => input.value);
+}
+
+function renderRepeatSummary(repeatDays) {
+    const normalized = normalizeRepeatDays(repeatDays);
+    const sorted = WEEKDAY_LABELS
+        .map(item => item.key)
+        .filter(day => normalized.includes(day));
+
+    const isSameSet = (target) =>
+        sorted.length === target.length && target.every(day => sorted.includes(day));
+
+    if (!sorted.length || isSameSet(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'])) {
+        return `<span class="alarm-repeat-badge">매일</span>`;
+    }
+
+    if (isSameSet(['MON', 'TUE', 'WED', 'THU', 'FRI'])) {
+        return `<span class="alarm-repeat-badge">평일</span>`;
+    }
+
+    if (isSameSet(['SAT', 'SUN'])) {
+        return `<span class="alarm-repeat-badge">주말</span>`;
+    }
+
+    const labelMap = Object.fromEntries(WEEKDAY_LABELS.map(item => [item.key, item.label]));
+    const labelText = sorted.map(day => labelMap[day]).join(' · ');
+
+    return `<span class="alarm-repeat-badge">${labelText}</span>`;
+}
+
 function showMedDetail(medId) {
     selectedMedId = medId;
 
-    // UI 업데이트: 선택된 약물 배경색 즉시 변경
     const medItems = document.querySelectorAll('.med-item');
     medItems.forEach(item => {
         if (parseInt(item.getAttribute('data-id')) === medId) {
@@ -328,6 +432,7 @@ function showMedDetail(medId) {
             item.classList.remove('selected');
         }
     });
+
     const med = currentMeds.find(m => m.id === medId);
     if (!med) return;
 
@@ -337,7 +442,7 @@ function showMedDetail(medId) {
     if (detailTitle) {
         detailTitle.innerHTML = `
           <span class="c9-section-title-icon med-tone-icon">🕰️</span>
-          ${med.medication_name} 알람 설정
+          ${escapeHtml(med.medication_name)} 알람 설정
         `;
     }
 
@@ -345,43 +450,136 @@ function showMedDetail(medId) {
         <div class="alarm-time-list">
             ${medAlarms.length === 0
             ? `<div class="alarm-detail-empty" style="min-height: 160px;">등록된 알람이 없습니다.</div>`
-            : medAlarms.map(alarm => `
-                    <div class="alarm-time-item ${!masterAlarmEnabled ? 'is-disabled' : ''}">
-                        <div class="alarm-time-left">
-                            <span>🕔</span>
-                            <span>${alarm.alarm_time}</span>
+            : medAlarms.map(alarm => {
+                const isEditing = editingAlarmId === alarm.id;
+                const repeatDays = Array.isArray(alarm.repeat_days) ? alarm.repeat_days : [];
+
+                return `
+                        <div class="alarm-time-item ${!masterAlarmEnabled ? 'is-disabled' : ''} ${isEditing ? 'is-editing' : ''}">
+                            <div class="alarm-time-main">
+                                <div class="alarm-time-left">
+                                    <span>🕔</span>
+                                    <div class="alarm-time-texts">
+                                        <span class="alarm-time-value" onclick="startEditAlarm(${alarm.id})" style="cursor:pointer" title="시간 수정">
+                                            ${formatAlarmDisplayTime(alarm.alarm_time)}
+                                        </span>
+                                        <div class="alarm-repeat-row">
+                                            ${renderRepeatSummary(repeatDays)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alarm-time-right ${!masterAlarmEnabled ? 'is-master-disabled' : ''}">
+                                    <button
+                                        type="button"
+                                        class="btn-edit-time ${getMasterBlockedClass()}"
+                                        onclick="startEditAlarm(${alarm.id})"
+                                        ${getMasterDisabledAttr()}>
+                                        수정
+                                    </button>
+                                    <button type="button"
+                                            class="toggle-switch ${(masterAlarmEnabled && alarm.is_active) ? 'active' : ''} ${getMasterBlockedClass()}"
+                                            ${getToggleAlarmClick(alarm.id, !(masterAlarmEnabled && alarm.is_active))}
+                                            aria-label="알람 켜기 끄기"
+                                            ${getMasterDisabledAttr()}>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn-delete ${getMasterBlockedClass()}"
+                                        ${getDeleteAlarmClick(alarm.id)}
+                                        aria-label="알람 삭제"
+                                        ${getMasterDisabledAttr()}>
+                                        ✖
+                                    </button>
+                                </div>
+                            </div>
+
+                            ${isEditing ? `
+                                <div class="alarm-inline-editor">
+                                    <div class="alarm-inline-editor-grid">
+                                        <div class="alarm-field">
+                                            <label class="alarm-field-label" for="editAlarmTime-${alarm.id}">시간</label>
+                                            <input
+                                                type="time"
+                                                id="editAlarmTime-${alarm.id}"
+                                                value="${alarm.alarm_time}"
+                                                ${getMasterDisabledAttr()}>
+                                        </div>
+
+                                        <div class="alarm-field">
+                                            <div class="alarm-field-label">
+                                                요일 반복
+                                                ${(() => {
+                            const preset = detectRepeatPreset(repeatDays);
+                            if (preset === 'EVERYDAY') return '<span class="alarm-repeat-badge" style="margin-left:8px;">매일</span>';
+                            if (preset === 'WEEKDAY') return '<span class="alarm-repeat-badge" style="margin-left:8px;">평일</span>';
+                            if (preset === 'WEEKEND') return '<span class="alarm-repeat-badge" style="margin-left:8px;">주말</span>';
+                            return '';
+                        })()}
+                                            </div>
+                                            ${renderWeekdayChips(repeatDays, `editRepeatDays-${alarm.id}`, !masterAlarmEnabled)}
+                                        </div>
+                                    </div>
+
+                                    <div class="alarm-inline-actions">
+                                        <button
+                                            type="button"
+                                            class="btn-inline-secondary"
+                                            onclick="cancelEditAlarm()">
+                                            취소
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="btn-inline-primary"
+                                            onclick="saveAlarmEdit(${alarm.id})"
+                                            ${getMasterDisabledAttr()}>
+                                            저장
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
-                        <div class="alarm-time-right ${!masterAlarmEnabled ? 'is-master-disabled' : ''}">
-                            <button type="button"
-                                    class="toggle-switch ${(masterAlarmEnabled && alarm.is_active) ? 'active' : ''} ${getMasterBlockedClass()}"
-                                    ${getToggleAlarmClick(alarm.id, !(masterAlarmEnabled && alarm.is_active))}
-                                    aria-label="알람 켜기 끄기"
-                                    ${getMasterDisabledAttr()}>
-                            </button>
-                            <button
-                                type="button"
-                                class="btn-delete ${getMasterBlockedClass()}"
-                                ${getDeleteAlarmClick(alarm.id)}
-                                aria-label="알람 삭제"
-                                ${getMasterDisabledAttr()}>
-                                ✖
-                            </button>
-                        </div>
-                    </div>
-                `).join('')
+                    `;
+            }).join('')
         }
         </div>
 
-        <div class="alarm-add-box ${!masterAlarmEnabled ? 'is-disabled is-master-disabled' : ''}">
-            <div class="alarm-add-title">새 알람 추가</div>
-            <input type="time" id="newAlarmTime" value="09:00" ${getMasterDisabledAttr()}>
-            <button
-                type="button"
-                class="btn-add-time ${getMasterBlockedClass()}"
-                ${getAddAlarmClick(medId)}
-                ${getMasterDisabledAttr()}>
-                복약 알람 추가
-            </button>
+        <div class="alarm-add-box alarm-add-box-modern ${!masterAlarmEnabled ? 'is-disabled is-master-disabled' : ''}">
+            <div class="alarm-add-head">
+                <div>
+                    <div class="alarm-add-title">새 알람 추가</div>
+                    <div class="alarm-add-subtitle">시간과 반복 요일을 선택해 복약 루틴을 설정하세요.</div>
+                </div>
+                <span class="alarm-add-badge">New</span>
+            </div>
+
+            <div class="alarm-add-form">
+                <div class="alarm-field">
+                    <label class="alarm-field-label" for="newAlarmTime">알람 시간</label>
+                    <input type="time" id="newAlarmTime" value="09:00" ${getMasterDisabledAttr()}>
+                </div>
+
+                <div class="alarm-field">
+                    <div class="alarm-field-label">요일 반복</div>
+                    ${renderWeekdayChips([], 'newRepeatDays', !masterAlarmEnabled)}
+                    <div class="alarm-field-hint">요일을 선택하지 않으면 매일 반복으로 저장됩니다.</div>
+                </div>
+
+                <div class="alarm-quick-actions">
+                    <button type="button" class="weekday-quick-btn" onclick="selectRepeatPreset('newRepeatDays', 'daily')" ${getMasterDisabledAttr()}>매일</button>
+                    <button type="button" class="weekday-quick-btn" onclick="selectRepeatPreset('newRepeatDays', 'weekdays')" ${getMasterDisabledAttr()}>평일</button>
+                    <button type="button" class="weekday-quick-btn" onclick="selectRepeatPreset('newRepeatDays', 'weekend')" ${getMasterDisabledAttr()}>주말</button>
+                    <button type="button" class="weekday-quick-btn" onclick="selectRepeatPreset('newRepeatDays', 'clear')" ${getMasterDisabledAttr()}>초기화</button>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-add-time ${getMasterBlockedClass()}"
+                    ${getAddAlarmClick(medId)}
+                    ${getMasterDisabledAttr()}>
+                    복약 알람 추가
+                </button>
+            </div>
         </div>
     `;
 
@@ -586,6 +784,89 @@ function saveBsAlarms() {
     );
 }
 
+function startEditAlarm(alarmId) {
+    if (!masterAlarmEnabled) {
+        showAppToast('마이페이지에서 전체 알람이 OFF 상태입니다.', 'warn', '복약 알람');
+        return;
+    }
+
+    editingAlarmId = alarmId;
+    if (selectedMedId) showMedDetail(selectedMedId);
+}
+
+function cancelEditAlarm() {
+    editingAlarmId = null;
+    if (selectedMedId) showMedDetail(selectedMedId);
+}
+
+function updateWeekdayChipState(inputName) {
+    document.querySelectorAll(`input[name="${inputName}"]`).forEach(input => {
+        const chip = input.closest('.weekday-chip');
+        if (!chip) return;
+
+        if (input.checked) chip.classList.add('is-selected');
+        else chip.classList.remove('is-selected');
+    });
+}
+
+function selectRepeatPreset(inputName, preset) {
+    const targetValues = {
+        daily: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+        weekdays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
+        weekend: ['SAT', 'SUN'],
+        clear: []
+    }[preset] || [];
+
+    document.querySelectorAll(`input[name="${inputName}"]`).forEach(input => {
+        input.checked = targetValues.includes(input.value);
+    });
+
+    updateWeekdayChipState(inputName);
+}
+
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.matches('.weekday-chip input[type="checkbox"]')) {
+        const inputName = e.target.getAttribute('name');
+        if (inputName) updateWeekdayChipState(inputName);
+    }
+});
+
+async function saveAlarmEdit(alarmId) {
+    if (!masterAlarmEnabled) {
+        showAppToast('마이페이지에서 전체 알람이 OFF 상태입니다.', 'warn', '복약 알람');
+        return;
+    }
+
+    const timeInput = document.getElementById(`editAlarmTime-${alarmId}`);
+    if (!timeInput || !timeInput.value) {
+        showAppToast('수정할 시간을 선택해주세요.', 'warn', '복약 알람');
+        return;
+    }
+
+    const repeatDays = getSelectedRepeatDaysByName(`editRepeatDays-${alarmId}`);
+
+    const response = await fetchWithAuth(`/api/v1/alarms/${alarmId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            alarm_time: timeInput.value,
+            repeat_days: repeatDays
+        })
+    });
+
+    if (!response) return;
+
+    if (response.ok) {
+        editingAlarmId = null;
+        await loadAlarms();
+        if (selectedMedId) showMedDetail(selectedMedId);
+        renderMeds();
+        showAppToast('복약 알람이 수정되었어요.', 'success', '복약 알람');
+    } else {
+        showAppToast('복약 알람을 수정할 수 없습니다.', 'warn', '복약 알람');
+    }
+}
+
 async function addAlarmTime(medId) {
     if (!masterAlarmEnabled) {
         showAppToast('마이페이지에서 전체 알람이 OFF 상태입니다.', 'warn', '복약 알람');
@@ -593,6 +874,8 @@ async function addAlarmTime(medId) {
     }
 
     const time = document.getElementById('newAlarmTime').value;
+    const repeatDays = getSelectedRepeatDaysByName('newRepeatDays');
+
     if (!time) {
         showAppToast('시간을 선택해주세요.', 'warn', '복약 알람');
         return;
@@ -601,7 +884,12 @@ async function addAlarmTime(medId) {
     const response = await fetchWithAuth('/api/v1/alarms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ current_med_id: medId, alarm_time: time })
+        body: JSON.stringify({
+            alarm_type: 'MED',
+            current_med_id: medId,
+            alarm_time: time,
+            repeat_days: repeatDays
+        })
     });
 
     if (!response) return;

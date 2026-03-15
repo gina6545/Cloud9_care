@@ -53,6 +53,86 @@ document.addEventListener('click', function () {
 });
 
 // =====================
+// 알람 오디오 및 진동 셋업
+// =====================
+let __alarmAudio = null;
+let __alarmAudioUnlocked = false;
+
+function ensureAlarmAudio() {
+    if (!__alarmAudio) {
+        __alarmAudio = new Audio('/static/sounds/alarm.mp3?v=2');
+        __alarmAudio.preload = 'auto';
+        __alarmAudio.volume = 1.0;
+
+        __alarmAudio.addEventListener('canplaythrough', () => {
+            console.log('🔊 alarm audio loaded');
+        });
+
+        __alarmAudio.addEventListener('error', (e) => {
+            console.error('❌ alarm audio load failed:', e, __alarmAudio.currentSrc);
+        });
+    }
+    return __alarmAudio;
+}
+
+async function unlockAlarmAudioOnce() {
+    if (__alarmAudioUnlocked) return;
+
+    try {
+        const audio = ensureAlarmAudio();
+
+        audio.muted = true;
+        const p = audio.play();
+        if (p && typeof p.then === 'function') {
+            await p;
+        }
+
+        audio.pause();
+        audio.currentTime = 0;
+        audio.muted = false;
+
+        __alarmAudioUnlocked = true;
+        console.log('🔓 alarm audio unlocked');
+    } catch (e) {
+        console.warn('🔇 alarm audio unlock failed:', e);
+    }
+}
+
+async function playAlarmSound() {
+    try {
+        const audio = ensureAlarmAudio();
+
+        // 이전 재생 흔적 정리
+        audio.pause();
+        audio.currentTime = 0;
+
+        const playPromise = audio.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+            await playPromise;
+        }
+    } catch (e) {
+        console.warn('🔇 알림음 재생 실패:', e);
+    }
+}
+
+function vibrateAlarm() {
+    try {
+        if ('vibrate' in navigator) {
+            navigator.vibrate([250, 120, 250, 120, 400]);
+        }
+    } catch (e) {
+        console.warn('📳 진동 실패:', e);
+    }
+}
+
+// 사용자 상호작용 때 오디오 언락 준비
+window.addEventListener('pointerdown', unlockAlarmAudioOnce, { once: true });
+window.addEventListener('keydown', unlockAlarmAudioOnce, { once: true });
+window.addEventListener('touchstart', unlockAlarmAudioOnce, { once: true });
+window.addEventListener('click', unlockAlarmAudioOnce, { once: true });
+
+
+// =====================
 // FCM 초기화 및 토큰 등록
 // =====================
 const VAPID_PUBLIC_KEY = 'BMqfMeyCFrPheF9o7AUnY0hsPZBixyc5tSYo9upqJ_EsWRoHm73-z-N30eXgGc3xO6P8wiqfJfRdPjulDrQrCe0';
@@ -67,7 +147,7 @@ async function initFCM() {
     try {
         console.log('🚀 FCM: 초기화 시작');
 
-        const swReg = await navigator.serviceWorker.register('/static/firebase-messaging-sw.js');
+        const swReg = await navigator.serviceWorker.register('/static/firebase_messaging.js');
         console.log('✅ FCM: Service Worker 등록 완료');
 
         const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
@@ -104,6 +184,7 @@ async function initFCM() {
 
         onMessage(messaging, (payload) => {
             console.log('📱 FCM: 메시지 수신!', payload);
+
             showAlarmPopup(
                 payload.notification.title,
                 payload.notification.body,
@@ -111,6 +192,16 @@ async function initFCM() {
                 payload.data?.history_id || null,
                 payload.data?.snooze_count || 0
             );
+
+            if (Notification.permission === 'granted') {
+                new Notification(payload.notification.title, {
+                    body: payload.notification.body,
+                    icon: '/static/img/pill_front.png',
+                    badge: '/static/img/pill_front.png',
+                    vibrate: [250, 120, 250, 120, 400],
+                    tag: payload.data?.history_id ? `alarm-history-${payload.data.history_id}` : `alarm-${Date.now()}`,
+                });
+            }
         });
         console.log('👂 FCM: 메시지 리스너 등록 완료');
 
@@ -128,7 +219,10 @@ let __activePopupHandled = false;
 const shownAlarmHistoryIds = new Set();
 
 function showAlarmPopup(title, body, alarmId, historyId = null, snoozeCount = 0) {
-    console.log('🎉 알람 팝업 표시:', { title, body, alarmId, historyId, snoozeCount });
+    console.log('🎉 알람 팝업 표시:', { title, body, alarmId, historyId, snoozeCount, audioUnlocked: __alarmAudioUnlocked });
+
+    playAlarmSound();
+    vibrateAlarm();
 
     document.getElementById('alarm-popup')?.remove();
 
@@ -322,10 +416,33 @@ async function confirmAlarm(alarmId, historyId = null) {
     }
 }
 
-// 브라우저 알림 + FCM 초기화
-if ('serviceWorker' in navigator && 'Notification' in window) {
-    window.addEventListener('load', initFCM);
+// 알람 폴링 관리 전역 변수 및 함수
+let __dueAlarmPollTimer = null;
+let __dueAlarmPollStarter = null;
+
+function startDueAlarmPolling() {
+    if (__dueAlarmPollTimer) {
+        clearInterval(__dueAlarmPollTimer);
+        __dueAlarmPollTimer = null;
+    }
+
+    if (__dueAlarmPollStarter) {
+        clearTimeout(__dueAlarmPollStarter);
+        __dueAlarmPollStarter = null;
+    }
+
+    pollDueAlarms();
+
+    const now = new Date();
+    const msUntilNext10Sec = 10000 - ((now.getSeconds() % 10) * 1000 + now.getMilliseconds());
+
+    __dueAlarmPollStarter = setTimeout(() => {
+        pollDueAlarms();
+        __dueAlarmPollTimer = setInterval(pollDueAlarms, 10000);
+    }, msUntilNext10Sec);
 }
+
+// 브라우저 알림 + FCM 초기화 (하단 onload 이벤트에서 통합 호출됨)
 
 let __healthProfilePollInterval = null;
 
@@ -459,6 +576,19 @@ window.addEventListener('load', () => {
     checkGlobalGuideStatus();
 
     // 3. 알람 폴링 (FCM 백업)
-    pollDueAlarms();
-    setInterval(pollDueAlarms, 30000);
+    startDueAlarmPolling();
+});
+// =====================
+// 화면 노출 시 오디오 리셋 (모바일 백그라운드 전환 등 방지 안정화)
+// =====================
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        try {
+            const audio = ensureAlarmAudio();
+            audio.pause();
+            audio.currentTime = 0;
+        } catch (e) {
+            console.warn('audio reset skipped:', e);
+        }
+    }
 });
