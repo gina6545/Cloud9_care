@@ -117,12 +117,18 @@ class GuideService:
                 "section3": {
                     "title": "오늘의 건강 관리 수칙",
                     "health_guides": [
-                        {"name": "운동", "tips": ["주 3회, 30분 이상 가벼운 걷기 등 자신에게 맞는 운동을 꾸준히 실천해 보세요."]},
-                        {"name": "식단", "tips": ["규칙적인 식사와 균형 잡힌 영양 섭취가 면역력 유지에 도움이 됩니다."]},
+                        {
+                            "name": "운동",
+                            "tips": ["주 3회, 30분 이상 가벼운 걷기 등 자신에게 맞는 운동을 꾸준히 실천해 보세요."],
+                        },
+                        {
+                            "name": "식단",
+                            "tips": ["규칙적인 식사와 균형 잡힌 영양 섭취가 면역력 유지에 도움이 됩니다."],
+                        },
                         {"name": "수면", "tips": ["하루 7~8시간의 충분한 수면으로 몸의 피로를 풀어주세요."]},
                         {"name": "흡연/음주", "tips": ["금연과 절주는 모든 대사 질환 예방의 첫걸음입니다."]},
-                    ]
-                }
+                    ],
+                },
             },
             "activity": False,  # 더미는 완료 상태로 표시
             "created_at": datetime.now(),
@@ -290,35 +296,29 @@ class GuideService:
         try:
             sec3 = content_json.get("section3") or {}
             guides = sec3.get("health_guides") or []
-            
+
             # 현재 있는 카테고리 이름들 수집
             guide_names = {g.get("name") for g in guides if isinstance(g, dict)}
-            
+
             required_categories = {
                 "운동": "주 3회, 30분 이상 가벼운 걷기 등 자신에게 맞는 운동을 꾸준히 실천해 보세요.",
                 "식단": "규칙적인 식사와 균형 잡힌 영양 섭취가 면역력 유지에 도움이 됩니다.",
                 "수면": "하루 7~8시간의 충분한 수면으로 몸의 피로를 풀어주세요.",
-                "흡연/음주": "금연과 절주는 모든 대사 질환 예방의 첫걸음입니다."
+                "흡연/음주": "금연과 절주는 모든 대사 질환 예방의 첫걸음입니다.",
             }
-            
+
             # 누락된 필수 카테고리 강제 추가
             for req_name, default_tip in required_categories.items():
                 # '흡연/음주' 처럼 복합어나 비슷한 이름이 처리안되는 경우를 위해 정확히 매칭
                 if req_name not in guide_names:
-                    guides.append(
-                        {
-                            "name": req_name,
-                            "tips": [default_tip]
-                        }
-                    )
-            
+                    guides.append({"name": req_name, "tips": [default_tip]})
+
             # (선택) UI의 정돈된 표시를 위해 고정된 순서로 정렬할 수 있으나, 일단 추가만으로 충분함
             sec3["health_guides"] = guides
             content_json["section3"] = sec3
         except Exception:
             pass
         return content_json
-
 
     async def _handle_generation_error(self, user_id: str | None, e: Exception) -> dict:
         print(f"OpenAI Error: {e}")
