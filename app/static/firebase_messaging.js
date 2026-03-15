@@ -20,26 +20,36 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(title, {
     body,
     icon: '/static/img/pill_front.png',
+    badge: '/static/img/pill_front.png',
     data: payload.data,
     actions: [{ action: 'confirm', title: '확인' }],
+    vibrate: [250, 120, 250, 120, 400],
+    requireInteraction: true,
+    silent: false,
+    tag: payload.data?.history_id ? `alarm-history-${payload.data.history_id}` : `alarm-${Date.now()}`,
+    renotify: true,
   });
   console.log('✅ Service Worker: 알림 표시 완료');
 });
 
-// 알림 클릭 처리
 self.addEventListener('notificationclick', (event) => {
   console.log('👆 Service Worker: 알림 클릭', event.action);
   event.notification.close();
-  if (event.action === 'confirm') {
-    const alarmId = event.notification.data?.alarm_id;
-    console.log('✅ Service Worker: 알람 확인 요청', alarmId);
-    if (alarmId) {
-      event.waitUntil(
-        fetch(`/api/v1/alarms/history/confirm/${alarmId}`, { method: 'POST' })
-          .then(() => console.log('✅ Service Worker: 알람 확인 완료'))
-          .catch(e => console.error('❌ Service Worker: 알람 확인 실패', e))
-      );
-    }
+
+  const alarmId = event.notification.data?.alarm_id;
+
+  if (event.action === 'confirm' && alarmId) {
+    event.waitUntil(
+      fetch(`/api/v1/alarms/history/confirm/${alarmId}`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+        .then(() => console.log('✅ Service Worker: 알람 확인 완료'))
+        .catch(e => console.error('❌ Service Worker: 알람 확인 실패', e))
+        .finally(() => clients.openWindow('/alarm'))
+    );
+    return;
   }
+
   event.waitUntil(clients.openWindow('/alarm'));
 });

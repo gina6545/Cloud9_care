@@ -108,7 +108,10 @@ async def get_due_alarms(user: Annotated[User, Depends(get_request_user)]) -> li
         await AlarmHistory.filter(
             Q(is_confirmed=False)
             & Q(alarm__user=user)
-            & ((Q(snoozed_until__isnull=True) & Q(sent_at__gte=since_utc)) | Q(snoozed_until__lte=now_utc))
+            & (
+                (Q(snoozed_until__isnull=True) & Q(sent_at__gte=since_utc))
+                | (Q(snoozed_until__lte=now_utc) & Q(snooze_count=0))
+            )
         )
         .prefetch_related("alarm__current_med")
         .order_by("-sent_at")
@@ -121,11 +124,17 @@ async def get_due_alarms(user: Annotated[User, Depends(get_request_user)]) -> li
         if not alarm:
             continue
 
-        is_snoozed_reopen = history.snoozed_until is not None and history.snoozed_until <= now_utc
+        is_snoozed_reopen = (
+            history.snoozed_until is not None
+            and history.snoozed_until <= now_utc
+            and not history.is_confirmed
+            and (history.snooze_count or 0) == 0
+        )
 
         if is_snoozed_reopen:
             history.snoozed_until = None
-            await history.save(update_fields=["snoozed_until"])
+            history.snooze_count = 1
+            await history.save(update_fields=["snoozed_until", "snooze_count"])
 
         med_name = alarm.current_med.medication_name if alarm.current_med else None
 

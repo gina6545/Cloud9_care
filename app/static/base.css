@@ -31,7 +31,7 @@ body {
     transition: height 0.3s ease;
     box-shadow: 0 2px 10px rgba(76, 29, 149, 0.04);
     position: relative;
-    z-index: 1;
+    z-index: 5000;
 }
 
 .header-left {
@@ -472,7 +472,7 @@ body.zoom-large .radio-item label {
     overflow: visible;
     transition: width 0.3s ease, padding 0.3s ease;
     position: relative;
-    z-index: 1;
+    z-index: 4000;
 }
 
 .nav-item {

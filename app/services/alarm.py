@@ -27,6 +27,8 @@ HEALTH_ALARM_NAMES = {
     "BS_BEDTIME": "혈당 취침 전",
 }
 
+WEEKDAY_ORDER = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+
 
 class AlarmService:
     HISTORY_KEEP_LIMIT = 15
@@ -63,6 +65,22 @@ class AlarmService:
 
         raise ValueError(f"지원하지 않는 alarm_time 타입입니다: {type(value)}")
 
+    def _serialize_repeat_days(self, repeat_days: list[str] | None) -> str | None:
+        if not repeat_days:
+            return None
+
+        unique_days: list[str] = []
+        for day in WEEKDAY_ORDER:
+            if day in repeat_days and day not in unique_days:
+                unique_days.append(day)
+
+        return ",".join(unique_days) if unique_days else None
+
+    def _parse_repeat_days(self, value: str | None) -> list[str]:
+        if not value:
+            return []
+        return [day for day in value.split(",") if day]
+
     def _to_response(self, alarm: Alarm, med_name: str, med_id: int) -> AlarmResponse:
         return AlarmResponse(
             id=alarm.id,
@@ -71,6 +89,7 @@ class AlarmService:
             alarm_time=self._format_time(alarm.alarm_time),
             is_active=alarm.is_active,
             current_med_id=med_id,
+            repeat_days=self._parse_repeat_days(alarm.repeat_days),
         )
 
     async def get_user_alarms(self, user: User, alarm_type: str | None = None) -> list[AlarmResponse]:
@@ -112,6 +131,7 @@ class AlarmService:
             current_med=current_med,
             alarm_time=time(hour, minute),
             is_active=True,
+            repeat_days=self._serialize_repeat_days(request.repeat_days),
         )
 
         if request.alarm_type == "MED":
@@ -131,6 +151,8 @@ class AlarmService:
             alarm.alarm_time = time(hour, minute)
         if request.is_active is not None:
             alarm.is_active = request.is_active
+        if request.repeat_days is not None:
+            alarm.repeat_days = self._serialize_repeat_days(request.repeat_days)
         await alarm.save()
 
         if alarm.alarm_type == "MED":
@@ -207,6 +229,49 @@ class AlarmService:
             return f"다음 알림까지 {hours}시간 남음"
         return f"다음 알림까지 {hours}시간 {minutes}분 남음"
 
+    def _matches_repeat_day(self, alarm: Alarm, target_date: date) -> bool:
+        repeat_days = self._parse_repeat_days(alarm.repeat_days)
+
+        # repeat_days가 비어 있으면 매일 반복
+        if not repeat_days:
+            return True
+
+        weekday_map = {
+            0: "MON",
+            1: "TUE",
+            2: "WED",
+            3: "THU",
+            4: "FRI",
+            5: "SAT",
+            6: "SUN",
+        }
+
+        return weekday_map[target_date.weekday()] in repeat_days
+
+    def _find_next_alarm_after(
+        self,
+        alarms: list[Alarm],
+        now: datetime,
+        days_ahead: int = 7,
+    ) -> tuple[datetime, Alarm] | None:
+        for offset in range(days_ahead + 1):
+            target_date = now.date() + timedelta(days=offset)
+
+            candidates: list[tuple[datetime, Alarm]] = []
+            for alarm in alarms:
+                if not self._matches_repeat_day(alarm, target_date):
+                    continue
+
+                alarm_dt = self._build_alarm_datetime_kst(alarm, target_date)
+                if alarm_dt > now:
+                    candidates.append((alarm_dt, alarm))
+
+            if candidates:
+                candidates.sort(key=lambda x: x[0])
+                return candidates[0]
+
+        return None
+
     async def get_dashboard_alarm_summary(self, user: User) -> DashboardAlarmSummaryResponse:
         now = datetime.now(ZoneInfo("Asia/Seoul"))
         today = now.date()
@@ -225,15 +290,16 @@ class AlarmService:
         tomorrow_items: list[tuple[datetime, Alarm]] = []
 
         for alarm in alarms:
-            today_items.append((self._build_alarm_datetime_kst(alarm, today), alarm))
-            tomorrow_items.append((self._build_alarm_datetime_kst(alarm, tomorrow), alarm))
+            if self._matches_repeat_day(alarm, today):
+                today_items.append((self._build_alarm_datetime_kst(alarm, today), alarm))
+
+            if self._matches_repeat_day(alarm, tomorrow):
+                tomorrow_items.append((self._build_alarm_datetime_kst(alarm, tomorrow), alarm))
 
         previous_candidates = [(dt, alarm) for dt, alarm in today_items if dt <= now]
-        next_candidates = [(dt, alarm) for dt, alarm in today_items if dt > now]
 
         previous_alarm_res = None
         next_alarm_res = None
-        remaining_text = "예정된 다음 알림이 없습니다."
 
         if previous_candidates:
             _, prev_alarm = previous_candidates[-1]
@@ -254,10 +320,15 @@ class AlarmService:
                 is_confirmed=is_confirmed,
             )
 
-        if next_candidates:
-            next_dt, next_alarm = next_candidates[0]
-        else:
-            next_dt, next_alarm = tomorrow_items[0]
+        next_result = self._find_next_alarm_after(alarms, now, days_ahead=7)
+        if not next_result:
+            return DashboardAlarmSummaryResponse(
+                previous_alarm=previous_alarm_res,
+                next_alarm=None,
+                remaining_text="예정된 다음 알림이 없습니다.",
+            )
+
+        next_dt, next_alarm = next_result
 
         next_alarm_res = DashboardAlarmItemResponse(
             time=self._normalize_alarm_time(next_alarm.alarm_time).strftime("%H:%M"),
@@ -362,19 +433,21 @@ class AlarmService:
 
     async def snooze_alarm_history(self, user: User, history_id: int, minutes: int = 10) -> None:
         history = await AlarmHistory.filter(id=history_id, alarm__user=user).prefetch_related("alarm").first()
-
         if not history:
             raise ValueError("알람 이력을 찾을 수 없습니다.")
 
         if history.is_confirmed:
             raise ValueError("이미 확인된 알람은 미룰 수 없습니다.")
 
+        now_utc = datetime.now(ZoneInfo("UTC"))
+
         if (history.snooze_count or 0) >= 1:
             raise ValueError("이 알람은 이미 한 번 미뤄졌습니다.")
 
-        now_utc = datetime.now(tz=ZoneInfo("UTC"))
+        if history.snoozed_until and history.snoozed_until > now_utc:
+            raise ValueError("이미 재알림이 예약된 알람입니다.")
+
         history.snoozed_until = now_utc + timedelta(minutes=minutes)
-        history.snooze_count = 1
-        await history.save(update_fields=["snoozed_until", "snooze_count"])
+        await history.save(update_fields=["snoozed_until"])
 
         await self._trim_user_alarm_histories(user)
