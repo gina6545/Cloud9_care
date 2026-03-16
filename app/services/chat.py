@@ -2,19 +2,19 @@ from typing import Any
 
 from app.dtos.chat import ChatRequest, ChatResponse
 from app.models.user import User
+from app.rag.context_builder import build_context_from_search_results
+from app.rag.vector_store import search_similar_documents
 from app.repositories.blood_pressure_record import BloodPressureRecordRepository
 from app.repositories.blood_sugar_record import BloodSugarRecordRepository
 from app.repositories.chat_memory_repository import ChatMemoryRepository
 from app.repositories.llm_life_guide import LLMLifeGuideRepository
 from app.services.llm_service import LLMService
-from app.services.rag_service import RagService
 
 
 class ChatService:
     def __init__(self):
         self.memory_repo = ChatMemoryRepository()
         self.llm_service = LLMService()
-        self.rag_service = RagService()
 
         self.llm_life_guide_repo = LLMLifeGuideRepository()
         self.bp_repo = BloodPressureRecordRepository()
@@ -117,10 +117,16 @@ class ChatService:
             # 6.5 사용자 맞춤 건강 정보 조회 (저장된 데이터 기반)
             user_health_context = await self._build_user_health_context(request.user_id)
 
-            # 7. RAG 문서 검색
-            keywords = self.rag_service.extract_keywords_from_query(recent_msg)
-            relevant_docs = self.rag_service.select_relevant_docs_by_keywords(keywords, max_docs=3)
-            rag_context = self.rag_service.build_rag_context(relevant_docs)
+            # 7. RAG 문서 검색 (ChromaDB 벡터 검색)
+            search_results = search_similar_documents(
+                query_text=recent_msg,
+                n_results=5,
+            )
+            rag_context = build_context_from_search_results(
+                results_list=[search_results],
+                max_docs=5,
+                include_metadata=True,
+            )
 
             # 8. 메시지 구성 (개선된 방식)
             system_prompt = """당신은 Cloud9 Care의 건강 상담 AI 비서입니다.
@@ -146,8 +152,8 @@ class ChatService:
                 messages.append({"role": role, "content": msg["content"]})
 
             # 참고 문서 추가
-            if relevant_docs:
-                messages.append({"role": "system", "content": f"[참고 문서]\n{rag_context}"})
+            if rag_context:
+                messages.append({"role": "system", "content": rag_context})
 
             # 현재 사용자 질문
             messages.append({"role": "user", "content": recent_msg})
