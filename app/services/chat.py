@@ -59,10 +59,6 @@ class ChatService:
         챗봇용 사용자 맞춤 건강 정보 문자열 생성
         """
         try:
-            from datetime import datetime
-
-            from app.core.config import config
-
             user = await User.get_or_none(id=user_id)
             if not user:
                 return None
@@ -88,38 +84,10 @@ class ChatService:
             guide_content = life_guide.generated_content if life_guide else "저장된 생활안내 가이드 내용 없음"
 
             # 알람 정보 조회
-            active_alarms = await self.alarm_repo.get_active_alarms_by_user_id(user_id)
-            alarm_lines = []
-            for alarm in active_alarms:
-                med_name = "-"
-                try:
-                    if alarm.current_med_id and alarm.current_med:
-                        med_name = alarm.current_med.medication_name
-                except Exception:
-                    pass
-                # alarm_time이 timedelta(MySQL TIME)일 수 있으므로 안전하게 변환
-                time_str = self._format_alarm_time(alarm.alarm_time)
-                alarm_lines.append(f"- [{alarm.alarm_type}] {time_str} / 약: {med_name}")
-            if not alarm_lines:
-                alarm_lines = ["- 설정된 알람 없음"]
+            alarm_lines = await self._build_alarm_lines(user_id)
 
             # 오늘 알람 히스토리 조회
-            now_kst = datetime.now(config.TIMEZONE)
-            today_histories = await self.alarm_history_repo.get_today_histories_by_user_id(user_id, now_kst)
-            history_lines = []
-            for h in today_histories:
-                a_type = h.alarm.alarm_type if h.alarm else "-"
-                med_name = "-"
-                try:
-                    if h.alarm and h.alarm.current_med_id and h.alarm.current_med:
-                        med_name = h.alarm.current_med.medication_name
-                except Exception:
-                    pass
-                sent = h.sent_at_kst.strftime("%H:%M") if h.sent_at_kst else "-"
-                confirmed = "✅ 확인" if h.is_confirmed else "❌ 미확인"
-                history_lines.append(f"- [{a_type}] {sent} / 약: {med_name} / {confirmed}")
-            if not history_lines:
-                history_lines = ["- 오늘 발송된 알람 없음"]
+            history_lines = await self._build_alarm_history_lines(user_id)
 
             return f"""[사용자 맞춤 건강 정보]
 사용자 상태 요약:
@@ -144,6 +112,43 @@ class ChatService:
         except Exception as e:
             print(f"[ChatService] user health context build failed: {e}")
             return None
+
+    async def _build_alarm_lines(self, user_id: str) -> list[str]:
+        """활성 알람 목록을 문자열 리스트로 변환"""
+        active_alarms = await self.alarm_repo.get_active_alarms_by_user_id(user_id)
+        lines = []
+        for alarm in active_alarms:
+            med_name = "-"
+            try:
+                if alarm.current_med_id and alarm.current_med:
+                    med_name = alarm.current_med.medication_name
+            except Exception:
+                pass
+            time_str = self._format_alarm_time(alarm.alarm_time)
+            lines.append(f"- [{alarm.alarm_type}] {time_str} / 약: {med_name}")
+        return lines or ["- 설정된 알람 없음"]
+
+    async def _build_alarm_history_lines(self, user_id: str) -> list[str]:
+        """오늘 알람 히스토리를 문자열 리스트로 변환"""
+        from datetime import datetime
+
+        from app.core.config import config
+
+        now_kst = datetime.now(config.TIMEZONE)
+        today_histories = await self.alarm_history_repo.get_today_histories_by_user_id(user_id, now_kst)
+        lines = []
+        for h in today_histories:
+            a_type = h.alarm.alarm_type if h.alarm else "-"
+            med_name = "-"
+            try:
+                if h.alarm and h.alarm.current_med_id and h.alarm.current_med:
+                    med_name = h.alarm.current_med.medication_name
+            except Exception:
+                pass
+            sent = h.sent_at_kst.strftime("%H:%M") if h.sent_at_kst else "-"
+            confirmed = "✅ 확인" if h.is_confirmed else "❌ 미확인"
+            lines.append(f"- [{a_type}] {sent} / 약: {med_name} / {confirmed}")
+        return lines or ["- 오늘 발송된 알람 없음"]
 
     async def process_chat(self, request: ChatRequest) -> ChatResponse:
         """

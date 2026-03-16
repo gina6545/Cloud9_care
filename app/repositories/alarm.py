@@ -29,7 +29,10 @@ class AlarmRepository:
 
     async def get_active_alarms_by_user_id(self, user_id: str) -> list[Alarm]:
         """활성화된 알람 목록 조회 (current_med 포함)"""
-        return await self._model.filter(user_id=user_id, is_active=True).prefetch_related("current_med").all()
+        alarms: list[Alarm] = (
+            await self._model.filter(user_id=user_id, is_active=True).prefetch_related("current_med").all()
+        )
+        return alarms
 
 
 class AlarmHistoryRepository:
@@ -41,7 +44,7 @@ class AlarmHistoryRepository:
         start = today.replace(hour=0, minute=0, second=0, microsecond=0)
         end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
 
-        return (
+        histories: list[AlarmHistory] = (
             await self._model.filter(
                 Q(alarm__user_id=user_id),
                 Q(sent_at__gte=start),
@@ -51,3 +54,4 @@ class AlarmHistoryRepository:
             .order_by("sent_at")
             .all()
         )
+        return histories
