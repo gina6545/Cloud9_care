@@ -520,7 +520,7 @@ function showAppToast(message, type = 'success', title = '안내') {
     __appToastTimer = setTimeout(() => {
         toast.classList.remove('show');
         toast.classList.add('hide');
-    }, 2400);
+    }, 8000);
 }
 
 document.getElementById('app-toast-close')?.addEventListener('click', () => {
