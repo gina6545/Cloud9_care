@@ -425,18 +425,29 @@ document.addEventListener('DOMContentLoaded', () => {
                             const duration = d.duration_days || d.duration || '';
 
                             return `
-                                <div class="prescription-drug-item" 
+                                <div class="pill-candidate-card prescription-drug-item" 
                                      data-name="${name}"
                                      data-prescription-id="${pId}"
-                                     style="margin-bottom: 8px; padding: 12px 15px; background: #fff; border-radius: 10px; border: 1px solid #e1e8f0; border-left: 5px solid #007bff; box-shadow: 0 2px 5px rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s;">
-                                    <div style="display: flex; align-items: center; flex: 1;">
-                                        <span style="font-size: 18px; margin-right: 10px;">💊</span>
-                                        <span style="font-weight: 600; color: #2c3e50; line-height: 1.2;">${name}</span>
-                                    </div>
-                                    <div style="text-align: right; font-size: 11px; color: #7f8c8d; min-width: 80px;">
-                                        <span style="display: inline-block; background: #f8f9fa; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px;">${dosage || '1정'}</span>
-                                        <br>
-                                        <span>${frequency ? frequency + '회' : '-'} / ${duration ? duration + '일분' : '-'}</span>
+                                     style="margin-bottom: 12px; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; background: white; transition: all 0.2s;">
+                                    <div style="display: flex; gap: 12px;">
+                                        <div style="width: 80px; height: 60px; background: #f1f5f9; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px;">💊</div>
+                                        <div style="flex: 1;">
+                                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                                <div style="font-weight: 700; color: #1e293b; font-size: 14px;">${name}</div>
+                                                <div style="background: #eef2ff; color: #4f46e5; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                                                    ${dosage || '1정'}
+                                                </div>
+                                            </div>
+                                            <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                                                ${frequency ? frequency + '회' : '-'} / ${duration ? duration + '일분' : '-'}
+                                            </div>
+                                            <button class="btn-toggle-sync prescription-sync-btn" 
+                                                    data-prescription-id="${pId}" 
+                                                    data-name="${name}"
+                                                    style="margin-top: 8px; width: 100%; border: 2px solid #7c3aed; background: white; color: #7c3aed; padding: 6px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                                                ➕ 복용 정보 등록
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             `;
@@ -458,12 +469,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).join('');
 
                 fullHtml += `
-                    <div class="hospital-group" style="background: #f8fbff; padding: 15px; border-radius: 12px; border: 1px solid #e1f0ff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 20px; width: 100%;">
-                        <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #007bff;">
-                            <div style="color: #666; font-size: 11px; margin-bottom: 2px;">🏥 병원명</div>
-                            <div style="font-weight: 700; font-size: 16px; color: #007bff;">${hospital}</div>
+                    <div class="hospital-group" style="background: #f8fafc; border-radius: 12px; padding: 15px; border: 1px solid #e2e8f0; margin-bottom: 20px; width: 100%;">
+                        <div style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 10px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 2px;">🏥 분석된 병원 정보</div>
+                            <div style="font-weight: 700; font-size: 15px; color: #1e293b;">${hospital}</div>
                         </div>
-                        <div>
+                        
+                        <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 10px; display: flex; align-items: center;">
+                            <span style="margin-right: 6px;">💊</span> 처방 약물 목록
+                        </div>
+
+                        <div class="drug-list-container" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
                             ${hospitalBlocksHtml}
                         </div>
                     </div>
@@ -472,16 +488,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
             resultContainer.innerHTML = fullHtml;
 
-            // 클릭 이벤트 리스너 등록
-            resultContainer.querySelectorAll('.prescription-drug-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    item.classList.toggle('selected');
-                    if (item.classList.contains('selected')) {
-                        item.style.background = '#e0f2fe';
-                        item.style.borderColor = '#7dd3fc';
-                    } else {
-                        item.style.background = '#fff';
-                        item.style.borderColor = '#e1e8f0';
+            // 개별 등록 버튼 이벤트 리스너 등록
+            resultContainer.querySelectorAll('.prescription-sync-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const pId = btn.dataset.prescriptionId;
+                    const name = btn.dataset.name;
+
+                    try {
+                        const response = await fetchWithAuth('/api/v1/ocr/prescriptions/toggle-sync', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: new URLSearchParams({
+                                prescription_id: pId,
+                                drug_name: name
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            if (result.synced) {
+                                // 등록됨 상태
+                                btn.textContent = '✅ 등록 취소';
+                                btn.style.background = '#7c3aed';
+                                btn.style.color = 'white';
+                                btn.closest('.pill-candidate-card').style.borderColor = '#7c3aed';
+                                btn.closest('.pill-candidate-card').style.background = '#f5f3ff';
+                            } else {
+                                // 미등록 상태로 원복
+                                btn.textContent = '➕ 복용 정보 등록';
+                                btn.style.background = 'white';
+                                btn.style.color = '#7c3aed';
+                                btn.closest('.pill-candidate-card').style.borderColor = '#e2e8f0';
+                                btn.closest('.pill-candidate-card').style.background = 'white';
+                            }
+                            
+                            showToast(result.message);
+                        }
+                    } catch (error) {
+                        showAppToast(`오류: ${error.message}`, "warn", "오류");
                     }
                 });
             });
@@ -502,10 +548,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // 새로운 배열 구조 또는 기존 객체 구조 대응
             const candidates = Array.isArray(data) ? data : (data.candidates || []);
             const firstItem = candidates[0] || {};
-            
+
             // 시각 분석 정보 추출 (첫 번째 후보의 raw_result 또는 data.ai_extracted 사용)
             const aiInfo = firstItem.raw_result ? Object.values(firstItem.raw_result)[0] : (data.ai_extracted ? Object.values(data.ai_extracted)[0] : {});
-            
+
             const displayText = firstItem.pill_name || data.display_text || '';
             const appearance = {
                 marking: aiInfo.text || '',
@@ -617,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 btn.closest('.pill-candidate-card').style.borderColor = '#e2e8f0';
                                 btn.closest('.pill-candidate-card').style.background = 'white';
                             }
-                            
+
                             if (typeof showToast === 'function') {
                                 showToast(result.message);
                             } else {
@@ -775,7 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 필터 버튼 이벤트
     const filterBtns = document.querySelectorAll('.history-filter-btn');
     filterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             filterBtns.forEach(b => b.classList.remove('is-active'));
             this.classList.add('is-active');
             currentHistoryFilter = this.getAttribute('data-filter');
@@ -793,7 +839,7 @@ async function fetchUploadHistory() {
         if (response.ok) {
             const result = await response.json();
             uploadHistoryData = result.content || [];
-            
+
             filterHistory(); // 필터 적용 후 렌더링
         } else {
             console.error("히스토리 데이터를 불러오지 못했습니다.");
@@ -823,12 +869,12 @@ function filterHistory() {
 
     // 2. 검색어 필터링
     if (query) {
-        filtered = filtered.filter(item => 
-            item.type.toLowerCase().includes(query) || 
+        filtered = filtered.filter(item =>
+            item.type.toLowerCase().includes(query) ||
             (item.date && item.date.toLowerCase().includes(query))
         );
     }
-    
+
     renderTreeHistory(container, filtered);
 }
 
@@ -839,11 +885,11 @@ function renderTreeHistory(container, historyList) {
     }
 
     const groupedByDate = historyList.reduce((acc, item) => {
-        const fullDate = item.date || ''; 
+        const fullDate = item.date || '';
         const parts = fullDate.split(' ');
         const dateStr = parts[0] || '날짜 미상';
         const timeStr = parts[1] ? parts[1].substring(0, 5) : '--:--';
-        
+
         const displayType = item.type === '처방전' ? '처방전' : '알약 분석';
         const icon = displayType === '처방전' ? '📄' : '💊';
 
@@ -861,12 +907,12 @@ function renderTreeHistory(container, historyList) {
             <div class="tree-date-group">
                 <div class="tree-date-header">${date}</div>
         `;
-        
+
         const items = groupedByDate[date];
         items.forEach((item, index) => {
             const isLast = (index === items.length - 1);
             const branchSymbol = isLast ? '└' : '├';
-            
+
             html += `
                 <div class="tree-item" onclick="showHistoryAnalysis('${item.id}', this, '${item.displayType}')">
                     <span class="tree-branch">${branchSymbol}</span>
@@ -876,7 +922,7 @@ function renderTreeHistory(container, historyList) {
                 </div>
             `;
         });
-        
+
         html += `</div>`;
     });
 
@@ -899,7 +945,7 @@ async function showHistoryAnalysis(uploadId, element, type) {
         if (response.ok) {
             const result = await response.json();
             const content = result.content;
-            
+
             // 기존 렌더링 로직 재활용 (단, 연동 버튼 출력 없이 HTML 문자열만 받아옵니다)
             let analysisHtml = '';
             if (type === '처방전') {
@@ -918,7 +964,7 @@ async function showHistoryAnalysis(uploadId, element, type) {
 
             detailContainer.classList.remove('analysis-result-empty');
             detailContainer.innerHTML = analysisHtml + reanalyzeBtnHtml;
-            
+
         } else {
             detailContainer.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 40px 0;">결과를 불러오지 못했습니다.</div>`;
         }
@@ -933,43 +979,56 @@ function generatePrescriptionDetailHtml(data) {
     if (!data.candidates || data.candidates.length === 0) {
         return `<div style="color: #64748b; padding: 20px 0;">분석된 처방전 데이터가 없습니다.</div>`;
     }
-    
+
     let html = '';
-    
+
     if (data.hospital) {
         html += `
-            <div class="hospital-group" style="background: #f8fbff; padding: 15px; border-radius: 12px; border: 1px solid #e1f0ff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 20px; width: 100%;">
-                <div>
-                    <img src="${data.file_path.replace("/app","")}" style="width: 100px;height: 100px; object-fit: cover;">
+            <div class="hospital-group" style="background: #f8fafc; border-radius: 12px; padding: 15px; border: 1px solid #e2e8f0; margin-bottom: 20px; width: 100%;">
+                <div style="margin-bottom: 12px; text-align: center;">
+                    <img src="${data.file_path.replace("/app", "")}" style="width: 100%; max-width: 200px; height: auto; border-radius: 8px; border: 1px solid #eee;">
                 </div>
-                <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #007bff; text-align: center;">
-                    <div style="color: #666; font-size: 11px; margin-bottom: 2px;">🏥 병원명</div>
-                    <div style="font-weight: 700; font-size: 16px; color: #007bff;">${data.hospital.hospital_name}</div>
+                <div style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 10px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.02); text-align: left;">
+                    <div style="color: #94a3b8; font-size: 11px; margin-bottom: 2px;">🏥 분석된 병원 정보</div>
+                    <div style="font-weight: 700; font-size: 15px; color: #1e293b;">${data.hospital.hospital_name}</div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 4px;">📅 처방일: ${data.hospital.prescription_date || '날짜 정보 없음'}</div>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #7f8c8d;">
-                    <span>📅 처방일: ${data.hospital.prescription_date || '날짜 정보 없음'}</span>
+                
+                <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 10px; display: flex; align-items: center;">
+                    <span style="margin-right: 6px;">💊</span> 처방 약물 목록
                 </div>
-            <div>
+
+                <div class="drug-list-container" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
         `;
     }
-    
+
     data.candidates.forEach(pill => {
         const name = pill.name || '';
         const dosage = pill.dosage || '';
         const frequency = pill.frequency || '';
         const duration = pill.duration || '';
-        
+
         html += `
-            <div class="prescription-drug-item" 
-                 style="margin-bottom: 8px; padding: 12px 15px; background: #fff; border-radius: 10px; border: 1px solid #e1e8f0; border-left: 5px solid #007bff; box-shadow: 0 2px 5px rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s;">
-                <div style="display: flex; align-items: center; flex: 1;">
-                    <span style="font-size: 18px; margin-right: 10px;">💊</span>
-                    <span style="font-weight: 600; color: #2c3e50; line-height: 1.2;">${name}</span>
-                </div>
-                <div style="text-align: right; font-size: 11px; color: #7f8c8d; min-width: 80px;">
-                    <span style="display: inline-block; background: #f8f9fa; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px;">${dosage || '1정'}</span>
-                    <br>
-                    <span>${frequency ? frequency + '회' : '-'} / ${duration ? duration + '일분' : '-'}</span>
+            <div class="pill-candidate-card prescription-drug-item" 
+                 style="margin-bottom: 12px; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; background: white; transition: all 0.2s;">
+                <div style="display: flex; gap: 12px;">
+                    <div style="width: 80px; height: 60px; background: #f1f5f9; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 20px;">💊</div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="font-weight: 700; color: #1e293b; font-size: 14px;">${name}</div>
+                            <div style="background: #eef2ff; color: #4f46e5; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                                ${dosage || '1정'}
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+                            ${frequency ? frequency + '회' : '-'} / ${duration ? duration + '일분' : '-'}
+                        </div>
+                        <button class="prescription-sync-btn-history" 
+                                onclick="event.stopPropagation(); syncSingleHistoryDrug('${data.hospital ? data.hospital.id : ''}', '${name}', this)"
+                                style="margin-top: 8px; width: 100%; border: 2px solid #7c3aed; background: white; color: #7c3aed; padding: 6px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                            ➕ 복용 정보 등록
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -981,7 +1040,7 @@ function generatePrescriptionDetailHtml(data) {
 
 // 기존 분석 결과 생성 로직(알약) - HTML 문자열만 반환
 function generatePillDetailHtml(data) {
-    
+
     appearance = {
         'text': (data.ai_extracted.image1.text || '-') + " , " + (data.ai_extracted.image2.text || '-'),
         'color': data.ai_extracted.image1.color + " , " + data.ai_extracted.image2.color,
@@ -995,8 +1054,8 @@ function generatePillDetailHtml(data) {
     console.log(data)
     let html = `
         <div>
-            <img src="${data.upload[0].file_path.replace("/app","")}" style="width: 100px;height: 100px; object-fit: cover;">
-            <img src="${data.upload[0].file_path.replace("/app","")}" style="width: 100px;height: 100px; object-fit: cover;">
+            <img src="${data.upload[0].file_path.replace("/app", "")}" style="width: 100px;height: 100px; object-fit: cover;">
+            <img src="${data.upload[0].file_path.replace("/app", "")}" style="width: 100px;height: 100px; object-fit: cover;">
         </div>
         <div style="background: #f8fafc; border-radius: 12px; padding: 15px; border: 1px solid #e2e8f0;">
             <div style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 10px; border-left: 4px solid #7c3aed; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
@@ -1032,10 +1091,45 @@ function generatePillDetailHtml(data) {
     return html;
 }
 
-function goToReanalyze() {
-    // 처방전 탭을 띄우고 파일 업로드 모달을 여는 처리
-    const prescriptionTabBtn = document.querySelector('.prescription-tab[data-tab="prescription"]');
-    if (prescriptionTabBtn) {
-        prescriptionTabBtn.click();
+/**
+ * 히스토리 상세 뷰에서 개별 약물을 연동하는 헬퍼 함수
+ */
+async function syncSingleHistoryDrug(prescriptionId, drugName, btn) {
+    if (!prescriptionId || prescriptionId === 'null') {
+        showAppToast('처방전 정보를 확인할 수 없어 연동이 불가능합니다.', 'warn', '알림');
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/v1/ocr/prescriptions/toggle-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                prescription_id: prescriptionId,
+                drug_name: drugName
+            })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            if (result.synced) {
+                btn.textContent = '✅ 등록 취소';
+                btn.style.background = '#7c3aed';
+                btn.style.color = 'white';
+                btn.closest('.pill-candidate-card').style.borderColor = '#7c3aed';
+                btn.closest('.pill-candidate-card').style.background = '#f5f3ff';
+            } else {
+                btn.textContent = '➕ 복용 정보 등록';
+                btn.style.background = 'white';
+                btn.style.color = '#7c3aed';
+                btn.closest('.pill-candidate-card').style.borderColor = '#e2e8f0';
+                btn.closest('.pill-candidate-card').style.background = 'white';
+            }
+            
+            showToast(result.message);
+        }
+    } catch (error) {
+        showAppToast(`오류: ${error.message}`, "warn", "오류");
     }
 }

@@ -826,3 +826,70 @@
     gap: 8px;
   }
 }
+
+/* ===== Zoom Modal ===== */
+.zoom-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.zoom-overlay.show {
+  display: flex;
+}
+
+.zoom-modal-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-modal-content img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.btn-zoom-close {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.btn-zoom-close:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+  .zoom-overlay {
+    padding: 20px;
+  }
+  .btn-zoom-close {
+    top: -50px;
+    right: 0;
+  }
+}

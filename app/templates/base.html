@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{ static_v('chatbot.css') }}">
 
     {% block head %}{% endblock %}
-        <style>
+    <style>
         * {
             box-sizing: border-box;
             margin: 0;
@@ -73,89 +73,332 @@
         }
 
         /* 전체 확대 모드 */
-        body.zoom-large { font-size: 18px; }
-        body.zoom-large .header { height: 80px; padding: 0 24px; }
-        body.zoom-large .header-left { font-size: 24px; }
-        body.zoom-large .search-input { font-size: 16px; padding: 8px 14px; }
-        body.zoom-large .search-btn { font-size: 16px; padding: 8px 14px; }
-        body.zoom-large .zoom-btn { font-size: 18px; padding: 10px 14px; }
-        body.zoom-large .user-menu-btn { font-size: 28px; }
-        body.zoom-large .sidebar { width: 280px; padding: 24px 20px; }
-        body.zoom-large .sidebar button { font-size: 16px !important; padding: 16px 20px !important; }
-        body.zoom-large .app-container { height: calc(100vh - 80px); }
-        body.zoom-large .main { font-size: 18px; }
-        body.zoom-large h1 { font-size: 32px; }
-        body.zoom-large h2 { font-size: 28px; }
-        body.zoom-large h3 { font-size: 24px; }
-        body.zoom-large h4 { font-size: 20px; }
-        body.zoom-large h5 { font-size: 18px; }
-        body.zoom-large input, body.zoom-large select, body.zoom-large textarea { font-size: 16px !important; padding: 12px !important; }
-        body.zoom-large button { font-size: 16px !important; padding: 12px 16px !important; }
-        body.zoom-large a { font-size: 16px; }
-        body.zoom-large .user-dropdown { font-size: 16px; }
-        body.zoom-large .user-dropdown a { padding: 16px 20px; font-size: 16px; }
-        
+        body.zoom-large {
+            font-size: 18px;
+        }
+
+        body.zoom-large .header {
+            height: 80px;
+            padding: 0 24px;
+        }
+
+        body.zoom-large .header-left {
+            font-size: 24px;
+        }
+
+        body.zoom-large .search-input {
+            font-size: 16px;
+            padding: 8px 14px;
+        }
+
+        body.zoom-large .search-btn {
+            font-size: 16px;
+            padding: 8px 14px;
+        }
+
+        body.zoom-large .zoom-btn {
+            font-size: 18px;
+            padding: 10px 14px;
+        }
+
+        body.zoom-large .user-menu-btn {
+            font-size: 28px;
+        }
+
+        body.zoom-large .sidebar {
+            width: 280px;
+            padding: 24px 20px;
+        }
+
+        body.zoom-large .sidebar button {
+            font-size: 16px !important;
+            padding: 16px 20px !important;
+        }
+
+        body.zoom-large .app-container {
+            height: calc(100vh - 80px);
+        }
+
+        body.zoom-large .main {
+            font-size: 18px;
+        }
+
+        body.zoom-large h1 {
+            font-size: 32px;
+        }
+
+        body.zoom-large h2 {
+            font-size: 28px;
+        }
+
+        body.zoom-large h3 {
+            font-size: 24px;
+        }
+
+        body.zoom-large h4 {
+            font-size: 20px;
+        }
+
+        body.zoom-large h5 {
+            font-size: 18px;
+        }
+
+        body.zoom-large input,
+        body.zoom-large select,
+        body.zoom-large textarea {
+            font-size: 16px !important;
+            padding: 12px !important;
+        }
+
+        body.zoom-large button {
+            font-size: 16px !important;
+            padding: 12px 16px !important;
+        }
+
+        body.zoom-large a {
+            font-size: 16px;
+        }
+
+        body.zoom-large .user-dropdown {
+            font-size: 16px;
+        }
+
+        body.zoom-large .user-dropdown a {
+            padding: 16px 20px;
+            font-size: 16px;
+        }
+
         /* 알람 페이지 확대 기능 */
-        body.zoom-large .page-title { font-size: 28px; }
-        body.zoom-large .tab-btn { font-size: 18px; padding: 18px; }
-        body.zoom-large .tab-icon { font-size: 28px; }
-        body.zoom-large .box h4 { font-size: 20px; }
-        body.zoom-large .med-item { font-size: 18px; padding: 16px; }
-        body.zoom-large .alarm-time-item { font-size: 18px; padding: 16px; }
-        body.zoom-large .alarm-slot-info h5 { font-size: 19px; }
-        body.zoom-large .alarm-slot-info p { font-size: 16px; }
-        body.zoom-large .guide-card h5 { font-size: 18px; }
-        body.zoom-large .guide-card p, body.zoom-large .guide-card li { font-size: 17px; }
-        body.zoom-large .normal-range-card h5 { font-size: 18px; }
-        body.zoom-large .range-item .label { font-size: 16px; }
-        body.zoom-large .range-item .value { font-size: 18px; }
-        body.zoom-large .btn-add-time { font-size: 18px; padding: 14px; }
+        body.zoom-large .page-title {
+            font-size: 28px;
+        }
+
+        body.zoom-large .tab-btn {
+            font-size: 18px;
+            padding: 18px;
+        }
+
+        body.zoom-large .tab-icon {
+            font-size: 28px;
+        }
+
+        body.zoom-large .box h4 {
+            font-size: 20px;
+        }
+
+        body.zoom-large .med-item {
+            font-size: 18px;
+            padding: 16px;
+        }
+
+        body.zoom-large .alarm-time-item {
+            font-size: 18px;
+            padding: 16px;
+        }
+
+        body.zoom-large .alarm-slot-info h5 {
+            font-size: 19px;
+        }
+
+        body.zoom-large .alarm-slot-info p {
+            font-size: 16px;
+        }
+
+        body.zoom-large .guide-card h5 {
+            font-size: 18px;
+        }
+
+        body.zoom-large .guide-card p,
+        body.zoom-large .guide-card li {
+            font-size: 17px;
+        }
+
+        body.zoom-large .normal-range-card h5 {
+            font-size: 18px;
+        }
+
+        body.zoom-large .range-item .label {
+            font-size: 16px;
+        }
+
+        body.zoom-large .range-item .value {
+            font-size: 18px;
+        }
+
+        body.zoom-large .btn-add-time {
+            font-size: 18px;
+            padding: 14px;
+        }
 
         /* 혈압/혈당 알람 탭 확대 */
-        body.zoom-large .health-panel { font-size: 20px; }
-        body.zoom-large .alarm-slot { padding: 20px 24px; }
-        body.zoom-large .alarm-slot-right input[type="time"] { font-size: 18px; padding: 10px 14px; }
-        body.zoom-large .toggle-switch { width: 60px; height: 32px; }
-        body.zoom-large .toggle-switch::after { width: 28px; height: 28px; }
-        body.zoom-large .toggle-switch.active::after { left: 30px; }
+        body.zoom-large .health-panel {
+            font-size: 20px;
+        }
+
+        body.zoom-large .alarm-slot {
+            padding: 20px 24px;
+        }
+
+        body.zoom-large .alarm-slot-right input[type="time"] {
+            font-size: 18px;
+            padding: 10px 14px;
+        }
+
+        body.zoom-large .toggle-switch {
+            width: 60px;
+            height: 32px;
+        }
+
+        body.zoom-large .toggle-switch::after {
+            width: 28px;
+            height: 28px;
+        }
+
+        body.zoom-large .toggle-switch.active::after {
+            left: 30px;
+        }
 
         /* 생활 안내, 건강정보 확대 */
-        body.zoom-large .guide-page-container { font-size: 20px; }
-        body.zoom-large .text-xl { font-size: 28px !important; }
-        body.zoom-large .text-lg { font-size: 24px !important; }
-        body.zoom-large .text-sm { font-size: 18px !important; }
-        body.zoom-large .text-xs { font-size: 16px !important; }
-        body.zoom-large .text-\[10px\] { font-size: 14px !important; }
-        body.zoom-large .p-8 { padding: 32px !important; }
-        body.zoom-large .p-6 { padding: 24px !important; }
-        body.zoom-large .p-5 { padding: 20px !important; }
-        body.zoom-large .p-4 { padding: 16px !important; }
-        body.zoom-large .mb-6 { margin-bottom: 24px !important; }
-        body.zoom-large .mb-4 { margin-bottom: 16px !important; }
-        body.zoom-large .gap-6 { gap: 24px !important; }
-        body.zoom-large .gap-4 { gap: 16px !important; }
+        body.zoom-large .guide-page-container {
+            font-size: 20px;
+        }
 
-        body.zoom-large .form-group label { font-size: 18px !important; }
-        body.zoom-large .form-group input, body.zoom-large .form-group select, body.zoom-large .form-group textarea { font-size: 18px !important; padding: 12px !important; }
-        body.zoom-large .btn { font-size: 18px !important; padding: 14px 20px !important; }
-        body.zoom-large .section-title { font-size: 26px !important; }
-        body.zoom-large .form-section h3 { font-size: 22px !important; }
-        body.zoom-large .checkbox-item label { font-size: 18px !important; }
-        body.zoom-large .radio-item label { font-size: 18px !important; }
-        
-        body.zoom-large .mega-panel { width: 600px; padding: 20px; }
-        body.zoom-large .mega-grid-alarm, body.zoom-large .mega-grid-health { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        body.zoom-large .mega-title { font-size: 18px; }
-        body.zoom-large .mega-desc { font-size: 15px; }
-        body.zoom-large .mega-card-title { font-size: 16px; }
-        body.zoom-large .mega-card-desc { font-size: 14px; }
-        body.zoom-large .mega-hint { font-size: 14px; }
-        
-        body.zoom-large .page-wrap { padding: 32px 32px 48px; }
-        body.zoom-large .c9-page-title { font-size: 26px; }
-        body.zoom-large .c9-page-header .c9-muted, body.zoom-large .c9-page-copy { font-size: 17px; }
-        body.zoom-large .c9-section-title { font-size: 20px; }
-        body.zoom-large .c9-btn { min-height: 48px; font-size: 16px; padding: 12px 18px; }
+        body.zoom-large .text-xl {
+            font-size: 28px !important;
+        }
+
+        body.zoom-large .text-lg {
+            font-size: 24px !important;
+        }
+
+        body.zoom-large .text-sm {
+            font-size: 18px !important;
+        }
+
+        body.zoom-large .text-xs {
+            font-size: 16px !important;
+        }
+
+        body.zoom-large .text-\[10px\] {
+            font-size: 14px !important;
+        }
+
+        body.zoom-large .p-8 {
+            padding: 32px !important;
+        }
+
+        body.zoom-large .p-6 {
+            padding: 24px !important;
+        }
+
+        body.zoom-large .p-5 {
+            padding: 20px !important;
+        }
+
+        body.zoom-large .p-4 {
+            padding: 16px !important;
+        }
+
+        body.zoom-large .mb-6 {
+            margin-bottom: 24px !important;
+        }
+
+        body.zoom-large .mb-4 {
+            margin-bottom: 16px !important;
+        }
+
+        body.zoom-large .gap-6 {
+            gap: 24px !important;
+        }
+
+        body.zoom-large .gap-4 {
+            gap: 16px !important;
+        }
+
+        body.zoom-large .form-group label {
+            font-size: 18px !important;
+        }
+
+        body.zoom-large .form-group input,
+        body.zoom-large .form-group select,
+        body.zoom-large .form-group textarea {
+            font-size: 18px !important;
+            padding: 12px !important;
+        }
+
+        body.zoom-large .btn {
+            font-size: 18px !important;
+            padding: 14px 20px !important;
+        }
+
+        body.zoom-large .section-title {
+            font-size: 26px !important;
+        }
+
+        body.zoom-large .form-section h3 {
+            font-size: 22px !important;
+        }
+
+        body.zoom-large .checkbox-item label {
+            font-size: 18px !important;
+        }
+
+        body.zoom-large .radio-item label {
+            font-size: 18px !important;
+        }
+
+        body.zoom-large .mega-panel {
+            width: 600px;
+            padding: 20px;
+        }
+
+        body.zoom-large .mega-grid-alarm,
+        body.zoom-large .mega-grid-health {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        body.zoom-large .mega-title {
+            font-size: 18px;
+        }
+
+        body.zoom-large .mega-desc {
+            font-size: 15px;
+        }
+
+        body.zoom-large .mega-card-title {
+            font-size: 16px;
+        }
+
+        body.zoom-large .mega-card-desc {
+            font-size: 14px;
+        }
+
+        body.zoom-large .mega-hint {
+            font-size: 14px;
+        }
+
+        body.zoom-large .page-wrap {
+            padding: 32px 32px 48px;
+        }
+
+        body.zoom-large .c9-page-title {
+            font-size: 26px;
+        }
+
+        body.zoom-large .c9-page-header .c9-muted,
+        body.zoom-large .c9-page-copy {
+            font-size: 17px;
+        }
+
+        body.zoom-large .c9-section-title {
+            font-size: 20px;
+        }
+
+        body.zoom-large .c9-btn {
+            min-height: 48px;
+            font-size: 16px;
+            padding: 12px 18px;
+        }
     </style>
 </head>
 
@@ -337,11 +580,11 @@
                     <div class="mega-grid">
                         <div class="mega-card">
                             <div class="mega-card-title">미션 저장</div>
-                            <div class="mega-card-desc">LLM을 통해 미션 자동 생성 및 개인 저장</div>
+                            <div class="mega-card-desc">Cloud9 Care가 맞춤 미션을 생성해 드립니다.</div>
                         </div>
                         <div class="mega-card">
                             <div class="mega-card-title">미션 체크</div>
-                            <div class="mega-card-desc">미션 동작을 체크 합니다.</div>
+                            <div class="mega-card-desc">오늘의 미션을 잘 지켰는지 하나씩 표시해보세요.</div>
                         </div>
                     </div>
                     <div class="mega-hint">클릭하면 하루 건강 미션으로 이동해요 →</div>
