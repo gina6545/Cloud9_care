@@ -366,12 +366,12 @@ class AlarmService:
 
         sent_at_str = ""
         if history.sent_at:
-            # DB에 저장된 alarm_history 시간은 현재 UTC wall clock 기준으로 들어오므로
-            # ORM이 어떤 tzinfo를 붙여서 주더라도 일단 tz를 제거한 뒤 UTC로 재해석한다.
-            raw_sent_at = history.sent_at.replace(tzinfo=None)
-            sent_at_utc = raw_sent_at.replace(tzinfo=ZoneInfo("UTC"))
-            sent_at_kst = sent_at_utc.astimezone(ZoneInfo("Asia/Seoul"))
-            sent_at_str = sent_at_kst.isoformat()
+            # DB에 UTC wall clock 기준으로 저장되므로
+            # ORM이 붙인 tzinfo를 제거한 뒤 UTC로 재해석 후 KST로 변환
+            raw_sent_at = history.sent_at.replace(tzinfo=None)          # tzinfo 제거
+            sent_at_utc = raw_sent_at.replace(tzinfo=ZoneInfo("UTC"))   # UTC로 재해석
+            sent_at_kst = sent_at_utc.astimezone(ZoneInfo("Asia/Seoul")) # KST로 변환
+            sent_at_str = sent_at_kst.isoformat()                       # ISO string 변환
 
         return AlarmHistoryResponse(
             history_id=history.id,

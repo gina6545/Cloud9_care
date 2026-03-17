@@ -35,9 +35,11 @@ class AlarmHistory(models.Model):
     def _as_kst(self, dt):
         if not dt:
             return None
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=ZoneInfo("UTC"))
-        return dt.astimezone(ZoneInfo("Asia/Seoul"))
+        # ORM이 붙인 tzinfo를 제거한 뒤 UTC로 재해석 후 KST로 변환
+        # (DB에 UTC wall clock 기준으로 저장되므로 항상 UTC로 재해석)
+        raw = dt.replace(tzinfo=None)                           # tzinfo 제거
+        utc = raw.replace(tzinfo=ZoneInfo("UTC"))               # UTC로 재해석
+        return utc.astimezone(ZoneInfo("Asia/Seoul"))           # KST로 변환
 
     @property
     def sent_at_kst(self):

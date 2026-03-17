@@ -945,6 +945,7 @@ function formatHistorySentAt(isoString) {
             return isoString;
         }
 
+        // KST ISO string 수신 -> 그대로 포매팅해서 표시
         const formatter = new Intl.DateTimeFormat('ko-KR', {
             timeZone: 'Asia/Seoul',
             year: 'numeric',
