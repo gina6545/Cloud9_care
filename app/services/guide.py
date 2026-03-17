@@ -287,7 +287,7 @@ class GuideService:
             guides = sec2.get("disease_guides") or []
 
             guide_names = {
-                self._normalize_disease_name(g.get("name"))
+                self._normalize_disease_name(str(g.get("name")))
                 for g in guides
                 if isinstance(g, dict) and g.get("name")
             }
@@ -340,7 +340,6 @@ class GuideService:
         except Exception:
             pass
         return content_json
-
 
     async def _handle_generation_error(self, user_id: str | None, e: Exception) -> dict:
         print(f"OpenAI Error: {e}")
