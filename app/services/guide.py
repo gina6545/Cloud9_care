@@ -20,9 +20,9 @@ class GuideService:
     def _to_kst_str(dt: datetime | None) -> str:
         if not dt:
             return ""
-        raw = dt.replace(tzinfo=None) # utc 로 간주하여 tzinfo 제거
-        utc = raw.replace(tzinfo=ZoneInfo("UTC")) # 명시적으로 UTC로 설정
-        return utc.astimezone(ZoneInfo("Asia/Seoul")).isoformat() # KST로 변환하여 ISO 포맷으로 반환
+        raw = dt.replace(tzinfo=None)  # utc 로 간주하여 tzinfo 제거
+        utc = raw.replace(tzinfo=ZoneInfo("UTC"))  # 명시적으로 UTC로 설정
+        return utc.astimezone(ZoneInfo("Asia/Seoul")).isoformat()  # KST로 변환하여 ISO 포맷으로 반환
 
     # ==========================================
     # 필수 1: LLM 기반 안내 가이드 생성

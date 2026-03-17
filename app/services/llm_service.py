@@ -73,9 +73,9 @@ class LLMService:
     def _to_kst_str(dt: datetime | None) -> str:
         if not dt:
             return ""
-        raw = dt.replace(tzinfo=None) # utc로 저장된 datetime에서 tzinfo 제거
-        utc = raw.replace(tzinfo=ZoneInfo("UTC")) # utc로 tzinfo 설정
-        return utc.astimezone(ZoneInfo("Asia/Seoul")).isoformat() # KST로 변환하여 ISO str 반환
+        raw = dt.replace(tzinfo=None)  # utc로 저장된 datetime에서 tzinfo 제거
+        utc = raw.replace(tzinfo=ZoneInfo("UTC"))  # utc로 tzinfo 설정
+        return utc.astimezone(ZoneInfo("Asia/Seoul")).isoformat()  # KST로 변환하여 ISO str 반환
 
     def _to_dto(self, model: Any) -> LlmLifeGuideResponse | None:
         if not model:
