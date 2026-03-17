@@ -159,6 +159,29 @@ async def sync_prescription_meds(
         ) from e
 
 
+@ocr_router.post("/prescriptions/toggle-sync", status_code=status.HTTP_200_OK)
+async def toggle_prescription_sync(
+    prescription_id: Annotated[int, Form()],
+    drug_name: Annotated[str, Form()],
+    user: Annotated[User, Depends(get_request_user)],
+):
+    """
+    처방전의 특정 약물을 현재 복용 목록에 추가하거나 이미 있으면 제거(토글)합니다.
+    """
+    try:
+        result = await prescription_service.toggle_med_sync(
+            prescription_id=prescription_id, user=user, drug_name=drug_name
+        )
+        return {"success": True, **result}
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+    except Exception as e:
+        logger.error(f"처방전 토글 연동 에러: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="연동 중 오류가 발생했습니다."
+        ) from e
+
+
 @ocr_router.post("/pill", status_code=status.HTTP_201_CREATED)
 async def extract_pill_ocr(
     front_file: Annotated[UploadFile, File()],

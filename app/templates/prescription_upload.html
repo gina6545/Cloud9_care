@@ -65,25 +65,15 @@
                         <span>🔍</span>
                         <span>분석 결과</span>
                     </h4>
-
                     <div class="analysis-result-text analysis-result-empty">
                         처방전을 업로드하면 분석 결과가 여기에 표시됩니다.
-                    </div>
-
-                    <div class="inline-sync-box" id="prescription-sync-modal">
-                        <div class="inline-sync-text">
-                            위 약물들을 내 복용 명단에 추가하시겠습니까?
-                        </div>
-                        <div class="inline-sync-actions">
-                            <button id="btn-sync-prescription" class="inline-sync-primary">네, 추가합니다</button>
-                            <button id="btn-cancel-sync" class="inline-sync-secondary">나중에</button>
-                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </div>
 
+    <!-- 알약 분석 탭 -->
     <div id="tab-pill" class="analysis-panel">
         <section class="c9-soft-card prescription-card">
             <div class="c9-section-head">
@@ -105,7 +95,6 @@
                         <span>🔍</span>
                         <span>분석 결과</span>
                     </h4>
-
                     <div class="analysis-result-text analysis-result-empty">
                         알약 이미지를 업로드하면 분석 결과가 여기에 표시됩니다.
                     </div>
@@ -114,17 +103,16 @@
         </section>
     </div>
 
-    <!-- 히스토리 전용 탭 -->
+    <!-- 히스토리 탭 -->
     <div id="tab-history" class="analysis-panel">
         <section class="c9-soft-card prescription-card">
-            <div class="c9-section-head" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="c9-section-head">
                 <h3 class="c9-section-title">
                     <span class="c9-section-title-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff;">🗂️</span>
                     업로드 히스토리
                 </h3>
             </div>
 
-            <!-- 사이드바(목록) + 디테일(분석결과) 레이아웃 -->
             <div class="upload-analysis-grid history-grid">
                 <div class="history-sidebar">
                     <div class="history-filters">
@@ -132,15 +120,12 @@
                         <button class="history-filter-btn" data-filter="pill">알약</button>
                         <button class="history-filter-btn" data-filter="prescription">처방전</button>
                     </div>
-                    <!-- <div class="history-search-container">
-                        <input type="text" id="history-search" class="history-search-input" placeholder="히스토리 검색..." oninput="filterHistory()">
-                    </div> -->
                     <div class="history-list tree-view" id="upload-history-list">
                         <div style="text-align: center; color: #94a3b8; padding: 20px 0;">히스토리를 불러오는 중입니다...</div>
                     </div>
                 </div>
 
-                <div class="analysis-card" id="history-analysis-box" style="background: #fdfdfd;">
+                <div class="analysis-card" id="history-analysis-box">
                     <h4 class="analysis-card-title">
                         <span>🔍</span>
                         <span>분석 내역 상세</span>
@@ -153,6 +138,7 @@
         </section>
     </div>
 </div>
+
 
 <div class="upload-overlay" id="upload-overlay">
     <div class="upload-modal">
@@ -185,13 +171,13 @@
     </div>
 </div>
 
-<!-- 이미지 확대 모달
+<!-- 이미지 확대 모달 -->
 <div class="zoom-overlay" id="zoom-overlay">
     <div class="zoom-modal-content">
         <button class="btn-zoom-close">&times;</button>
         <img src="" id="zoom-img" alt="확대 이미지">
     </div>
-</div> -->
+</div>
 {% endblock %}
 
 

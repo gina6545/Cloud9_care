@@ -312,3 +312,46 @@ class PrescriptionService:
             created_meds.append(med)
 
         return created_meds
+
+    async def toggle_med_sync(self, prescription_id: int, user: User, drug_name: str) -> dict[str, Any]:
+        """
+        처방전의 특정 약물을 복용 목록에 추가하거나 이미 있으면 제거(토글)합니다.
+        """
+        prescription = await self.repo.get_by_id(prescription_id)
+        if not prescription or prescription.user_id != user.id:
+            raise ValueError("처방전을 찾을 수 없거나 권한이 없습니다.")
+
+        # 1. 해당 처방전에서 drug_name에 해당하는 PrescriptionDrug 찾기
+        drug = await prescription.drugs.filter(standard_drug_name=drug_name).first()
+        if not drug:
+            raise ValueError(f"처방전에서 '{drug_name}' 약물을 찾을 수 없습니다.")
+
+        # 만약 multiple matches가 있을 수 있으나, 보통 이 화면에서는 이 처방전에서 온 건지 체크
+        # prescription_drug.current_med 필드가 설정되어 있는지 확인하는 것이 가장 정확함
+        if drug.is_linked_to_meds and drug.current_med_id:
+            # 이미 있으면 삭제 (토글 오프)
+            target_med = await drug.current_med
+            if target_med:
+                await target_med.delete()
+
+            drug.is_linked_to_meds = False
+            drug.current_med = None
+            await drug.save()
+
+            return {"synced": False, "message": f"'{drug_name}'이(가) 복용 목록에서 제거되었습니다."}
+        else:
+            # 없으면 추가 (토글 온)
+            new_med = await CurrentMed.create(
+                user=user,
+                medication_name=drug_name,
+                one_dose_amount=f"{drug.dosage_amount or ''}".strip(),
+                one_dose_count=str(drug.daily_frequency or ""),
+                total_days=str(drug.duration_days or ""),
+                instructions="",
+            )
+
+            drug.is_linked_to_meds = True
+            drug.current_med = new_med
+            await drug.save()
+
+            return {"synced": True, "message": f"'{drug_name}'이(가) 복용 목록에 추가되었습니다."}
