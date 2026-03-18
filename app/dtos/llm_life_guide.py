@@ -5,11 +5,15 @@ from pydantic import BaseModel
 class LlmLifeGuideResponse(BaseModel):
     user_current_status: str
     generated_content: dict
-    activity: bool
+    activity: bool  # Aggregate of the three below (for backward compatibility)
+    activity_medication: bool = False
+    activity_disease: bool = False
+    activity_profile: bool = False
     created_at: str
 
 
 class LlmLifeGuideRequest(BaseModel):
     user_current_status: str
-    activity: bool
-    generated_content: dict
+    activity_medication: bool = False
+    activity_disease: bool = False
+    activity_profile: bool = False

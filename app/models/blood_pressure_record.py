@@ -24,6 +24,7 @@ class BloodPressureRecord(models.Model):
     user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField(
         "models.User",
         related_name="blood_pressure_records",
+        index=True,
         on_delete=fields.CASCADE,
         description="사용자",
     )

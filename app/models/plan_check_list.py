@@ -17,7 +17,9 @@ class PlanCheckList(models.Model):
     is_completed = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now_add=True)
 
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="plan_check_list")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField(
+        "models.User", related_name="plan_check_list", index=True
+    )
 
     class Meta:
         table = "plan_check_list"

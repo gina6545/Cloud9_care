@@ -222,132 +222,130 @@ function renderHealthProfile() {
 }
 
 function renderGuide() {
-
     if (!guideData) return;
 
     // --- Section 1: 복약 안전성 ---
-    const s1 = guideData.section1;
+    const s1 = guideData.section1 || {};
     const section1 = document.getElementById('section-1');
     const statusTag = document.getElementById('safety-status-tag');
     const safetyContent = document.getElementById('safety-content');
     const safetyCautions = document.getElementById('general-cautions-list');
 
-    statusTag.innerText = s1.status;
-    section1.className = 'guide-section-card line-blue'; // Fixed color
+    if (section1 && statusTag && safetyContent) {
+        statusTag.innerText = s1.status || "정보 없음";
+        section1.className = 'guide-section-card line-blue';
 
-    if (s1.status.includes('위험')) {
-        statusTag.className = 'c9-badge c9-badge-danger';
-    } else if (s1.status.includes('주의')) {
-        statusTag.className = 'c9-badge c9-badge-warn';
-    } else {
-        statusTag.className = 'c9-badge c9-badge-success';
-    }
+        if (s1.status && s1.status.includes('위험')) {
+            statusTag.className = 'c9-badge c9-badge-danger';
+        } else if (s1.status && s1.status.includes('주의')) {
+            statusTag.className = 'c9-badge c9-badge-warn';
+        } else {
+            statusTag.className = 'c9-badge c9-badge-success';
+        }
 
-    // 약물이 없을 때의 문구 처리 (LLM이 준 content를 우선하되, 비어있으면 기본 문구)
-    safetyContent.innerHTML = (currentStatus.meds.length === 0 && (!s1.content || s1.content.length < 5))
-        ? `<div>현재 복용 중인 약물이 없어 상호작용 위험이 없습니다.</div><div class="mt-1">건강한 상태를 잘 유지하고 계시네요!</div>`
-        : s1.content.replace(/\n/g, '<br>');
+        const s1Content = s1.content || "";
+        safetyContent.innerHTML = (currentStatus.meds.length === 0 && (!s1Content || s1Content.length < 5))
+            ? `<div>현재 복용 중인 약물이 없어 상호작용 위험이 없습니다.</div><div class="mt-1">건강한 상태를 잘 유지하고 계시네요!</div>`
+            : s1Content.replace(/\n/g, '<br>');
 
-    const safetyNotesBox = document.getElementById('safety-notes-box');
-    const cautionsArray = s1.general_cautions || [];
-    // 일반 주의사항은 LLM 데이터 기준으로 표시 (프로필 로딩 race condition 방지)
-    // status가 '상호작용 없음'이거나 약물이 없을 때만 상태 뱃지와 노트박스를 숨김
-    const hasNoMeds = s1.status && s1.status.includes('상호작용 없음') && cautionsArray.length === 0;
-    if (hasNoMeds) {
-        statusTag.classList.add('hidden');
-        if (safetyNotesBox) safetyNotesBox.classList.add('hidden');
-    } else {
-        statusTag.classList.remove('hidden');
-        if (safetyNotesBox) safetyNotesBox.classList.remove('hidden');
-        safetyCautions.innerHTML = cautionsArray.length > 0
-            ? cautionsArray.map(c => `<li>${c}</li>`).join('')
-            : '<li>특별한 주의사항이 없습니다.</li>';
+        const safetyNotesBox = document.getElementById('safety-notes-box');
+        const cautionsArray = s1.general_cautions || [];
+        const hasNoMeds = s1.status && s1.status.includes('상호작용 없음') && cautionsArray.length === 0;
+
+        if (hasNoMeds) {
+            statusTag.classList.add('hidden');
+            if (safetyNotesBox) safetyNotesBox.classList.add('hidden');
+        } else {
+            statusTag.classList.remove('hidden');
+            if (safetyNotesBox) safetyNotesBox.classList.remove('hidden');
+            if (safetyCautions) {
+                safetyCautions.innerHTML = cautionsArray.length > 0
+                    ? cautionsArray.map(c => `<li>${c}</li>`).join('')
+                    : '<li>특별한 주의사항이 없습니다.</li>';
+            }
+        }
     }
 
     // --- Section 2: 질환 기반 생활습관 가이드 ---
-    const s2 = guideData.section2;
+    const s2 = guideData.section2 || {};
     const diseaseGuidesContent = document.getElementById('disease-guides-content');
     const integratedPoint = document.getElementById('integrated-point');
     const integratedBox = document.querySelector('#section-2 .guide-integrated-box');
     const diseaseReferenceFooter = document.getElementById('disease-reference-footer');
 
-    if (s2.disease_guides && s2.disease_guides.length > 0) {
-        integratedBox.classList.remove('hidden');
-        if (diseaseReferenceFooter) diseaseReferenceFooter.classList.remove('hidden');
-        diseaseGuidesContent.innerHTML = `
-            <div class="guide-disease-grid">
-                ${s2.disease_guides.map(dg => `
-                    <div class="guide-disease-card">
-                        <div class="guide-disease-title">
-                            <span>${dg.name}</span>
-                            <span class="c9-badge c9-badge-primary">CARE</span>
+    if (diseaseGuidesContent && integratedPoint && integratedBox) {
+        if (s2.disease_guides && s2.disease_guides.length > 0) {
+            integratedBox.classList.remove('hidden');
+            if (diseaseReferenceFooter) diseaseReferenceFooter.classList.remove('hidden');
+            diseaseGuidesContent.innerHTML = `
+                <div class="guide-disease-grid">
+                    ${s2.disease_guides.map(dg => `
+                        <div class="guide-disease-card">
+                            <div class="guide-disease-title">
+                                <span>${dg.name}</span>
+                                <span class="c9-badge c9-badge-primary">CARE</span>
+                            </div>
+                            <div class="guide-disease-list">
+                                ${(dg.tips || []).map(tip => `
+                                    <div class="guide-disease-item">
+                                        <span class="guide-disease-dot">•</span>
+                                        <span>${tip}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                        <div class="guide-disease-list">
-                            ${dg.tips.map(tip => `
-                                <div class="guide-disease-item">
-                                    <span class="guide-disease-dot">•</span>
-                                    <span>${tip}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-        integratedPoint.innerText = s2.integrated_point || "";
-    } else {
-        integratedBox.classList.add('hidden');
-        if (diseaseReferenceFooter) diseaseReferenceFooter.classList.add('hidden');
-        diseaseGuidesContent.innerHTML = `
-            <div>등록된 질환이 없어 별도의 생활습관 가이드가 필요하지 않습니다.</div>
-            <div class="mt-1">아주 건강하시네요!</div>
-        `;
+                    `).join('')}
+                </div>
+            `;
+            integratedPoint.innerText = s2.integrated_point || "";
+        } else {
+            integratedBox.classList.add('hidden');
+            if (diseaseReferenceFooter) diseaseReferenceFooter.classList.add('hidden');
+            diseaseGuidesContent.innerHTML = `
+                <div>등록된 질환이 없어 별도의 생활습관 가이드가 필요하지 않습니다.</div>
+                <div class="mt-1">아주 건강하시네요!</div>
+            `;
+        }
     }
 
-
     // --- Section 3: 건강 관리 수칙 ---
-    const s3 = guideData.section3;
+    const s3 = guideData.section3 || {};
     const section3Title = document.querySelector('#section-3 .guide-plan-title');
     const checklistContainer = document.getElementById('checklist-container');
 
-    section3Title.innerText = "③ 오늘의 건강 관리 수칙";
+    if (section3Title && checklistContainer) {
+        section3Title.innerText = "③ 오늘의 건강 관리 수칙";
 
-    // 4대 필수 카테고리 기본 가이드 (백엔드 보정이 놓친 경우 프론트에서 최후 방어)
-    const REQUIRED_CATEGORIES = [
-        { name: '운동', tip: '주 3회, 30분 이상 가벼운 걷기 등 자신에게 맞는 운동을 꾸준히 실천해 보세요.' },
-        { name: '식단', tip: '규칙적인 식사와 균형 잡힌 영양 섭취가 면역력 유지에 도움이 됩니다.' },
-        { name: '수면', tip: '하루 7~8시간의 충분한 수면으로 몸의 피로를 풀어주세요.' },
-        { name: '흡연/음주', tip: '금연과 절주는 모든 대사 질환 예방의 첫걸음입니다.' }
-    ];
+        const REQUIRED_CATEGORIES = [
+            { name: '운동', tip: '주 3회, 30분 이상 가벼운 걷기 등 자신에게 맞는 운동을 꾸준히 실천해 보세요.' },
+            { name: '식단', tip: '규칙적인 식사와 균형 잡힌 영양 섭취가 면역력 유지에 도움이 됩니다.' },
+            { name: '수면', tip: '하루 7~8시간의 충분한 수면으로 몸의 피로를 풀어주세요.' },
+            { name: '흡연/음주', tip: '금연과 절주는 모든 대사 질환 예방의 첫걸음입니다.' }
+        ];
 
-    // health_guides를 우선 사용, 없으면 checklist 팁들을 공통 hints로 변환
-    let healthGuides = s3.health_guides || [];
-    if (healthGuides.length === 0 && s3.checklist && s3.checklist.length > 0) {
-        // 체크리스트 형식 → 4대 카테고리로 분배 (항목을 나눠서 할당)
-        const tips = s3.checklist;
-        const chunkSize = Math.ceil(tips.length / 4);
-        healthGuides = REQUIRED_CATEGORIES.map((cat, i) => ({
-            name: cat.name,
-            tips: tips.slice(i * chunkSize, (i + 1) * chunkSize).length > 0
-                ? tips.slice(i * chunkSize, (i + 1) * chunkSize)
-                : [cat.tip]
-        }));
-    }
-
-    // 4대 카테고리 누락 보정 (프론트 최후 방어선)
-    if (healthGuides.length > 0) {
-        const existingNames = new Set(healthGuides.map(hg => hg.name));
-        for (const cat of REQUIRED_CATEGORIES) {
-            if (!existingNames.has(cat.name)) {
-                healthGuides.push({ name: cat.name, tips: [cat.tip] });
-            }
+        let healthGuides = s3.health_guides || [];
+        if (healthGuides.length === 0 && s3.checklist && s3.checklist.length > 0) {
+            const tips = s3.checklist;
+            const chunkSize = Math.ceil(tips.length / 4);
+            healthGuides = REQUIRED_CATEGORIES.map((cat, i) => ({
+                name: cat.name,
+                tips: tips.slice(i * chunkSize, (i + 1) * chunkSize).length > 0
+                    ? tips.slice(i * chunkSize, (i + 1) * chunkSize)
+                    : [cat.tip]
+            }));
         }
-    } else {
-        // 완전히 빈 경우 기본값으로 채우기
-        healthGuides = REQUIRED_CATEGORIES.map(cat => ({ name: cat.name, tips: [cat.tip] }));
-    }
 
-    if (healthGuides.length > 0) {
+        if (healthGuides.length > 0) {
+            const existingNames = new Set(healthGuides.map(hg => hg.name));
+            for (const cat of REQUIRED_CATEGORIES) {
+                if (!existingNames.has(cat.name)) {
+                    healthGuides.push({ name: cat.name, tips: [cat.tip] });
+                }
+            }
+        } else {
+            healthGuides = REQUIRED_CATEGORIES.map(cat => ({ name: cat.name, tips: [cat.tip] }));
+        }
+
         checklistContainer.innerHTML = healthGuides.map(hg => `
             <div class="guide-disease-card">
                 <div class="guide-disease-title">
@@ -364,12 +362,6 @@ function renderGuide() {
                 </div>
             </div>
         `).join('');
-    } else {
-        checklistContainer.innerHTML = `
-            <div class="guide-section-body text-gray-600" style="grid-column: span 2;">
-                수집된 건강 데이터를 바탕으로 생성된 맞춤 수칙이 없습니다.
-            </div>
-        `;
     }
 
     // Disclaimer

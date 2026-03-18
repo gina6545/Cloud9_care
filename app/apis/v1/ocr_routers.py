@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import uuid
@@ -6,12 +7,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel
 
+from app.core.config import config
 from app.dependencies.security import get_request_user
 from app.models.current_med import CurrentMed
 from app.models.pill_recognitions import PillRecognition
 from app.models.upload import Upload
 from app.models.user import User
 from app.repositories.pill import PillRepository
+from app.services.guide import GuideService
 from app.services.ocr import OCRService
 from app.services.prescription import PrescriptionService
 
@@ -21,10 +24,10 @@ ocr_router = APIRouter(prefix="/ocr", tags=["ocr"], dependencies=[Depends(get_re
 ocr_service = OCRService()
 prescription_service = PrescriptionService()
 pill_repo = PillRepository()
+guide_service = GuideService()
 
 # 업로드 디렉토리 설정
-UPLOAD_DIR = "/app/uploads/"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+UPLOAD_DIR = config.UPLOAD_DIR
 
 
 async def save_file(file: UploadFile, user: User, category: str) -> Upload:
@@ -169,6 +172,7 @@ async def toggle_prescription_sync(
     처방전의 특정 약물을 현재 복용 목록에 추가하거나 이미 있으면 제거(토글)합니다.
     """
     try:
+        # 전면적인 404 방지를 위해, 전달된 ID가 Prescription ID가 아니라 Upload ID일 경우도 대응합니다.
         result = await prescription_service.toggle_med_sync(
             prescription_id=prescription_id, user=user, drug_name=drug_name
         )
@@ -191,9 +195,11 @@ async def extract_pill_ocr(
     """
     [OCR] 알약 앞/뒷면 이미지 업로드 및 LLM 기반 식별
     """
-    # 1. 파일 저장
-    front_upload = await save_file(front_file, user, category="pill_front")
-    back_upload = await save_file(back_file, user, category="pill_back")
+    # 1. 파일 저장 (병렬 실행)
+    front_upload, back_upload = await asyncio.gather(
+        save_file(front_file, user, category="pill_front"),
+        save_file(back_file, user, category="pill_back"),
+    )
 
     # 2. 파일 바이트 읽기
     with open(front_upload.file_path, "rb") as f:

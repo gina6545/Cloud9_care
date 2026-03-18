@@ -69,6 +69,7 @@ class HealthProfile(models.Model):
     user: fields.OneToOneRelation["User"] = fields.OneToOneField(
         "models.User",
         related_name="health_profile",
+        index=True,
         on_delete=fields.CASCADE,
         description="사용자",
     )

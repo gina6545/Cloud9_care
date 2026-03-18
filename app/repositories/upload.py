@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 
 from app.models.upload import Upload
@@ -15,11 +16,8 @@ class UploadRepository:
         """
         여러 개의 복용 약물 정보를 한꺼번에 생성합니다.
         """
-        created_objs = []
-        for data in uploads:
-            obj = await self._model.create(**{**data, "user_id": user_id})
-            created_objs.append(obj)
-        return created_objs
+        tasks = [self._model.create(**{**data, "user_id": user_id}) for data in uploads]
+        return await asyncio.gather(*tasks)
 
     async def get_latest_day_uploads(self, user_id: str):
         """
