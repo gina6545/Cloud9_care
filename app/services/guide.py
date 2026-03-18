@@ -255,22 +255,26 @@ class GuideService:
         try:
             # 1. 특정 유저의 가장 최신 가이드 레코드를 하나만 타겟팅합니다.
             guide = await LLMLifeGuide.filter(user_id=user_id).order_by("-created_at").first()
-            if not guide: return
+            if not guide:
+                return
 
             field_name = f"activity_{section_type.lower()}"
-            
+
             # 2. 현재 상태 업데이트
             update_data = {field_name: is_active}
-            
+
             # 모든 activity 플래그가 False가 되는지 체크하여 status 변경
             if is_active is False:
                 # 다른 플래그들도 확인 (이것 때문에 상태가 안 변했을 수 있음)
                 # 현재 저장될 값 외에 다른 필드들의 값을 확인
                 others_active = []
-                if section_type != "MEDICATION": others_active.append(guide.activity_medication)
-                if section_type != "DISEASE": others_active.append(guide.activity_disease)
-                if section_type != "PROFILE": others_active.append(guide.activity_profile)
-                
+                if section_type != "MEDICATION":
+                    others_active.append(guide.activity_medication)
+                if section_type != "DISEASE":
+                    others_active.append(guide.activity_disease)
+                if section_type != "PROFILE":
+                    others_active.append(guide.activity_profile)
+
                 if not any(others_active):
                     update_data["user_current_status"] = "가이드 생성 완료"
             else:
@@ -418,7 +422,7 @@ class GuideService:
             return {"user_current_status": "로그인이 필요합니다.", "activity": False}
 
         user_id_str = str(user.id)
-        
+
         # [수정] 1. 태스크 시작 전에 '하나의 레코드'를 확실히 먼저 가져오거나 생성합니다.
         # 이렇게 하면 Race Condition을 방지할 수 있습니다.
         guide = await self._get_guide_record(user_id_str)
@@ -431,7 +435,7 @@ class GuideService:
                 merged_content = {
                     "section1": guide.medication_guide,
                     "section2": guide.disease_guide,
-                    "section3": guide.profile_guide
+                    "section3": guide.profile_guide,
                 }
                 fixed_content = self._fix_missing_health_guides(merged_content)
                 return {
