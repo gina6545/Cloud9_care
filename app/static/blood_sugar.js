@@ -4,6 +4,22 @@ let sugarRecords = [];
 let activeSugarFilter = "공복";
 let activeSugarRecordFilter = "공복";
 
+let sugar_change_cnt = 0
+window.addEventListener('pagehide', () => {
+    if(sugar_change_cnt != 0){
+        const accessToken = localStorage.getItem("access_token");
+        const headers = { "Content-Type": "application/json" };
+        if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+
+        fetch("/api/v1/guides/refresh", {
+            method: "POST",
+            headers: headers,
+            keepalive: true,
+        });
+        sugar_change_cnt = 0;
+    }
+});
+
 function switchSugarMode(mode, button) {
   BloodNotebook.switchMode('sugar', mode, button);
 }
@@ -137,7 +153,7 @@ async function submitBloodSugar() {
   });
 
   BloodNotebook.showFeedback('sugar-save-feedback', "혈당 기록이 저장되었습니다.", "success");
-
+  sugar_change_cnt += 1
   await loadBloodSugarRecords();
 }
 
@@ -342,6 +358,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const result = await response.json();
         if (result.status === 'success') {
           await loadBloodSugarRecords();
+          sugar_change_cnt -= 1
         }
       }
     }

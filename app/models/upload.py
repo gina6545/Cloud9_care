@@ -19,7 +19,7 @@ class Upload(models.Model):
     file_type = fields.CharField(max_length=20)  # png, jpg 등 확장자
     category = fields.CharField(max_length=50, null=True)  # 분류 (prescription, pill_front, pill_back)
     created_at = fields.DatetimeField(auto_now_add=True)
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="uploads")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="uploads", index=True)
     prescription: fields.OneToOneRelation["Prescription"]
 
     class Meta:

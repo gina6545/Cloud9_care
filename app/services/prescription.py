@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from datetime import date
@@ -8,9 +9,12 @@ from openai import AsyncOpenAI
 from app.core import config
 from app.models.current_med import CurrentMed
 from app.models.ocr_history import OCRHistory
+from app.models.prescription import Prescription
+from app.models.prescription_drug import PrescriptionDrug
 from app.models.upload import Upload
 from app.models.user import User
 from app.repositories.prescription import PrescriptionRepository
+from app.services.guide import GuideService
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +27,7 @@ class PrescriptionService:
     def __init__(self):
         self.repo = PrescriptionRepository()
         self.client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
+        self.guide_service = GuideService()
 
     @staticmethod
     def _clean_drug_name(raw_name: str) -> str:
@@ -196,7 +201,7 @@ class PrescriptionService:
         )
 
         # 6. PrescriptionDrug 생성
-        for drug in drugs_data:
+        async def _save_drug(drug):
             try:
                 await self.repo.create_drug(
                     prescription=prescription,
@@ -207,6 +212,8 @@ class PrescriptionService:
                 )
             except Exception as e:
                 logger.error(f"약물 데이터 저장 실패: {drug.get('name')}, 에러: {str(e)}")
+
+        await asyncio.gather(*(_save_drug(d) for d in drugs_data))
 
         return prescription
 
@@ -248,32 +255,24 @@ class PrescriptionService:
         )
 
         # 4. Step 5: PrescriptionDrug 테이블 저장 (개별 약물 상세 정보)
+        async def _save_drug_logic(drug, is_raw=False):
+            try:
+                name = drug if is_raw else drug.get("name")
+                await self.repo.create_drug(
+                    prescription=prescription,
+                    standard_drug_name=name,
+                    dosage_amount=None if is_raw else drug.get("dosage"),
+                    daily_frequency=None if is_raw else drug.get("frequency"),
+                    duration_days=None if is_raw else drug.get("duration"),
+                )
+            except Exception as e:
+                logger.error(f"약물 데이터 저장 실패: {drug}, 에러: {str(e)}")
+
         if not drugs_data and drug_list_raw:
-            # drugs_data가 비어있다면 drug_list_raw를 파싱해서 최소한의 약물 정보라도 저장
             raw_drugs = [name.strip() for name in drug_list_raw.split(",") if name.strip()]
-            for name in raw_drugs:
-                try:
-                    await self.repo.create_drug(
-                        prescription=prescription,
-                        standard_drug_name=name,
-                        dosage_amount=None,
-                        daily_frequency=None,
-                        duration_days=None,
-                    )
-                except Exception as e:
-                    logger.error(f"약물 데이터(raw) 저장 실패: {name}, 에러: {str(e)}")
+            await asyncio.gather(*(_save_drug_logic(name, is_raw=True) for name in raw_drugs))
         else:
-            for drug in drugs_data:
-                try:
-                    await self.repo.create_drug(
-                        prescription=prescription,
-                        standard_drug_name=drug.get("name"),
-                        dosage_amount=drug.get("dosage"),
-                        daily_frequency=drug.get("frequency"),
-                        duration_days=drug.get("duration"),
-                    )
-                except Exception as e:
-                    logger.error(f"약물 데이터 저장 실패: {drug.get('name')}, 에러: {str(e)}")
+            await asyncio.gather(*(_save_drug_logic(d) for d in drugs_data))
 
         return prescription
 
@@ -290,12 +289,11 @@ class PrescriptionService:
             raise ValueError("처방전을 찾을 수 없거나 권한이 없습니다.")
 
         drugs = await prescription.drugs.all()
-        created_meds = []
 
-        for drug in drugs:
+        async def _sync_drug(drug):
             # 선택된 약물 리스트가 있다면 필터링
             if drug_names is not None and drug.standard_drug_name not in drug_names:
-                continue
+                return None
 
             # 새로운 5가지 필드에 맞춰 데이터 연동
             med = await CurrentMed.create(
@@ -306,52 +304,69 @@ class PrescriptionService:
                 total_days=str(drug.duration_days or ""),
                 instructions="",
             )
-            # 연동 상태 업데이트
+            # 연동 상태 업데이트 및 관계 설정 [FIX]
             drug.is_linked_to_meds = True
+            drug.current_med = med
             await drug.save()
-            created_meds.append(med)
+            return med
 
-        return created_meds
+        # 병렬 동기화 실행
+        results = await asyncio.gather(*(_sync_drug(d) for d in drugs))
+
+        return [r for r in results if r is not None]
 
     async def toggle_med_sync(self, prescription_id: int, user: User, drug_name: str) -> dict[str, Any]:
         """
-        처방전의 특정 약물을 복용 목록에 추가하거나 이미 있으면 제거(토글)합니다.
+        처방전의 특정 약물을 current_meds에 추가하거나 제거합니다(토글).
+        - prescriptions / prescription_drugs / ocr_history 는 LLM 분석 시 1회 저장 전용이므로 절대 수정하지 않음.
+        - current_meds 테이블만 추가/삭제합니다.
         """
-        prescription = await self.repo.get_by_id(prescription_id)
-        if not prescription or prescription.user_id != user.id:
-            raise ValueError("처방전을 찾을 수 없거나 권한이 없습니다.")
+        # 1. 처방전 조회 (user 조건 포함하여 권한 검증)
+        prescription = await Prescription.filter(id=prescription_id, user=user).first()
 
-        # 1. 해당 처방전에서 drug_name에 해당하는 PrescriptionDrug 찾기
-        drug = await prescription.drugs.filter(standard_drug_name=drug_name).first()
+        if not prescription:
+            # Upload ID로 잘못 전달된 경우 보정
+            upload = await Upload.filter(id=prescription_id, user=user).first()
+            if upload:
+                prescription = await Prescription.filter(upload=upload, user=user).first()
+
+            if not prescription:
+                logger.error(f"[toggle_med_sync] Prescription not found: user={user.id}, id={prescription_id}")
+                raise ValueError("처방전을 찾을 수 없거나 권한이 없습니다.")
+
+        # 2. 해당 처방전의 약물 조회 (prescription_drugs는 읽기 전용)
+        drug_name_cleaned = drug_name.strip()
+        drug = await PrescriptionDrug.filter(
+            prescription=prescription,
+            standard_drug_name=drug_name_cleaned,
+        ).first()
         if not drug:
+            drug = await PrescriptionDrug.filter(
+                prescription=prescription,
+                standard_drug_name=drug_name,
+            ).first()
+        if not drug:
+            logger.error(f"[toggle_med_sync] Drug not found: '{drug_name}' in prescription {prescription_id}")
             raise ValueError(f"처방전에서 '{drug_name}' 약물을 찾을 수 없습니다.")
 
-        # 만약 multiple matches가 있을 수 있으나, 보통 이 화면에서는 이 처방전에서 온 건지 체크
-        # prescription_drug.current_med 필드가 설정되어 있는지 확인하는 것이 가장 정확함
-        if drug.is_linked_to_meds and drug.current_med_id:
-            # 이미 있으면 삭제 (토글 오프)
-            target_med = await drug.current_med
-            if target_med:
-                await target_med.delete()
+        # 3. current_meds에서 현재 등록 여부 확인 (user + medication_name 기준)
+        existing_med = await CurrentMed.filter(
+            user=user,
+            medication_name=drug.standard_drug_name,
+        ).first()
 
-            drug.is_linked_to_meds = False
-            drug.current_med = None
-            await drug.save()
-
+        if existing_med:
+            # 토글 오프: current_meds에서 삭제만 (prescription_drugs 건드리지 않음)
+            await existing_med.delete()
             return {"synced": False, "message": f"'{drug_name}'이(가) 복용 목록에서 제거되었습니다."}
         else:
-            # 없으면 추가 (토글 온)
-            new_med = await CurrentMed.create(
+            # 토글 온: current_meds에 추가만 (prescription_drugs 건드리지 않음)
+            await CurrentMed.create(
                 user=user,
-                medication_name=drug_name,
+                medication_name=drug.standard_drug_name,
                 one_dose_amount=f"{drug.dosage_amount or ''}".strip(),
                 one_dose_count=str(drug.daily_frequency or ""),
                 total_days=str(drug.duration_days or ""),
                 instructions="",
             )
-
-            drug.is_linked_to_meds = True
-            drug.current_med = new_med
-            await drug.save()
-
             return {"synced": True, "message": f"'{drug_name}'이(가) 복용 목록에 추가되었습니다."}

@@ -3,6 +3,7 @@ let allergyIndex = 0;
 let medIndex = 0;
 let chronicList = [];
 let toastTimer = null;
+let health_change_cnt = 0;
 
 function showToast(message, type = "info") {
   const toast = document.getElementById("health-toast");
@@ -146,6 +147,10 @@ function toggleSmokingFields() {
   }
 }
 
+function markHealthChanged() {
+  health_change_cnt++;
+}
+
 function toggleDrinkingFields() {
   const drinkingStatus = document.querySelector("[name='drinking_status']")?.value;
   const drinkingYears = document.querySelector("[name='drinking_years']");
@@ -175,7 +180,10 @@ function activateHealthTab(tabName) {
 // 공통 테이블 행 삭제
 function removeTableRow(button) {
   const row = button.closest('tr');
-  if (row) row.remove();
+  if (row) {
+    row.remove();
+    markHealthChanged();
+  }
 }
 
 // 데이터 렌더링
@@ -241,6 +249,7 @@ function renderMedications(list) {
     const newRow = container.lastElementChild;
     newRow.querySelector(".delete-btn").addEventListener("click", (e) => {
       e.target.closest('tr').remove();
+      markHealthChanged();
     });
   });
 }
@@ -322,6 +331,7 @@ function addChronic(name) {
 function removeChronic(index) {
   chronicList.splice(index, 1);
   renderChronic();
+  markHealthChanged();
 }
 
 function updateDiagnose(index, value) {
@@ -329,6 +339,7 @@ function updateDiagnose(index, value) {
   const hiddenInput = document.getElementById("chronic-hidden");
   if (hiddenInput) {
     hiddenInput.value = JSON.stringify(chronicList);
+    markHealthChanged();
   }
 }
 
@@ -360,6 +371,7 @@ function addAllergy() {
 
   tbody.appendChild(tr);
   allergyIndex++;
+  markHealthChanged();
 }
 
 // 약 추가
@@ -382,7 +394,9 @@ function addMed() {
   const newRow = container.lastElementChild;
   newRow.querySelector(".delete-btn").addEventListener("click", (e) => {
     e.target.closest('tr').remove();
+    markHealthChanged();
   });
+  markHealthChanged();
 }
 
 // 검증
@@ -590,13 +604,7 @@ async function handleSaveHealthProfile() {
 
   if (response.ok) {
     showToast("건강정보가 저장되었습니다.", "success");
-
-    // 가이드 생성 트리거 (비동기로 실행)
-    fetchWithAuth("/api/v1/guides", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-    });
-
+    health_change_cnt = 0; // Reset after manual save
   } else {
     const errorText = await response.text();
     console.error("건강정보 저장 실패:", errorText);
@@ -660,4 +668,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   toggleSmokingFields();
   toggleDrinkingFields();
+
+  // Track all input changes
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('change', markHealthChanged);
+  });
+});
+
+window.addEventListener('pagehide', () => {
+    if (health_change_cnt > 0) {
+        const accessToken = localStorage.getItem("access_token");
+        const headers = { "Content-Type": "application/json" };
+        if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+
+        fetch("/api/v1/guides/refresh", {
+            method: "POST",
+            headers: headers,
+            keepalive: true
+        });
+        health_change_cnt = 0;
+    }
 });

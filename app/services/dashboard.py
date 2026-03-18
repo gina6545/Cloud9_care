@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from datetime import datetime, timedelta, timezone
@@ -58,10 +59,12 @@ class DashboardService:
     async def generate_insights(self, user: User, force_refresh: bool = False) -> dict:
         """사용자 건강 정보 기반 AI 인사이트 3개 생성"""
         try:
-            # 1. 사용자 건강 데이터 수집
-            llm_life_guide = await self.llm_life_guide_repo.get_by_user_id(user_id=user.id)
-            bp_records = await BloodPressureRecord.filter(user=user).order_by("-created_at").limit(7)
-            bs_records = await BloodSugarRecord.filter(user=user).order_by("-created_at").limit(7)
+            # 1. 사용자 건강 데이터 수집 (병렬 실행)
+            llm_life_guide, bp_records, bs_records = await asyncio.gather(
+                self.llm_life_guide_repo.get_by_user_id(user_id=user.id),
+                BloodPressureRecord.filter(user=user).order_by("-created_at").limit(7),
+                BloodSugarRecord.filter(user=user).order_by("-created_at").limit(7),
+            )
 
             # 2. 데이터 요약
             bp_avg = None
@@ -88,7 +91,7 @@ class DashboardService:
 {{"insights": ["팁1", "팁2", "팁3"]}}
 """
 
-            # 4. OpenAI 호출
+            # 4. OpenAI KEY 확인
             if not config.OPENAI_API_KEY:
                 logger.warning("OPENAI_API_KEY not set, returning fallback insights")
                 return {
@@ -100,34 +103,12 @@ class DashboardService:
                     ],
                 }
 
-            client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
-            response = await client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "당신은 친절한 건강 생활 코치입니다. JSON 형식으로만 응답합니다, 다른 설명이나 섹션은 포함하지 마세요.",
-                    },
-                    {"role": "user", "content": context},
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.0,
-                max_tokens=200,
-            )
-
-            # 5. 미션 달성도 계산 (캐시 여부와 상관없이 매번 계산)
-            total_plans = await PlanCheckList.filter(user=user).count()
-            completed_plans = await PlanCheckList.filter(user=user, is_completed=True).count()
+            total_plans_task = PlanCheckList.filter(user=user).count()
+            completed_plans_task = PlanCheckList.filter(user=user, is_completed=True).count()
+            total_plans, completed_plans = await asyncio.gather(total_plans_task, completed_plans_task)
             mission_rate = int(completed_plans / total_plans * 100) if total_plans > 0 else 0
 
-            # 7. OpenAI 호출 (캐시가 없거나 force_refresh=True일 때만 실행)
-            if not config.OPENAI_API_KEY:
-                logger.warning("OPENAI_API_KEY not set, returning fallback insights")
-                return {
-                    "mission_rate": mission_rate,
-                    "result": ["", "", ""],
-                }
-
+            # 4. OpenAI 호출 (데이터 페칭 후 한 번만 실행)
             client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
             response = await client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -165,8 +146,10 @@ class DashboardService:
         try:
             today_kst = datetime.now(KST).date()
 
-            bp_records = await BloodPressureRecord.filter(user=user).order_by("-created_at").limit(30)
-            bs_records = await BloodSugarRecord.filter(user=user).order_by("-created_at").limit(45)
+            # 병렬 실행
+            bp_task = BloodPressureRecord.filter(user=user).order_by("-created_at").limit(30)
+            bs_task = BloodSugarRecord.filter(user=user).order_by("-created_at").limit(45)
+            bp_records, bs_records = await asyncio.gather(bp_task, bs_task)
 
             def is_today_kst(dt):
                 return dt.astimezone(KST).date() == today_kst

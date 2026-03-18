@@ -4,6 +4,22 @@ let pressureRecords = [];
 let activePressureFilter = "아침";
 let activePressureRecordFilter = "아침";
 
+let pressure_change_cnt = 0
+window.addEventListener('pagehide', () => {
+    if(pressure_change_cnt != 0){
+        const accessToken = localStorage.getItem("access_token");
+        const headers = { "Content-Type": "application/json" };
+        if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+
+        fetch("/api/v1/guides/refresh", {
+            method: "POST",
+            headers: headers,
+            keepalive: true,
+        });
+        pressure_change_cnt = 0;
+    }
+});
+
 function switchPressureMode(mode, button) {
   BloodNotebook.switchMode('pressure', mode, button);
 }
@@ -146,7 +162,7 @@ async function submitBloodPressure() {
   });
 
   BloodNotebook.showFeedback('pressure-save-feedback', "혈압 기록이 저장되었습니다.", "success");
-
+  pressure_change_cnt += 1
   await loadBloodPressureRecords();
 }
 
@@ -370,6 +386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const result = await response.json();
         if (result.status === 'success') {
           await loadBloodPressureRecords();
+          pressure_change_cnt -= 1
         }
       }
     }

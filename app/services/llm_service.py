@@ -82,8 +82,15 @@ class LLMService:
             return None
         return LlmLifeGuideResponse(
             user_current_status=model.user_current_status,
-            generated_content=model.generated_content,
-            activity=model.activity,
+            generated_content={
+                "section1": model.medication_guide or {},
+                "section2": model.disease_guide or {},
+                "section3": model.profile_guide or {},
+            },
+            activity=bool(model.activity_medication or model.activity_disease or model.activity_profile),
+            activity_medication=model.activity_medication,
+            activity_disease=model.activity_disease,
+            activity_profile=model.activity_profile,
             created_at=self._to_kst_str(model.created_at),
         )
 

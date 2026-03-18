@@ -1,3 +1,5 @@
+import asyncio
+
 from app.dtos.health import BloodPressureRequest, BloodSugarRequest, FullHealthProfileSaveRequest
 from app.dtos.plan_check_list import PlanCheckListRequest
 from app.models.allergy import Allergy
@@ -48,12 +50,16 @@ class HealthProfileService:
         """
         user_id = user.id if user else None
 
-        allergies = await self.allergy_repo.get_by_user_id(user_id)
-        blood_pressure_records = await self.blood_pressure_record_repo.get_by_user_id(user_id)
-        blood_sugar_records = await self.blood_sugar_record_repo.get_by_user_id(user_id)
-        chronic_diseases = await self.chronic_disease_repo.get_by_user_id(user_id)
-        current_meds = await self.current_med_repo.get_by_user_id(user_id)
-        health_profile = await self.health_profile_repo.get_by_user_id(user_id)
+        # 병렬 조회 실행
+        results = await asyncio.gather(
+            self.allergy_repo.get_by_user_id(user_id),
+            self.blood_pressure_record_repo.get_by_user_id(user_id),
+            self.blood_sugar_record_repo.get_by_user_id(user_id),
+            self.chronic_disease_repo.get_by_user_id(user_id),
+            self.current_med_repo.get_by_user_id(user_id),
+            self.health_profile_repo.get_by_user_id(user_id),
+        )
+        allergies, blood_pressure_records, blood_sugar_records, chronic_diseases, current_meds, health_profile = results
 
         return {
             "health_profile": health_profile,
@@ -123,8 +129,12 @@ class HealthProfileService:
         if request.medications:
             await self.current_med_repo.create_many(user_id, [m.model_dump() for m in request.medications])
 
-        # 5. 가이드 생성 트리거 (DB activity=True 및 백그라운드 태스크 등록)
-        await self.guide_service.generate_guide(user_id, background_tasks)
+        # 5. 가이드 생성 트리거 (모듈별 독립 요청)
+        await asyncio.gather(
+            self.guide_service.generate_modular_guide(user_id, "MEDICATION", background_tasks),
+            self.guide_service.generate_modular_guide(user_id, "DISEASE", background_tasks),
+            self.guide_service.generate_modular_guide(user_id, "PROFILE", background_tasks),
+        )
 
         # 6. 무거운 작업(AI 추천 및 동기화)을 백그라운드로 이동
         if background_tasks:
@@ -144,8 +154,11 @@ class HealthProfileService:
         if recommendation_result and "content" in recommendation_result:
             await self.plan_check_list.delete_all_by_type(user_id, plan_type="llm")
             checklist = recommendation_result["content"].get("checklist", [])
-            for content in checklist:
-                await self.plan_check_list.create(user_id, PlanCheckListRequest(content=content, plan_type="llm"))
+            tasks = [
+                self.plan_check_list.create(user_id, PlanCheckListRequest(content=content, plan_type="llm"))
+                for content in checklist
+            ]
+            await asyncio.gather(*tasks)
 
         # 2. 복약 알림 기반 플랜 동기화
         await self.plan_check_list.sync_pill_plans(user_id)
@@ -198,13 +211,17 @@ class HealthProfileService:
 
     async def _fetch_user_health_data(self, user_id: str | None) -> dict:
         try:
-            diseases = await ChronicDisease.filter(user_id=user_id).all()
-            allergies = await Allergy.filter(user_id=user_id).all()
-            meds = await CurrentMed.filter(user_id=user_id).all()
-            profile = await HealthProfile.get_or_none(user_id=user_id)
+            # 병렬 실행 (asyncio.gather 사용)
+            diseases_task = ChronicDisease.filter(user_id=user_id).all()
+            allergies_task = Allergy.filter(user_id=user_id).all()
+            meds_task = CurrentMed.filter(user_id=user_id).all()
+            profile_task = HealthProfile.get_or_none(user_id=user_id)
+            bp_records_task = BloodPressureRecord.filter(user_id=user_id).order_by("-created_at").limit(1)
+            bs_records_task = BloodSugarRecord.filter(user_id=user_id).order_by("-created_at").limit(1)
 
-            bp_records = await BloodPressureRecord.filter(user_id=user_id).order_by("-created_at").limit(1)
-            bs_records = await BloodSugarRecord.filter(user_id=user_id).order_by("-created_at").limit(1)
+            diseases, allergies, meds, profile, bp_records, bs_records = await asyncio.gather(
+                diseases_task, allergies_task, meds_task, profile_task, bp_records_task, bs_records_task
+            )
 
             return {
                 "disease_list": [d.disease_name for d in diseases],

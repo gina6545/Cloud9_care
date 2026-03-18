@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import logging
 import os
@@ -11,6 +12,7 @@ import anyio
 from fastapi import UploadFile
 from tortoise.expressions import Q
 
+from app.core.config import config
 from app.models.drug_master import DrugMaster
 from app.models.pill_recognitions import PillRecognition
 from app.repositories.upload import UploadRepository
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class UploadService:
-    UPLOAD_DIR = "/app/uploads/"
+    UPLOAD_DIR = config.UPLOAD_DIR
     CHROMA_DB_PATH = "./data/chroma_db"
     VISION_MODEL = "gpt-4o-mini"
     COLLECTION_NAME = "pill_database"
@@ -121,20 +123,21 @@ class UploadService:
             back_up = next((u for u in created_uploads if u.category == "pill_back"), None)
 
             if front_up:
-                # 후보군 리스트를 돌며 각각 새로운 행(row)으로 저장합니다.
-                for cand in result["candidates"]:
-                    db_data.append(
-                        await PillRecognition.create(
-                            pill_name=cand["name"],
-                            pill_description=cand.get("efcy_qesitm"),
-                            confidence=cand["score"],
-                            model_version=self.VISION_MODEL,
-                            raw_result=result.get("ai_extracted"),
-                            user_id=user.id,
-                            front_upload=front_up,  # ForeignKey이므로 여러 번 create 가능
-                            back_upload=back_up,
-                        )
+                # 후보군 리스트를 돌며 각각 새로운 행(row)으로 저장합니다. (병렬 실행)
+                tasks = [
+                    PillRecognition.create(
+                        pill_name=cand["name"],
+                        pill_description=cand.get("efcy_qesitm"),
+                        confidence=cand["score"],
+                        model_version=self.VISION_MODEL,
+                        raw_result=result.get("ai_extracted"),
+                        user_id=user.id,
+                        front_upload=front_up,
+                        back_upload=back_up,
                     )
+                    for cand in result["candidates"]
+                ]
+                db_data = await asyncio.gather(*tasks)
 
         return db_data
 
@@ -366,6 +369,7 @@ class UploadService:
                 return None
 
             hospital = {
+                "id": prescription.id,
                 "hospital_name": getattr(prescription, "hospital_name", ""),
                 "prescription_date": prescription.prescribed_date.strftime("%Y-%m-%d")
                 if getattr(prescription, "prescribed_date", None)
@@ -376,6 +380,7 @@ class UploadService:
             for drug in getattr(prescription, "drugs", []):
                 candidates.append(
                     {
+                        "id": drug.id,
                         "name": getattr(drug, "standard_drug_name", ""),
                         "dosage": getattr(drug, "dosage_amount", ""),
                         "frequency": getattr(drug, "daily_frequency", ""),
@@ -406,13 +411,15 @@ class UploadService:
             if data and hasattr(data[0], "raw_result"):
                 ai_extracted = getattr(data[0], "raw_result", {}) or {}
 
+            # 병렬 조회 실행
+            upload_tasks = [
+                self._repo.get_upload_by_id_with_relations(getattr(data[0], "back_upload_id", None), user.id),
+                self._repo.get_upload_by_id_with_relations(getattr(data[0], "front_upload_id", None), user.id),
+            ]
+            upload_results = await asyncio.gather(*upload_tasks)
+
             return {
-                "upload": [
-                    await self._repo.get_upload_by_id_with_relations(getattr(data[0], "back_upload_id", None), user.id),
-                    await self._repo.get_upload_by_id_with_relations(
-                        getattr(data[0], "front_upload_id", None), user.id
-                    ),
-                ],
+                "upload": upload_results,
                 "ai_extracted": ai_extracted,
                 "candidates": candidates,
             }
@@ -455,7 +462,18 @@ class UploadService:
             # 같은 시간(분) + 같은 타입인 경우 한 항목으로 묶어줌
             key = f"{group_time_key}_{display_type}"
             if key not in history_map:
-                history_map[key] = {"id": upload.id, "date": created_datetime, "type": display_type, "images": []}
+                p_id = None
+                if upload.category == "prescription":
+                    p = getattr(upload, "prescription", None)
+                    p_id = p.id if p else None
+
+                history_map[key] = {
+                    "id": upload.id,
+                    "prescription_id": p_id,
+                    "date": created_datetime,
+                    "type": display_type,
+                    "images": [],
+                }
 
             history_map[key]["images"].append({"name": original_name, "url": file_url})
 
@@ -504,6 +522,9 @@ class UploadService:
                 else:
                     groups[base]["back"] = upload
             else:
+                if upload.category == "prescription":
+                    p = getattr(upload, "prescription", None)
+                    upload.prescription_id = p.id if p else None
                 others.append(upload)
         return groups, others
 

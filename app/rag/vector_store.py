@@ -72,33 +72,34 @@ def build_sample_vector_store() -> None:
     reset_collection()
     collection = get_or_create_collection()
 
-    ids = []
-    documents = []
-    metadatas = []
+    batch_size = 100
+    for i in range(0, len(docs), batch_size):
+        batch = docs[i : i + batch_size]
+        ids = [doc["id"] for doc in batch]
+        documents = [doc["text"] for doc in batch]
+        metadatas = [doc["metadata"] for doc in batch]
 
-    for doc in docs:
-        ids.append(doc["id"])
-        documents.append(doc["text"])
-        metadatas.append(doc["metadata"])
+        collection.add(
+            ids=ids,
+            documents=documents,
+            metadatas=metadatas,
+        )
+        print(f"진행 중: {i + len(batch)} / {len(docs)} 개의 문서를 저장했습니다.")
 
-    collection.add(
-        ids=ids,
-        documents=documents,
-        metadatas=metadatas,
-    )
-
-    print(f"총 {len(ids)}개의 문서를 collection에 저장했습니다.")
+    print(f"최종적으로 {len(docs)}개의 문서를 collection에 저장했습니다.")
 
 
-def search_similar_documents(query_text: str, n_results: int = 3) -> Any:
+def search_similar_documents(query_text: str, n_results: int = 3, where: dict | None = None) -> Any:
     """
     query_text로 유사 문서를 검색한다.
+    where 파라미터를 통해 메타데이터 필터링(예: 특정 질환 그룹)이 가능하다.
     """
     collection = get_or_create_collection()
 
     results = collection.query(
         query_texts=[query_text],
         n_results=n_results,
+        where=where,
     )
     return results
 

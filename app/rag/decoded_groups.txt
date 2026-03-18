@@ -1,0 +1,8 @@
+eab8b0ed8380 -> 기타
+ec868ced9994eab8b020eca788ed9998 -> 소화기 질환
+ed98b8ed9da1eab8b020eca788ed9998 -> 호흡기 질환
+ec8898eba9b420eca788ed9998 -> 수면 질환
+eca095ec8ba0eab1b4eab09520ebb08f20ec8898eba9b420eca788ed9998 -> 정신건강 및 수면 질환
+eab7bceab3a8eab2a9eab38420eca788ed9998 -> 근골격계 질환
+ec8ba0eab2bdeab38420eca788ed9998 -> 신경계 질환
+eab3b5ed86b520ec839ded999cec8ab5eab480 -> 공통 생활습관

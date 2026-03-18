@@ -3,6 +3,22 @@
  * Handles multiple file selection, previews, deletion, and simulated upload.
  */
 
+let drug_change_cnt = 0
+window.addEventListener('pagehide', () => {
+    if(drug_change_cnt != 0){
+        const accessToken = localStorage.getItem("access_token");
+        const headers = { "Content-Type": "application/json" };
+        if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+
+        fetch("/api/v1/guides/refresh", {
+            method: "POST",
+            headers: headers,
+            keepalive: true,
+        });
+        drug_change_cnt = 0;
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     // Elements
     const uploadOverlay = document.getElementById('upload-overlay');
@@ -412,7 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const results = grouped[hospital];
 
                 let hospitalBlocksHtml = results.map(res => {
-                    const pId = res.prescription_id || res.id || 'unknown';
+                    // [BUG FIX] API 응답 구조가 다른 경우(ocr/prescription vs uploads/id/analysis)를 모두 대응합니다.
+                    const pId = res.prescription_id || (res.hospital ? res.hospital.id : null) || res.id || 'unknown';
                     const pDate = res.prescribed_date || '날짜 정보 없음';
                     const drugList = res.drugs || [];
 
@@ -515,6 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 btn.style.color = 'white';
                                 btn.closest('.pill-candidate-card').style.borderColor = '#7c3aed';
                                 btn.closest('.pill-candidate-card').style.background = '#f5f3ff';
+                                drug_change_cnt += 1
                             } else {
                                 // 미등록 상태로 원복
                                 btn.textContent = '➕ 복용 정보 등록';
@@ -522,6 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 btn.style.color = '#7c3aed';
                                 btn.closest('.pill-candidate-card').style.borderColor = '#e2e8f0';
                                 btn.closest('.pill-candidate-card').style.background = 'white';
+                                drug_change_cnt -= 1
                             }
                             
                             showToast(result.message);
@@ -655,6 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 btn.style.color = 'white';
                                 btn.closest('.pill-candidate-card').style.borderColor = '#7c3aed';
                                 btn.closest('.pill-candidate-card').style.background = '#f5f3ff';
+                                drug_change_cnt += 1
                             } else {
                                 // 미등록 상태로 원복
                                 btn.textContent = '➕ 복용 정보 등록';
@@ -662,6 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 btn.style.color = '#7c3aed';
                                 btn.closest('.pill-candidate-card').style.borderColor = '#e2e8f0';
                                 btn.closest('.pill-candidate-card').style.background = 'white';
+                                drug_change_cnt -= 1
                             }
 
                             if (typeof showToast === 'function') {
@@ -1119,12 +1140,14 @@ async function syncSingleHistoryDrug(prescriptionId, drugName, btn) {
                 btn.style.color = 'white';
                 btn.closest('.pill-candidate-card').style.borderColor = '#7c3aed';
                 btn.closest('.pill-candidate-card').style.background = '#f5f3ff';
+                drug_change_cnt += 1
             } else {
                 btn.textContent = '➕ 복용 정보 등록';
                 btn.style.background = 'white';
                 btn.style.color = '#7c3aed';
                 btn.closest('.pill-candidate-card').style.borderColor = '#e2e8f0';
                 btn.closest('.pill-candidate-card').style.background = 'white';
+                drug_change_cnt -= 1
             }
             
             showToast(result.message);

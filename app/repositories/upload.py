@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 
 from app.models.upload import Upload
@@ -15,11 +16,8 @@ class UploadRepository:
         """
         여러 개의 복용 약물 정보를 한꺼번에 생성합니다.
         """
-        created_objs = []
-        for data in uploads:
-            obj = await self._model.create(**{**data, "user_id": user_id})
-            created_objs.append(obj)
-        return created_objs
+        tasks = [self._model.create(**{**data, "user_id": user_id}) for data in uploads]
+        return await asyncio.gather(*tasks)
 
     async def get_latest_day_uploads(self, user_id: str):
         """
@@ -40,7 +38,7 @@ class UploadRepository:
         """
         사용자의 모든 업로드 기록을 최신순으로 정렬하여 반환합니다.
         """
-        return await self._model.filter(user_id=user_id).order_by("-created_at")
+        return await self._model.filter(user_id=user_id).order_by("-created_at").prefetch_related("prescription")
 
     async def delete_upload(self, upload_id: int, user_id: str) -> bool:
         """
