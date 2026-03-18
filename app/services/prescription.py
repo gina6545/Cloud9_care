@@ -210,7 +210,7 @@ class PrescriptionService:
                 )
             except Exception as e:
                 logger.error(f"약물 데이터 저장 실패: {drug.get('name')}, 에러: {str(e)}")
- 
+
         await asyncio.gather(*(_save_drug(d) for d in drugs_data))
 
         return prescription
@@ -265,7 +265,7 @@ class PrescriptionService:
                 )
             except Exception as e:
                 logger.error(f"약물 데이터 저장 실패: {drug}, 에러: {str(e)}")
- 
+
         if not drugs_data and drug_list_raw:
             raw_drugs = [name.strip() for name in drug_list_raw.split(",") if name.strip()]
             await asyncio.gather(*(_save_drug_logic(name, is_raw=True) for name in raw_drugs))
@@ -287,7 +287,6 @@ class PrescriptionService:
             raise ValueError("처방전을 찾을 수 없거나 권한이 없습니다.")
 
         drugs = await prescription.drugs.all()
-        created_meds = []
 
         async def _sync_drug(drug):
             # 선택된 약물 리스트가 있다면 필터링
@@ -311,7 +310,7 @@ class PrescriptionService:
 
         # 병렬 동기화 실행
         results = await asyncio.gather(*(_sync_drug(d) for d in drugs))
-        
+
         return [r for r in results if r is not None]
 
     async def toggle_med_sync(self, prescription_id: int, user: User, drug_name: str) -> dict[str, Any]:
@@ -320,7 +319,7 @@ class PrescriptionService:
         """
         # [ID 보정] 전달된 ID가 Prescription ID가 아니라 Upload ID일 경우를 대비해 한번 더 확인합니다.
         prescription = await self.repo.get_by_id(prescription_id)
-        
+
         if not prescription or prescription.user_id != user.id:
             # 반대로 조회: Upload ID로 처방전 찾기
             upload = await Upload.filter(id=prescription_id, user_id=user.id).prefetch_related("prescription").first()
@@ -334,7 +333,7 @@ class PrescriptionService:
         # [성능/안정성] 검색 시 공백 제거 등 유연하게 처리
         drug_name_cleaned = drug_name.strip()
         drug = await prescription.drugs.filter(standard_drug_name=drug_name_cleaned).first()
-        
+
         # [Fallback] 만약 못 찾았다면 이름이 정확히 일치하지 않을 수 있으므로 원본 그대로 시도
         if not drug:
             drug = await prescription.drugs.filter(standard_drug_name=drug_name).first()
@@ -360,7 +359,7 @@ class PrescriptionService:
             # 만약 current_med_id만 없고 is_linked_to_meds만 True인 상태(버그)라면 여기서 보정됨
             new_med = await CurrentMed.create(
                 user=user,
-                medication_name=drug.standard_drug_name, # 원본 저장된 이름 사용
+                medication_name=drug.standard_drug_name,  # 원본 저장된 이름 사용
                 one_dose_amount=f"{drug.dosage_amount or ''}".strip(),
                 one_dose_count=str(drug.daily_frequency or ""),
                 total_days=str(drug.duration_days or ""),

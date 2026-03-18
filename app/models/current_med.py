@@ -24,7 +24,9 @@ class CurrentMed(models.Model):
     total_days = fields.CharField(max_length=255, null=True)  # 총 투약일수
     instructions = fields.TextField(null=True)  # 용법 (예: 식후 30분)
 
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="current_meds", index=True)
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField(
+        "models.User", related_name="current_meds", index=True
+    )
 
     # 약물 식별(PillRecognition)과의 1:1 관계
     pill_recognition: fields.OneToOneRelation["PillRecognition"] | None = fields.OneToOneField(

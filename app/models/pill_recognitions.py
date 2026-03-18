@@ -28,7 +28,9 @@ class PillRecognition(models.Model):
         "models.Upload", related_name="pill_recognitions_back", null=True
     )
 
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="pill_recognitions", index=True)
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField(
+        "models.User", related_name="pill_recognitions", index=True
+    )
 
     # CurrentMed와 1:1 관계 (식별된 결과가 실제 복용 목록에 추가될 때 사용)
     current_med: fields.OneToOneRelation["CurrentMed"]

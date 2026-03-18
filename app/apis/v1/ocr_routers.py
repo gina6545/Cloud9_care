@@ -4,19 +4,20 @@ import os
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel
 
+from app.core.config import config
 from app.dependencies.security import get_request_user
 from app.models.current_med import CurrentMed
 from app.models.pill_recognitions import PillRecognition
 from app.models.upload import Upload
 from app.models.user import User
 from app.repositories.pill import PillRepository
+from app.services.guide import GuideService
 from app.services.ocr import OCRService
 from app.services.prescription import PrescriptionService
-from app.core.config import config
-from app.services.guide import GuideService
+
 logger = logging.getLogger(__name__)
 
 ocr_router = APIRouter(prefix="/ocr", tags=["ocr"], dependencies=[Depends(get_request_user)])

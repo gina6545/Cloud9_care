@@ -1,4 +1,5 @@
 import asyncio
+
 from app.dtos.health import BloodPressureRequest, BloodSugarRequest, FullHealthProfileSaveRequest
 from app.dtos.plan_check_list import PlanCheckListRequest
 from app.models.allergy import Allergy
@@ -132,7 +133,7 @@ class HealthProfileService:
         await asyncio.gather(
             self.guide_service.generate_modular_guide(user_id, "MEDICATION", background_tasks),
             self.guide_service.generate_modular_guide(user_id, "DISEASE", background_tasks),
-            self.guide_service.generate_modular_guide(user_id, "PROFILE", background_tasks)
+            self.guide_service.generate_modular_guide(user_id, "PROFILE", background_tasks),
         )
 
         # 6. 무거운 작업(AI 추천 및 동기화)을 백그라운드로 이동

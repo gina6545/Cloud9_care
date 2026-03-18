@@ -21,16 +21,14 @@ def generate_rag_context(
 
     # 1️⃣ 질환 정규화 및 그룹 추출
     normalized_diseases = normalize_user_diseases(selected_diseases, other_disease)
-    
+
     # 중복 제거된 질환 그룹 세트 (기타 및 공통 포함)
     disease_groups = {d["group"] for d in normalized_diseases}
     disease_groups.add("공통")
     disease_groups.add("기타")  # 미분류 문서를 위해 포함
-    
+
     # ChromaDB용 where 필터 생성 ($in 연산자 사용)
-    search_filter = {
-        "disease_group": {"$in": list(disease_groups)}
-    }
+    search_filter = {"disease_group": {"$in": list(disease_groups)}}
 
     # 2️⃣ query 생성
     queries = build_queries(normalized_diseases, lifestyle)
@@ -41,7 +39,7 @@ def generate_rag_context(
         results = search_similar_documents(
             query_text=query,
             n_results=top_k,
-            where=search_filter  # 계층적 필터링 적용
+            where=search_filter,  # 계층적 필터링 적용
         )
         results_list.append(results)
 

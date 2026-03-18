@@ -61,7 +61,7 @@ class GuideService:
                 await self._run_disease_guide_task(user_id)
             elif section_type == "PROFILE":
                 await self._run_profile_guide_task(user_id)
-            
+
             # 해당 작업 완료 시 상태 변경 False 처리
             await self.update_loading_state(user_id, section_type, False)
         except Exception as e:
@@ -77,11 +77,9 @@ class GuideService:
     async def _run_medication_guide_task(self, user_id: str) -> None:
         """복약 가이드(section1) 생성 - 알약만 별개"""
         health_data = await self._fetch_user_health_data(user_id)
-        current_data = {
-            "med_list": health_data["med_list"]
-        }
+        current_data = {"med_list": health_data["med_list"]}
         fingerprint = self._calculate_fingerprint(current_data)
-        
+
         guide_record = await self._get_guide_record(user_id)
         if guide_record.medication_guide and guide_record.medication_guide.get("_fingerprint") == fingerprint:
             return  # 변동 없음
@@ -89,10 +87,12 @@ class GuideService:
         prompt = self._build_medication_prompt(health_data)
         try:
             content = await self.llm_service.generate_json(
-                messages=[{"role": "system", "content": "복약 지도 전문 의사로서 조언한다. JSON으로만 답변한다."},
-                          {"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": "복약 지도 전문 의사로서 조언한다. JSON으로만 답변한다."},
+                    {"role": "user", "content": prompt},
+                ],
                 model="gpt-4o-mini",
-                temperature=0.3
+                temperature=0.3,
             )
             content["_fingerprint"] = fingerprint
             await self._save_modular_result(guide_record, "medication_guide", content)
@@ -102,16 +102,16 @@ class GuideService:
     def _build_medication_prompt(self, health_data: dict) -> str:
         return f"""
         당신은 환자의 복약 안전을 관리하는 의사입니다. 아래 약물 목록을 바탕으로 복약 지침을 작성하세요.
-        
+
         [복용 중인 약물]
         {", ".join(health_data["med_list"]) if health_data["med_list"] else "없음"}
-        
+
         [작성 지침]
         1. 현재 복용 중인 약물들 간의 상호작용 또는 주의사항을 체크하세요.
         2. 'status': '상호작용 없음', '주의 필요', '위험 가능성' 중 하나를 선택하세요.
         3. 'content': 환자가 이해하기 쉬운 상세 설명을 작성하세요.
         4. 'general_cautions': 일반적인 복약 주의사항을 리스트로 작성하세요.
-        
+
         [응답 형식]
         {{
             "title": "복약 안전성 및 주의사항",
@@ -131,10 +131,7 @@ class GuideService:
     async def _run_disease_guide_task(self, user_id: str) -> None:
         """질환 및 알레르기 가이드(section2) 생성"""
         health_data = await self._fetch_user_health_data(user_id)
-        current_data = {
-            "disease_list": health_data["disease_list"],
-            "allergy_list": health_data["allergy_list"]
-        }
+        current_data = {"disease_list": health_data["disease_list"], "allergy_list": health_data["allergy_list"]}
         fingerprint = self._calculate_fingerprint(current_data)
 
         guide_record = await self._get_guide_record(user_id)
@@ -144,10 +141,12 @@ class GuideService:
         prompt = self._build_disease_prompt(health_data)
         try:
             content = await self.llm_service.generate_json(
-                messages=[{"role": "system", "content": "질환 및 알레르기 관리 전문의로서 조언한다. JSON으로만 답변한다."},
-                          {"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": "질환 및 알레르기 관리 전문의로서 조언한다. JSON으로만 답변한다."},
+                    {"role": "user", "content": prompt},
+                ],
                 model="gpt-4o-mini",
-                temperature=0.3
+                temperature=0.3,
             )
             content["_fingerprint"] = fingerprint
             await self._save_modular_result(guide_record, "disease_guide", content)
@@ -157,18 +156,18 @@ class GuideService:
     def _build_disease_prompt(self, health_data: dict) -> str:
         return f"""
         당신은 만성 질환 및 알레르기 관리 전문의입니다. 아래 정보를 바탕으로 환자 맞춤형 생활 지침을 작성하세요.
-        
+
         [환자 질환]
         {", ".join(health_data["disease_list"]) if health_data["disease_list"] else "없음"}
 
         [알레르기 정보]
         {", ".join(health_data["allergy_list"]) if health_data["allergy_list"] else "없음"}
-        
+
         [작성 지침]
         1. 질환과 알레르기 정보를 결합하여 환자가 일상에서 주의해야 할 핵심 관리 수칙을 'disease_guides'에 담으세요.
         2. 만약 질환이나 알레르기가 없다면, 해당 카테고리에 맞는 일반적인 예방 수칙을 제공해 주세요.
         3. 'integrated_point': 질환과 알레르기를 통합하여 관리해야 할 핵심 포인트를 작성하세요.
-        
+
         [응답 형식]
         {{
             "title": "질환 및 알레르기 관리 가이드",
@@ -183,13 +182,9 @@ class GuideService:
         """생활 습관 가이드(section3) 생성"""
         health_data = await self._fetch_user_health_data(user_id)
         lifestyle = self._extract_lifestyle(health_data["profile"])
-        
+
         # 핑거프린트: 프로필 + 최신 BP/BS
-        current_data = {
-            "lifestyle": lifestyle,
-            "bp": health_data["bp_list"],
-            "bs": health_data["bs_list"]
-        }
+        current_data = {"lifestyle": lifestyle, "bp": health_data["bp_list"], "bs": health_data["bs_list"]}
         fingerprint = self._calculate_fingerprint(current_data)
 
         guide_record = await self._get_guide_record(user_id)
@@ -199,13 +194,15 @@ class GuideService:
         # RAG Context (질환별 생활수칙 참고용)
         rag_context = await self._generate_rag_context_str(health_data["disease_list"], lifestyle)
         prompt = self._build_profile_prompt(health_data, lifestyle, rag_context)
-        
+
         try:
             content = await self.llm_service.generate_json(
-                messages=[{"role": "system", "content": "건강 코치로서 조언한다. JSON으로만 답변한다."},
-                          {"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": "건강 코치로서 조언한다. JSON으로만 답변한다."},
+                    {"role": "user", "content": prompt},
+                ],
                 model="gpt-4o-mini",
-                temperature=0.4
+                temperature=0.4,
             )
             content["_fingerprint"] = fingerprint
             # 누락된 4대 카테고리 보정
@@ -217,10 +214,10 @@ class GuideService:
     def _build_profile_prompt(self, health_data: dict, lifestyle: dict, rag_context: str) -> str:
         s_hours = lifestyle.get("sleep_hours")
         s_hours_text = f"{s_hours}시간" if s_hours is not None else "정보 없음"
-        
+
         return f"""
         당신은 건강 관리 코치입니다. 환자의 생활 습관과 최신 활력 징후를 바탕으로 '오늘의 건강 관리 수칙'을 작성하세요.
-        
+
         [환자 정보]
         - 최근 혈압: {", ".join(health_data["bp_list"]) if health_data["bp_list"] else "없음"}
         - 최근 혈당: {", ".join(health_data["bs_list"]) if health_data["bs_list"] else "없음"}
@@ -229,14 +226,14 @@ class GuideService:
         - 운동: {lifestyle.get("exercise_frequency") or "정보 없음"}
         - 식습관: {lifestyle.get("diet_type") or "정보 없음"}
         - 수면: {s_hours_text} ({lifestyle.get("sleep_change") or "변화 없음"})
-        
+
         [참고 지침 (RAG)]
         {rag_context}
-        
+
         [작성 지침]
         1. 'health_guides': '운동', '식단', '수면', '흡연/음주' 4가지 카테고리를 반드시 포함하여 각각 1~2개의 팁을 작성하세요.
         2. 카드 형태의 UI에 표시될 것이므로 간결하고 실천 가능한 조언을 제공하세요.
-        
+
         [응답 형식]
         {{
             "title": "오늘의 건강 관리 수칙",
@@ -254,13 +251,14 @@ class GuideService:
         dumped = json.dumps(data, sort_keys=True, ensure_ascii=False)
         return hashlib.md5(dumped.encode("utf-8")).hexdigest()
 
-
     async def update_loading_state(self, user_id: str | None, section_type: str, is_active: bool) -> None:
         try:
             saved = await self.llm_service.get_by_user_id(user_id)
             data_to_update = {
                 f"activity_{section_type.lower()}": is_active,
-                "user_current_status": "AI가 맞춤 가이드를 생성 중입니다..." if getattr(saved, "activity", False) or is_active else "가이드 생성 완료",
+                "user_current_status": "AI가 맞춤 가이드를 생성 중입니다..."
+                if getattr(saved, "activity", False) or is_active
+                else "가이드 생성 완료",
             }
             await self.llm_service.update_or_create(
                 user_id=user_id,
@@ -338,7 +336,6 @@ class GuideService:
             print(f"[RAG ERROR] {e}")
             return "[참고 문서]\n관련 참고 문서를 불러오지 못했습니다."
 
-
     def _fix_missing_health_guides(self, content_json: dict) -> dict:
         try:
             sec3 = content_json.get("section3") or {}
@@ -402,13 +399,20 @@ class GuideService:
             "created_at": self._to_kst_str(datetime.now(ZoneInfo("UTC"))),
         }
 
-
     async def get_saved_guide(self, user: User | None = None, background_tasks=None) -> dict:
         """
         저장된 생활가이드를 조회합니다.
         - 저장된 가이드가 있으면 그대로 반환
         - 없으면 백그라운드 생성 트리거 후 '생성 중' 상태 반환
         """
+        if not user:
+            return {
+                "user_current_status": "로그인이 필요합니다.",
+                "generated_content": {},
+                "activity": False,
+                "created_at": self._to_kst_str(datetime.now(ZoneInfo("UTC"))),
+            }
+
         saved = await LLMLifeGuide.filter(user_id=str(user.id)).order_by("-created_at").first()
 
         # 1. 저장된 가이드가 있는 경우, 모듈화된 컬럼들을 합쳐서 반환
@@ -420,8 +424,8 @@ class GuideService:
                 merged_content["section2"] = saved.disease_guide
             if saved.profile_guide:
                 merged_content["section3"] = saved.profile_guide
-            
-            # 꿀팁: 프론트에서 activity=True면 계속 로딩 아이콘을 띄우므로, 
+
+            # 꿀팁: 프론트에서 activity=True면 계속 로딩 아이콘을 띄우므로,
             # 모든 섹션이 채워져 있거나 생성 중이 아닐 때 적절히 False 반환
             fixed_content = self._fix_missing_health_guides(merged_content)
             return {
@@ -433,17 +437,17 @@ class GuideService:
 
         # 2. 저장된 가이드가 전혀 없는 경우 최초 생성 트리거 (전체 섹션)
         async def _trigger_all():
-             await asyncio.gather(
+            await asyncio.gather(
                 self.generate_modular_guide(str(user.id), "MEDICATION"),
                 self.generate_modular_guide(str(user.id), "DISEASE"),
-                self.generate_modular_guide(str(user.id), "PROFILE")
-             )
+                self.generate_modular_guide(str(user.id), "PROFILE"),
+            )
 
         if background_tasks:
             background_tasks.add_task(_trigger_all)
         else:
             await _trigger_all()
-        
+
         return {
             "user_current_status": "가이드 생성 시작...",
             "generated_content": {},

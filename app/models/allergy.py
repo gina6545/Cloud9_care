@@ -18,7 +18,9 @@ class Allergy(models.Model):
     symptom = fields.CharField(max_length=100, null=True)
 
     # 사용자별 알러지 관리 (N:1)
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="allergies", index=True)
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField(
+        "models.User", related_name="allergies", index=True
+    )
 
     class Meta:
         table = "allergies"

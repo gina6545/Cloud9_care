@@ -12,13 +12,12 @@ import anyio
 from fastapi import UploadFile
 from tortoise.expressions import Q
 
+from app.core.config import config
 from app.models.drug_master import DrugMaster
 from app.models.pill_recognitions import PillRecognition
 from app.repositories.upload import UploadRepository
 from app.services.drug_enrichment_service import DrugEnrichmentService
 from app.services.llm_service import LLMService
-
-from app.core.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -468,13 +467,13 @@ class UploadService:
                     # prefetch_related가 안되어 있을 수 있으므로 직접 조회하거나 모델 속성 확인
                     # 여기서는 간단하게 prescription_id 속성이 있으면 사용 (tortoise foreign key 필드 이름)
                     p_id = getattr(upload, "prescription_id", None)
-                
+
                 history_map[key] = {
-                    "id": upload.id, 
+                    "id": upload.id,
                     "prescription_id": p_id,
-                    "date": created_datetime, 
-                    "type": display_type, 
-                    "images": []
+                    "date": created_datetime,
+                    "type": display_type,
+                    "images": [],
                 }
 
             history_map[key]["images"].append({"name": original_name, "url": file_url})

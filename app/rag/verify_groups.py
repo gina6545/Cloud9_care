@@ -2,10 +2,10 @@ import json
 import os
 
 file_path = r"d:\healthcare_web\app\rag\data\merged_documents.jsonl"
-group_map = {}
+group_map: dict[str, set] = {}
 
 if os.path.exists(file_path):
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         for line in f:
             if line.strip():
                 try:
@@ -15,13 +15,13 @@ if os.path.exists(file_path):
                     if group not in group_map:
                         group_map[group] = set()
                     group_map[group].add(disease)
-                except:
+                except Exception:
                     pass
 
 print("--- Group to Disease Mapping ---")
 for g, diseases in group_map.items():
     # Print hex for group name to be sure
-    g_hex = g.encode('utf-8').hex()
+    g_hex = g.encode("utf-8").hex()
     print(f"Group: {g} (hex: {g_hex})")
     print(f"Diseases: {list(diseases)}")
     print("-" * 20)

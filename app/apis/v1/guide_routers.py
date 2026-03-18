@@ -28,7 +28,7 @@ async def refresh_all_guides(
     await asyncio.gather(
         service.generate_modular_guide(user_id, "MEDICATION", background_tasks),
         service.generate_modular_guide(user_id, "DISEASE", background_tasks),
-        service.generate_modular_guide(user_id, "PROFILE", background_tasks)
+        service.generate_modular_guide(user_id, "PROFILE", background_tasks),
     )
     return {"status": "success", "message": "모든 가이드 갱신 태스크가 등록되었습니다."}
 

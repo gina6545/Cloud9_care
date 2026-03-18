@@ -175,13 +175,13 @@ def find_disease_group(disease_name: str) -> str:
     for group_name, disease_list in DISEASE_TAXONOMY.items():
         if disease_name in disease_list:
             return group_name
-            
+
     # 2. Keyword Match (Smarter Category)
     for group_name, keywords in GROUP_KEYWORDS.items():
         for kw in keywords:
             if kw in disease_name:
                 return group_name
-                
+
     return "기타"
 
 
