@@ -187,8 +187,7 @@ function renderHealthProfile() {
         currentStatus.meds.length > 0
             ? currentStatus.meds.map(m => `
                 <div class="guide-med-item">
-                    <span class="guide-med-name">${m.medication_name}</span>
-                    <span class="guide-med-date">${m.start_date || '기록없음'}</span>
+                    <span class="guide-med-name">💊 ${m.medication_name}</span>
                 </div>
             `).join('')
             : '<p class="c9-muted text-center py-2">등록된 약물이 없습니다.</p>';
@@ -279,11 +278,17 @@ function renderGuide() {
             if (diseaseReferenceFooter) diseaseReferenceFooter.classList.remove('hidden');
             diseaseGuidesContent.innerHTML = `
                 <div class="guide-disease-grid">
-                    ${s2.disease_guides.map(dg => `
-                        <div class="guide-disease-card">
+                    ${s2.disease_guides.map(dg => {
+                // type 필드가 없으면 이름에서 '알러지'나 '알레르기' 포함 여부 확인 (강력한 폴백)
+                const isAllergy = (dg.type && dg.type.toLowerCase() === 'allergy') ||
+                    dg.name.includes('알러지') ||
+                    dg.name.includes('알레르기');
+                const cardClass = isAllergy ? 'is-allergy' : 'is-disease';
+
+                return `
+                        <div class="guide-disease-card ${cardClass}">
                             <div class="guide-disease-title">
                                 <span>${dg.name}</span>
-                                <span class="c9-badge c9-badge-primary">CARE</span>
                             </div>
                             <div class="guide-disease-list">
                                 ${(dg.tips || []).map(tip => `
@@ -294,7 +299,8 @@ function renderGuide() {
                                 `).join('')}
                             </div>
                         </div>
-                    `).join('')}
+                        `;
+            }).join('')}
                 </div>
             `;
             integratedPoint.innerText = s2.integrated_point || "";
@@ -350,7 +356,6 @@ function renderGuide() {
             <div class="guide-disease-card">
                 <div class="guide-disease-title">
                     <span>${hg.name}</span>
-                    <span class="c9-badge c9-badge-primary">HEALTH</span>
                 </div>
                 <div class="guide-disease-list">
                     ${(hg.tips || []).map(tip => `
@@ -439,7 +444,7 @@ function toggleTTS() {
     const fullText = `
         현재 등록된 질환, 복용 중인 약, 생활습관 등 건강 정보를 바탕으로 맞춤 생활 가이드를 안내드립니다.
 
-        먼저 질환 기반 생활습관 가이드입니다.
+        먼저 질환 및 알러지 기반 생활습관 가이드입니다.
         ${diseaseText || "등록된 질환이 없습니다."}
 
         다음은 복약 안전성 안내입니다.

@@ -130,15 +130,15 @@
     justify-content: space-between;
     gap: 12px;
     padding: 10px 14px;
-    background: #fffaf3;
-    border: 1px solid #f4e7c8;
+    background: #ffffff;
+    border: 1px solid #edf2f7;
     border-radius: 14px;
 }
 
 .guide-med-name {
     font-size: 14px;
     font-weight: 700;
-    color: #312e81;
+    color: #475569;
 }
 
 .guide-med-date {
@@ -290,6 +290,19 @@
     border: 1px solid #edf2f7;
     border-radius: 18px;
     padding: 18px;
+    transition: all 0.2s ease;
+}
+
+.guide-disease-card.is-disease {
+    border: 1.5px solid #dad4f581;
+    /* 파란색 계열 테두리 */
+    background: #ffffff;
+}
+
+.guide-disease-card.is-allergy {
+    border: 1.5px solid #ebc0a18d;
+    /* 주황색 계열 테두리 */
+    background: #ffffff;
 }
 
 .guide-disease-title {
@@ -303,6 +316,14 @@
     color: #1e293b;
     padding-bottom: 10px;
     border-bottom: 1px solid #edf2f7;
+}
+
+.is-disease .guide-disease-title {
+    border-bottom-color: #f1f5f9;
+}
+
+.is-allergy .guide-disease-title {
+    border-bottom-color: #fff7ed;
 }
 
 .guide-disease-list {
@@ -325,6 +346,14 @@
     font-weight: 900;
     line-height: 1.4;
     flex-shrink: 0;
+}
+
+.is-disease .guide-disease-dot {
+    color: #c498dc8d;
+}
+
+.is-allergy .guide-disease-dot {
+    color: #fb923c;
 }
 
 .guide-integrated-box {
@@ -889,58 +918,75 @@
 
 /* ===== 모바일 확대 전용 보정 ===== */
 @media (max-width: 768px) {
-  body.zoom-large .guide-section-title {
-    font-size: 22px;
-  }
-  body.zoom-large .guide-section-body {
-    font-size: 18px;
-  }
-  body.zoom-large .guide-note-title {
-    font-size: 16px;
-  }
-  body.zoom-large .guide-note-list {
-    font-size: 18px;
-  }
-  body.zoom-large .guide-disease-title {
-    font-size: 19px;
-  }
-  body.zoom-large .guide-disease-list {
-    font-size: 16px;
-  }
-  body.zoom-large .guide-integrated-title {
-    font-size: 18px;
-  }
-  body.zoom-large .guide-integrated-text {
-    font-size: 18px;
-  }
-  body.zoom-large .guide-kicker {
-    font-size: 14px;
-  }
-  body.zoom-large .guide-value {
-    font-size: 19px;
-  }
-  body.zoom-large .guide-med-name {
-    font-size: 18px;
-  }
-  body.zoom-large .guide-med-date {
-    font-size: 14px;
-  }
-  body.zoom-large .guide-check-title {
-    font-size: 22px;
-  }
-  body.zoom-large .guide-check-sub {
-    font-size: 18px;
-  }
-  body.zoom-large .guide-updated-at {
-    font-size: 14px;
-  }
-  body.zoom-large .guide-mode-tab {
-    font-size: 16px;
-  }
-  body.zoom-large .c9-subcard-title {
-    font-size: 16px;
-  }
-  body.zoom-large .guide-info-box {
-    font-size: 18px;
-  }
+    body.zoom-large .guide-section-title {
+        font-size: 22px;
+    }
+
+    body.zoom-large .guide-section-body {
+        font-size: 18px;
+    }
+
+    body.zoom-large .guide-note-title {
+        font-size: 16px;
+    }
+
+    body.zoom-large .guide-note-list {
+        font-size: 18px;
+    }
+
+    body.zoom-large .guide-disease-title {
+        font-size: 19px;
+    }
+
+    body.zoom-large .guide-disease-list {
+        font-size: 16px;
+    }
+
+    body.zoom-large .guide-integrated-title {
+        font-size: 18px;
+    }
+
+    body.zoom-large .guide-integrated-text {
+        font-size: 18px;
+    }
+
+    body.zoom-large .guide-kicker {
+        font-size: 14px;
+    }
+
+    body.zoom-large .guide-value {
+        font-size: 19px;
+    }
+
+    body.zoom-large .guide-med-name {
+        font-size: 18px;
+    }
+
+    body.zoom-large .guide-med-date {
+        font-size: 14px;
+    }
+
+    body.zoom-large .guide-check-title {
+        font-size: 22px;
+    }
+
+    body.zoom-large .guide-check-sub {
+        font-size: 18px;
+    }
+
+    body.zoom-large .guide-updated-at {
+        font-size: 14px;
+    }
+
+    body.zoom-large .guide-mode-tab {
+        font-size: 16px;
+    }
+
+    body.zoom-large .c9-subcard-title {
+        font-size: 16px;
+    }
+
+    body.zoom-large .guide-info-box {
+        font-size: 18px;
+    }
 }
