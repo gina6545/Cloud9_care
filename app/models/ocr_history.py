@@ -27,7 +27,7 @@ class OCRHistory(models.Model):
         "models.Upload", related_name="ocr_histories_back", null=True
     )
     prescription: fields.ReverseRelation["Prescription"]
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="ocr_histories")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="ocr_histories", index=True)
 
     class Meta:
         table = "ocr_history"

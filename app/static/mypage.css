@@ -435,6 +435,30 @@
   box-shadow: 0 16px 28px rgba(91, 79, 240, 0.24);
 }
 
+/* 하단 액션 버튼 영역 추가 */
+.mypage-footer-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.mypage-footer-actions .mypage-primary-submit {
+  flex: 1.5;
+  margin-top: 0;
+}
+
+.mypage-footer-actions .mypage-box-action-neutral {
+  min-width: 140px;
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .mypage-footer-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
 .mypage_container button:not(.mypage-switch) {
   width: auto;
   padding: 0;
@@ -701,7 +725,7 @@
     width: 100%;
   }
 
-/* mypage-grid 미디어 쿼리는 1200px에서 이미 1fr로 전환되도록 위에서 설정되었습니다. */
+  /* mypage-grid 미디어 쿼리는 1200px에서 이미 1fr로 전환되도록 위에서 설정되었습니다. */
 
   .mypage-form-grid,
   .mypage-password-grid,

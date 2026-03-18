@@ -14,7 +14,7 @@ class ChatMessage(models.Model):
     """
 
     id = fields.IntField(pk=True)
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="chat_messages")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="chat_messages", index=True)
     session_id = fields.CharField(max_length=100)  # 대화 세션 묶음
     role = fields.CharField(max_length=20)  # user 또는 ai
     message = fields.TextField()

@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any
 
 from app.dtos.chat import ChatRequest, ChatResponse
@@ -63,9 +64,12 @@ class ChatService:
             if not user:
                 return None
 
-            life_guide = await self.llm_life_guide_repo.get_by_user_id(user_id)
-            bp_records = await self.bp_repo.get_by_user_id(user_id)
-            bs_records = await self.bs_repo.get_by_user_id(user_id)
+            # 병렬 데이터 조회 실행
+            life_guide, bp_records, bs_records = await asyncio.gather(
+                self.llm_life_guide_repo.get_by_user_id(user_id),
+                self.bp_repo.get_by_user_id(user_id),
+                self.bs_repo.get_by_user_id(user_id),
+            )
 
             recent_bp = bp_records[:5]
             recent_bs = bs_records[:5]
@@ -83,11 +87,10 @@ class ChatService:
             guide_status = life_guide.user_current_status if life_guide else "저장된 생활안내 가이드 상태 정보 없음"
             guide_content = life_guide.generated_content if life_guide else "저장된 생활안내 가이드 내용 없음"
 
-            # 알람 정보 조회
-            alarm_lines = await self._build_alarm_lines(user_id)
-
-            # 오늘 알람 히스토리 조회
-            history_lines = await self._build_alarm_history_lines(user_id)
+            # 알람 정보 및 히스토리 조회 병렬 실행
+            alarm_lines_task = self._build_alarm_lines(user_id)
+            history_lines_task = self._build_alarm_history_lines(user_id)
+            alarm_lines, history_lines = await asyncio.gather(alarm_lines_task, history_lines_task)
 
             return f"""[사용자 맞춤 건강 정보]
 사용자 상태 요약:

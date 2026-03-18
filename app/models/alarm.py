@@ -26,7 +26,7 @@ class Alarm(models.Model):
     alarm_time = fields.TimeField()  # 알람 시간
     is_active = fields.BooleanField(default=True)  # 알람 활성화 여부
     repeat_days = fields.CharField(max_length=32, null=True, default=None)
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="alarms")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="alarms", index=True)
     current_med: fields.ForeignKeyRelation["CurrentMed"] | None = fields.ForeignKeyField(
         "models.CurrentMed",
         related_name="alarms",

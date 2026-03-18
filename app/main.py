@@ -1,6 +1,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, ORJSONResponse
@@ -13,7 +14,6 @@ from app.core.config import config
 from app.core.http_client import http_client
 from app.core.mongodb import close_mongo_connection, connect_to_mongo
 from app.db.databases import TORTOISE_ORM
-from app.utils.default_data import DefaultData
 
 logger = logging.getLogger("seed")
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +22,9 @@ logging.basicConfig(level=logging.INFO)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- Startup ---
+    # 0. 업로드 디렉토리 생성
+    uploads_path = Path(config.UPLOAD_DIR)
+    uploads_path.mkdir(parents=True, exist_ok=True)
     # 1. HTTP Client 초기화
     http_client.init_client()
 
@@ -32,40 +35,12 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ MongoDB 연결 실패: {e}")
 
-    # 3. DB 초기화 로직 (조건부로 변경)
-    if config.RESET_DB_ON_STARTUP:
-        logger.warning("🔨🔨🔨 [lifespan] DB Reset process starting...")
-        try:
-            # [A] 기존 DB 접속 및 전체 드롭
-            await Tortoise.init(config=TORTOISE_ORM)
-            await Tortoise._drop_databases()
-            logger.warning("✅ 기존 데이터베이스 및 테이블 삭제 완료.")
-
-            # [B] DB 다시 생성 및 최신 모델 반영 (is_valid 등 최신 필드 생성)
-            # _create_db=True 옵션이 삭제된 ai_health 데이터베이스를 다시 만듭니다.
-            await Tortoise.init(config=TORTOISE_ORM, _create_db=True)
-            await Tortoise.generate_schemas()
-            logger.warning("✅ 최신 스키마로 DB 테이블 생성 완료.")
-
-        except Exception as e:
-            logger.error(f"❌ DB Reset failed: {e}")
-    else:
-        # DB 리셋 없이 기존 DB 연결만 수행
-        try:
-            await Tortoise.init(config=TORTOISE_ORM)
-            logger.warning("✅ 기존 DB 연결 완료")
-        except Exception as e:
-            logger.error(f"❌ DB 연결 실패: {e}")
-
-    # 4. 기본 데이터 생성 (리셋 시에만)
-    if config.RESET_DB_ON_STARTUP:
-        logger.warning("🔥🔥🔥 [lifespan] seed_default_data starting")
-        try:
-            await DefaultData().create_default_data()
-            logger.warning("✅✅✅ Default data population completed successfully.")
-        except Exception:
-            logger.exception("⚠️⚠️⚠️ Default data population failed")
-
+    # 3. MariaDB 초기화 로직 (조건부로 변경)
+    try:
+        await Tortoise.init(config=TORTOISE_ORM)
+        logger.warning("✅ 기존 DB 연결 완료")
+    except Exception as e:
+        logger.error(f"❌ DB 연결 실패: {e}")
     yield
 
     # --- Shutdown ---
@@ -89,11 +64,11 @@ app = FastAPI(
 
 
 # [추가된 기능] 정적 파일 및 템플릿 설정
+# /static 경로는 앱 내부의 static을 사용합니다.
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-uploads_dir = "app/uploads"
-os.makedirs(uploads_dir, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# /uploads 경로는 Docker 볼륨 또는 루트 디렉토리의 uploads를 사용합니다.
+app.mount("/uploads", StaticFiles(directory=config.UPLOAD_DIR), name="uploads")
 
 templates = Jinja2Templates(directory="app/templates")
 

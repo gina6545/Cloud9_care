@@ -16,7 +16,7 @@ class ChronicDisease(models.Model):
     disease_name = fields.CharField(max_length=100)  # 질환명 (예: 고혈압, 당뇨)
     when_to_diagnose = fields.CharField(max_length=10)  # 진단 시기 (YYYY-MM-DD 형식)
     # 사용자별 기저질환 관리 (N:1)
-    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="chronic_diseases")
+    user: fields.ForeignKeyRelation["User"] = fields.ForeignKeyField("models.User", related_name="chronic_diseases", index=True)
 
     class Meta:
         table = "chronic_diseases"

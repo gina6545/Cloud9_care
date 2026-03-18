@@ -7,21 +7,15 @@ let drug_change_cnt = 0
 window.addEventListener('pagehide', () => {
     if(drug_change_cnt != 0){
         const accessToken = localStorage.getItem("access_token");
-        
-        // fetchWithAuth의 핵심 로직(헤더 추가)만 수동으로 적용
-        const headers = {
-            "Content-Type": "application/json"
-        };
-        if (accessToken) {
-            headers["Authorization"] = `Bearer ${accessToken}`;
-        }
+        const headers = { "Content-Type": "application/json" };
+        if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
 
-        // fetchWithAuth 대신 순수 fetch를 사용하고 keepalive를 켭니다.
-        fetch("/api/v1/guides", {
+        fetch("/api/v1/guides/refresh", {
             method: "POST",
             headers: headers,
-            keepalive: true, // 👈 페이지가 닫혀도 전송을 보장함
+            keepalive: true,
         });
+        drug_change_cnt = 0;
     }
 });
 
@@ -434,7 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const results = grouped[hospital];
 
                 let hospitalBlocksHtml = results.map(res => {
-                    const pId = res.prescription_id || res.id || 'unknown';
+                    // [BUG FIX] API 응답 구조가 다른 경우(ocr/prescription vs uploads/id/analysis)를 모두 대응합니다.
+                    const pId = res.prescription_id || (res.hospital ? res.hospital.id : null) || res.id || 'unknown';
                     const pDate = res.prescribed_date || '날짜 정보 없음';
                     const drugList = res.drugs || [];
 
