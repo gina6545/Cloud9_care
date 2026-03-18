@@ -50,6 +50,7 @@ class ChatService:
         if not section:
             return fallback
         import json
+
         if isinstance(section, dict):
             return json.dumps(section, ensure_ascii=False, indent=2)
         return str(section)
@@ -117,7 +118,9 @@ class ChatService:
                 profile_lines = [
                     f"- 키: {health_profile.height_cm}cm / 몸무게: {health_profile.weight_kg}kg",
                     f"- 최근 체중 변화: {health_profile.weight_change}",
-                    f"- 수면: {health_profile.sleep_hours}시간 / 변화: {health_profile.sleep_change}" if health_profile.sleep_hours else f"- 수면 변화: {health_profile.sleep_change}",
+                    f"- 수면: {health_profile.sleep_hours}시간 / 변화: {health_profile.sleep_change}"
+                    if health_profile.sleep_hours
+                    else f"- 수면 변화: {health_profile.sleep_change}",
                     f"- 흡연: {health_profile.smoking_status}",
                     f"- 음주: {health_profile.drinking_status}",
                     f"- 운동: {health_profile.exercise_frequency}",
@@ -129,9 +132,15 @@ class ChatService:
 
             # 생활안내 가이드 섹션별 파싱
             guide_status = life_guide.user_current_status if life_guide else "저장된 상태 정보 없음"
-            medication_guide = self._format_guide_section(life_guide.medication_guide if life_guide else None, "복약/알레르기 가이드 없음")
-            disease_guide = self._format_guide_section(life_guide.disease_guide if life_guide else None, "기저질환 가이드 없음")
-            profile_guide = self._format_guide_section(life_guide.profile_guide if life_guide else None, "생활습관 가이드 없음")
+            medication_guide = self._format_guide_section(
+                life_guide.medication_guide if life_guide else None, "복약/알레르기 가이드 없음"
+            )
+            disease_guide = self._format_guide_section(
+                life_guide.disease_guide if life_guide else None, "기저질환 가이드 없음"
+            )
+            profile_guide = self._format_guide_section(
+                life_guide.profile_guide if life_guide else None, "생활습관 가이드 없음"
+            )
 
             # 알람 정보 및 히스토리 조회 병렬 실행
             alarm_lines_task = self._build_alarm_lines(user_id)
