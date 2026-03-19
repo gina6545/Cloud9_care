@@ -118,7 +118,9 @@ class UploadService:
         db_data = []
         try:
             result = await self.pill_name_result(created_uploads)
-            logger.info(f"[PILL] AI 분석 결과: status={result.get('status')}, candidates={len(result.get('candidates', []))}건, ai_extracted={result.get('ai_extracted')}")
+            logger.info(
+                f"[PILL] AI 분석 결과: status={result.get('status')}, candidates={len(result.get('candidates', []))}건, ai_extracted={result.get('ai_extracted')}"
+            )
         except Exception as e:
             logger.error(f"[PILL] pill_name_result 에러: {e}", exc_info=True)
             return db_data
@@ -145,7 +147,7 @@ class UploadService:
                 db_data = await asyncio.gather(*tasks)
                 logger.info(f"[PILL] DB 저장 완료: {len(db_data)}건")
         else:
-            logger.warning(f"[PILL] 매칭 결과 없음 - candidates 비어있음")
+            logger.warning("[PILL] 매칭 결과 없음 - candidates 비어있음")
 
         return db_data
 
