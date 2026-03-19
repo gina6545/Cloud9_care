@@ -115,15 +115,20 @@ class UploadService:
         created_uploads = await self._repo.create_file(user.id, uploaded_db_params)
 
         # 1-1. 분석 수행
-        result = await self.pill_name_result(created_uploads)
         db_data = []
+        try:
+            result = await self.pill_name_result(created_uploads)
+            logger.info(f"[PILL] AI 분석 결과: status={result.get('status')}, candidates={len(result.get('candidates', []))}건, ai_extracted={result.get('ai_extracted')}")
+        except Exception as e:
+            logger.error(f"[PILL] pill_name_result 에러: {e}", exc_info=True)
+            return db_data
+
         # 1-2. 분석 결과 DB 저장 (모든 후보군 기록)
         if result.get("status") == "success" and result.get("candidates"):
             front_up = next((u for u in created_uploads if u.category == "pill_front"), None)
             back_up = next((u for u in created_uploads if u.category == "pill_back"), None)
 
             if front_up:
-                # 후보군 리스트를 돌며 각각 새로운 행(row)으로 저장합니다. (병렬 실행)
                 tasks = [
                     PillRecognition.create(
                         pill_name=cand["name"],
@@ -138,6 +143,9 @@ class UploadService:
                     for cand in result["candidates"]
                 ]
                 db_data = await asyncio.gather(*tasks)
+                logger.info(f"[PILL] DB 저장 완료: {len(db_data)}건")
+        else:
+            logger.warning(f"[PILL] 매칭 결과 없음 - candidates 비어있음")
 
         return db_data
 
@@ -240,6 +248,7 @@ class UploadService:
 
         ai_shape = img1.get("shape", "")
         ai_form = img1.get("formulation", "")
+        logger.info(f"[PILL] DB 후보 조회: shape='{ai_shape}', form='{ai_form}'")
 
         query = Q()
         if ai_shape:
@@ -247,7 +256,9 @@ class UploadService:
         if ai_form:
             query |= Q(form_code_name__icontains=ai_form[:2])
 
-        return await DrugMaster.filter(query).all()
+        results = await DrugMaster.filter(query).all()
+        logger.info(f"[PILL] DB 후보 수: {len(results)}건")
+        return results
 
     def _score_candidates(self, candidates, img1, img2, cands1, cands2):
         """후보군들에 대해 AI 분석값과 비교하여 스코어링"""
@@ -407,16 +418,24 @@ class UploadService:
                     }
                 )
 
-            ai_extracted: dict = {}
-            if data and hasattr(data[0], "raw_result"):
-                ai_extracted = getattr(data[0], "raw_result", {}) or {}
+            empty_image = {"text": "", "color": "", "shape": "", "formulation": ""}
+            ai_extracted: dict = {"image1": empty_image, "image2": empty_image}
+            if data and hasattr(data[0], "raw_result") and data[0].raw_result:
+                ai_extracted = data[0].raw_result
+                ai_extracted.setdefault("image1", empty_image)
+                ai_extracted.setdefault("image2", empty_image)
 
-            # 병렬 조회 실행
-            upload_tasks = [
-                self._repo.get_upload_by_id_with_relations(getattr(data[0], "back_upload_id", None), user.id),
-                self._repo.get_upload_by_id_with_relations(getattr(data[0], "front_upload_id", None), user.id),
-            ]
-            upload_results = await asyncio.gather(*upload_tasks)
+            upload_results: list = []
+            if data:
+                back_id = getattr(data[0], "back_upload_id", None)
+                front_id = getattr(data[0], "front_upload_id", None)
+                upload_tasks = []
+                if back_id:
+                    upload_tasks.append(self._repo.get_upload_by_id_with_relations(back_id, user.id))
+                if front_id:
+                    upload_tasks.append(self._repo.get_upload_by_id_with_relations(front_id, user.id))
+                if upload_tasks:
+                    upload_results = [u for u in await asyncio.gather(*upload_tasks) if u]
 
             return {
                 "upload": upload_results,
