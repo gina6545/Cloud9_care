@@ -115,7 +115,7 @@ class UploadService:
         created_uploads = await self._repo.create_file(user.id, uploaded_db_params)
 
         # 1-1. 분석 수행
-        db_data = []
+        db_data: list[Any] = []
         try:
             result = await self.pill_name_result(created_uploads)
             logger.info(
@@ -377,75 +377,77 @@ class UploadService:
             return None
 
         if upload.category == "prescription":
-            prescription = getattr(upload, "prescription", None)
-            if not prescription:
-                return None
-
-            hospital = {
-                "id": prescription.id,
-                "hospital_name": getattr(prescription, "hospital_name", ""),
-                "prescription_date": prescription.prescribed_date.strftime("%Y-%m-%d")
-                if getattr(prescription, "prescribed_date", None)
-                else "",
-            }
-
-            candidates = []
-            for drug in getattr(prescription, "drugs", []):
-                candidates.append(
-                    {
-                        "id": drug.id,
-                        "name": getattr(drug, "standard_drug_name", ""),
-                        "dosage": getattr(drug, "dosage_amount", ""),
-                        "frequency": getattr(drug, "daily_frequency", ""),
-                        "duration": getattr(drug, "duration_days", ""),
-                    }
-                )
-            return {"file_path": getattr(upload, "file_path", ""), "hospital": hospital, "candidates": candidates}
-
+            return self._build_prescription_detail(upload)
         elif upload.category in ["pill_front", "pill_back"]:
-            regs_front = getattr(upload, "pill_recognitions_front", [])
-            regs_back = getattr(upload, "pill_recognitions_back", [])
-
-            data = regs_front
-            if len(regs_front) < len(regs_back):
-                data = regs_back
-
-            candidates = []
-            for cand in data:
-                candidates.append(
-                    {
-                        "name": getattr(cand, "pill_name", ""),
-                        "score": float(getattr(cand, "confidence", 1.0) or 1.0),
-                        "efcy_qesitm": getattr(cand, "pill_description", "") or "",
-                    }
-                )
-
-            empty_image = {"text": "", "color": "", "shape": "", "formulation": ""}
-            ai_extracted: dict = {"image1": empty_image, "image2": empty_image}
-            if data and hasattr(data[0], "raw_result") and data[0].raw_result:
-                ai_extracted = data[0].raw_result
-                ai_extracted.setdefault("image1", empty_image)
-                ai_extracted.setdefault("image2", empty_image)
-
-            upload_results: list = []
-            if data:
-                back_id = getattr(data[0], "back_upload_id", None)
-                front_id = getattr(data[0], "front_upload_id", None)
-                upload_tasks = []
-                if back_id:
-                    upload_tasks.append(self._repo.get_upload_by_id_with_relations(back_id, user.id))
-                if front_id:
-                    upload_tasks.append(self._repo.get_upload_by_id_with_relations(front_id, user.id))
-                if upload_tasks:
-                    upload_results = [u for u in await asyncio.gather(*upload_tasks) if u]
-
-            return {
-                "upload": upload_results,
-                "ai_extracted": ai_extracted,
-                "candidates": candidates,
-            }
-
+            return await self._build_pill_detail(upload, user)
         return None
+
+    def _build_prescription_detail(self, upload: Any) -> dict[str, Any] | None:
+        """처방전 업로드의 상세 분석 결과를 구성합니다."""
+        prescription = getattr(upload, "prescription", None)
+        if not prescription:
+            return None
+
+        hospital = {
+            "id": prescription.id,
+            "hospital_name": getattr(prescription, "hospital_name", ""),
+            "prescription_date": prescription.prescribed_date.strftime("%Y-%m-%d")
+            if getattr(prescription, "prescribed_date", None)
+            else "",
+        }
+
+        candidates = [
+            {
+                "id": drug.id,
+                "name": getattr(drug, "standard_drug_name", ""),
+                "dosage": getattr(drug, "dosage_amount", ""),
+                "frequency": getattr(drug, "daily_frequency", ""),
+                "duration": getattr(drug, "duration_days", ""),
+            }
+            for drug in getattr(prescription, "drugs", [])
+        ]
+        return {"file_path": getattr(upload, "file_path", ""), "hospital": hospital, "candidates": candidates}
+
+    async def _build_pill_detail(self, upload: Any, user: Any) -> dict[str, Any]:
+        """알약 업로드의 상세 분석 결과를 구성합니다."""
+        regs_front = getattr(upload, "pill_recognitions_front", [])
+        regs_back = getattr(upload, "pill_recognitions_back", [])
+
+        data = regs_back if len(regs_front) < len(regs_back) else regs_front
+
+        candidates = [
+            {
+                "name": getattr(cand, "pill_name", ""),
+                "score": float(getattr(cand, "confidence", 1.0) or 1.0),
+                "efcy_qesitm": getattr(cand, "pill_description", "") or "",
+            }
+            for cand in data
+        ]
+
+        empty_image = {"text": "", "color": "", "shape": "", "formulation": ""}
+        ai_extracted: dict = {"image1": empty_image, "image2": empty_image}
+        if data and hasattr(data[0], "raw_result") and data[0].raw_result:
+            ai_extracted = data[0].raw_result
+            ai_extracted.setdefault("image1", empty_image)
+            ai_extracted.setdefault("image2", empty_image)
+
+        upload_results: list = []
+        if data:
+            back_id = getattr(data[0], "back_upload_id", None)
+            front_id = getattr(data[0], "front_upload_id", None)
+            upload_tasks = []
+            if back_id:
+                upload_tasks.append(self._repo.get_upload_by_id_with_relations(back_id, user.id))
+            if front_id:
+                upload_tasks.append(self._repo.get_upload_by_id_with_relations(front_id, user.id))
+            if upload_tasks:
+                upload_results = [u for u in await asyncio.gather(*upload_tasks) if u]
+
+        return {
+            "upload": upload_results,
+            "ai_extracted": ai_extracted,
+            "candidates": candidates,
+        }
 
     async def get_upload_history(self, user: Any) -> list[dict]:
         """
