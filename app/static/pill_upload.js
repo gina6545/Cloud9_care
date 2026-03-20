@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.submitUploadBtn.addEventListener('click', async () => {
         if (window.currentUploadType !== 'medication') return;
-        if (window.selectedFiles.length == 2) {
+        if (window.selectedFiles.length != 2) {
             if (typeof showAppToast === 'function') {
                 showAppToast("알약 분석을 위해 앞면과 뒷면 사진 두 장을 선택해주세요.", "warn", "확인 필요");
             }
